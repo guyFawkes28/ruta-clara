@@ -37,4 +37,38 @@ export const getZonasByQr = async (req, res) => {
         console.error("Error total:", err);
         return res.status(500).json({ error: "Error interno del servidor" });
     }
+}
+
+export const getTiposIncidencia = async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('tipos_incidencia')
+            .select('*')
+            .order('nombre', { ascending: true });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: "Error al obtener catálogo" });
+    }
+}
+
+export const crearReporteMantenimiento = async (req, res) => {
+    const { p_activo_id, p_incidencias_ids, p_comentario_general } = req.body;
+   
+    const p_operador_id = req.user.id; 
+
+    try {
+        const { data, error } = await supabase.rpc('registrar_reporte_completo', {
+            p_activo_id,
+            p_operador_id,
+            p_incidencias_ids,
+            p_comentario_general
+        });
+
+        if (error) throw error;
+        res.status(201).json({ success: true, tarea_id: data });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
 };
