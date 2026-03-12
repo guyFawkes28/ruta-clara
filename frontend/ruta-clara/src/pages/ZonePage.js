@@ -114,7 +114,9 @@ export const zonePage = () => {
             </div>
           </div>
         </div>
-        ${modalReporte.render()}
+        <div id="report-modal" class="d-none">
+          ${modalReporte.render()}
+        </div>
       `;
     },
     loadRender: () => {

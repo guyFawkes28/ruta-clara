@@ -3,77 +3,318 @@ export const reportZone = ({ onSave, onCancel }) => {
 
     return {
         render: () => `
-        <div id="report-modal" class="modal d-none" style="display:block; background: rgba(0,0,0,0.6); position:fixed; top:0; left:0; width:100%; height:100%; z-index:2000;">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0">
-                    <div class="modal-header bg-dark text-white">
-                        <h5 class="modal-title">Reportar Daño: <span id="w-puesto-id"></span></h5>
-                        <button type="button" class="btn-close btn-close-white" id="w-close"></button>
+            <!-- ── Sheet principal: Puesto ── -->
+            <div class="overlay" id="rc-sheet">
+            <div class="sheet">
+                <div class="shandle"></div>
+
+                <!-- Cabecera -->
+                <div class="sheet-hd">
+                <div class="stitle" id="rc-titulo">Puesto</div>
+                <div class="ssub"   id="rc-sub">Sala 3</div>
+                </div>
+
+                <!-- ── PASO 1 — ¿Qué tiene daño? ── -->
+                <div class="step-panel on" id="rc-step1">
+                <div class="step-lbl">¿Qué tiene daño?</div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6"><button class="dmg-btn" data-dmg="pantalla o torre"><span class="di">🖥️</span>Pantalla o Torre</button></div>
+                    <div class="col-6"><button class="dmg-btn" data-dmg="cable"><span class="di">🔌</span>Cable</button></div>
+                    <div class="col-6"><button class="dmg-btn" data-dmg="enchufe"><span class="di">⚡</span>Enchufe / Toma</button></div>
+                    <div class="col-6"><button class="dmg-btn" data-dmg="teclado"><span class="di">⌨️</span>Teclado</button></div>
+                    <div class="col-6"><button class="dmg-btn" data-dmg="silla"><span class="di">🪑</span>Silla</button></div>
+                    <div class="col-6"><button class="dmg-btn" data-dmg="otro"><span class="di">🔧</span>Otro</button></div>
+                </div>
+                <button class="btn-navy" id="rc-step1-next" disabled>Siguiente →</button>
+                </div>
+
+                <!-- ── PASO 2a — Cable ── -->
+                <div class="step-panel" id="rc-step2-cable">
+                <div class="step-lbl">¿Cuál cable?</div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6"><button class="cable-btn" data-cable="cable de datos (red/internet)"><span class="ci">🌐</span>Datos / Red</button></div>
+                    <div class="col-6"><button class="cable-btn" data-cable="cable de corriente (alimentación)"><span class="ci">⚡</span>Corriente</button></div>
+                    <div class="col-6"><button class="cable-btn" data-cable="cable HDMI / VGA (video)"><span class="ci">📺</span>Video HDMI/VGA</button></div>
+                    <div class="col-6"><button class="cable-btn" data-cable="cable USB"><span class="ci">⌨️</span>USB</button></div>
+                </div>
+                <button class="btn-navy" id="rc-cable-next" disabled>Siguiente →</button>
+                <button class="btn-back" id="rc-cable-back">← Volver</button>
+                </div>
+
+                <!-- ── PASO 2b — Enchufe ── -->
+                <div class="step-panel" id="rc-step2-enchufe">
+                <div class="step-lbl">¿Cuál enchufe?</div>
+                <div class="d-flex gap-3 justify-content-center mb-3">
+                    <div class="op-card" id="rc-op-left" data-outlet="izquierdo">
+                    <svg viewBox="0 0 44 48" width="48" height="52" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="42" height="46" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.5"/><rect x="3.5" y="6.5" width="37" height="23" rx="3" fill="white" stroke="#FDBA74" stroke-width="1"/><rect x="6.5" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><rect x="12" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><circle cx="11" cy="37" r="4" fill="#EA580C"/><circle cx="11" cy="37" r="2" fill="white"/><rect x="23" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><rect x="29" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><circle cx="29" cy="37" r="4" fill="#D1D5DB"/><circle cx="29" cy="37" r="2" fill="white"/><text x="4" y="47" font-size="8" fill="#EA580C" font-weight="900">← ESTE</text></svg>
+                    <div style="font-size:13px;font-weight:800">Izquierdo</div>
                     </div>
-                    <div class="modal-body p-4">
-                        <div id="w-step-1">
-                            <p class="text-muted">Selecciona el componente afectado:</p>
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-outline-primary py-2 btn-cat" data-cat="Pantalla">🖥️ Pantalla</button>
-                                <button class="btn btn-outline-primary py-2 btn-cat" data-cat="Torre">⚙️ Torre</button>
-                                <button class="btn btn-outline-primary py-2 btn-cat" data-cat="Periféricos">🖱️ Teclado / Mouse</button>
-                            </div>
-                        </div>
-                        <div id="w-step-2" class="d-none">
-                            <label class="form-label fw-bold">Describe la falla:</label>
-                            <textarea id="w-desc" class="form-control mb-3" rows="3" placeholder="Escribe aquí..."></textarea>
-                            <div class="d-flex justify-content-between">
-                                <button id="w-prev" class="btn btn-secondary">Atrás</button>
-                                <button id="w-next" class="btn btn-success">Finalizar Reporte</button>
-                            </div>
-                        </div>
+                    <div class="op-card" id="rc-op-right" data-outlet="derecho">
+                    <svg viewBox="0 0 44 48" width="48" height="52" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="42" height="46" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.5"/><rect x="3.5" y="6.5" width="37" height="23" rx="3" fill="white" stroke="#FDBA74" stroke-width="1"/><rect x="6.5" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><rect x="12" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><circle cx="11" cy="37" r="4" fill="#D1D5DB"/><circle cx="11" cy="37" r="2" fill="white"/><rect x="23" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><rect x="29" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><circle cx="29" cy="37" r="4" fill="#EA580C"/><circle cx="29" cy="37" r="2" fill="white"/><text x="22" y="47" font-size="8" fill="#EA580C" font-weight="900">ESTE →</text></svg>
+                    <div style="font-size:13px;font-weight:800">Derecho</div>
                     </div>
                 </div>
-            </div>
-        </div>`,
+                <button class="btn-navy" id="rc-enc-next" disabled>Siguiente →</button>
+                <button class="btn-back" id="rc-enc-back">← Volver</button>
+                </div>
+
+                <!-- ── PASO 2c — Componente simple ── -->
+                <div class="step-panel" id="rc-step2-simple">
+                <div class="step-lbl">Confirmar componente</div>
+                <div class="d-flex align-items-center gap-3 rounded-3 p-3 mb-3" style="background:var(--orab);border:2px solid var(--orabd)">
+                    <span style="font-size:32px" id="rc-simple-ico">🔧</span>
+                    <div>
+                    <div style="font-size:17px;font-weight:800" id="rc-simple-name">Componente</div>
+                    <div style="font-size:13px;color:var(--tsoft);font-weight:600;margin-top:2px">Describe el daño y la IA te ayuda con el reporte</div>
+                    </div>
+                </div>
+                <button class="btn-navy" id="rc-simple-next">Siguiente →</button>
+                <button class="btn-back" id="rc-simple-back">← Volver</button>
+                </div>
+
+                <!-- ── PASO 2d — Silla ── -->
+                <div class="step-panel" id="rc-step2-silla">
+                <div class="step-lbl">¿Qué pasa con la silla?</div>
+                <div class="row g-3 mb-3">
+                    <div class="col-6"><button class="yn-btn" id="rc-silla-arreglar" data-silla="arreglar" style="border-color:var(--blue);color:var(--blue)"><span class="yni">🔨</span>Arreglar<br>aquí mismo</button></div>
+                    <div class="col-6"><button class="yn-btn" id="rc-silla-bodega"   data-silla="bodega"   style="border-color:var(--orange);color:var(--orange)"><span class="yni">📦</span>Enviar a<br>bodega</button></div>
+                </div>
+                <div id="rc-silla-detail" class="rounded-3 p-3 mb-3" style="display:none;border:1.5px solid var(--border)">
+                    <div style="font-size:14px;font-weight:800;color:var(--tmid);margin-bottom:4px" id="rc-silla-lbl">—</div>
+                    <div style="font-size:13px;color:var(--tsoft);font-weight:600" id="rc-silla-sub">—</div>
+                </div>
+                <button class="btn-navy" id="rc-silla-next" disabled>Siguiente →</button>
+                <button class="btn-back" id="rc-silla-back">← Volver</button>
+                </div>
+
+                <!-- ── PASO 3 — Descripción + IA ── -->
+                <div class="step-panel" id="rc-step3">
+                <div class="step-lbl">Describe el daño con tus palabras</div>
+                <div class="mb-1" style="font-size:13px;font-weight:800;color:var(--tmid)">🔧 ¿Qué observas?</div>
+                <textarea id="rc-nota" class="form-control mb-1" rows="4"
+                    placeholder="Ej: el cable está pelado, la pantalla parpadea y se apaga sola…"
+                    style="font-family:'Nunito',sans-serif;font-size:16px;font-weight:600;background:var(--bg);border:2px solid var(--border);border-radius:14px;outline:none;resize:none;line-height:1.5"></textarea>
+                <div class="text-end mb-3" style="font-size:12px;color:var(--tsoft);font-weight:600"><span id="rc-chars">0</span> caracteres</div>
+
+                <button class="ai-improve-btn" id="rc-ai-btn" disabled>
+                    <span style="font-size:22px">🤖</span> Mejorar reporte con IA
+                </button>
+
+                <!-- Cargando IA -->
+                <div class="ai-loading" id="rc-ai-loading">
+                    <span class="ai-spin">🤖</span>
+                    <div style="font-size:15px;font-weight:800;color:#4C1D95;margin-bottom:4px">Mejorando tu descripción...</div>
+                    <div style="font-size:13px;color:#6D28D9;font-weight:600" id="rc-ai-sub">Formalizando el reporte técnico</div>
+                </div>
+
+                <!-- Resultado IA -->
+                <div class="ai-result" id="rc-ai-result">
+                    <div class="ai-result-lbl">🤖 Reporte mejorado por IA</div>
+                    <div class="ai-result-txt" id="rc-ai-txt">—</div>
+                    <button id="rc-rewrite-btn" class="w-100 mt-2 rounded-3 py-2"
+                    style="border:1.5px solid var(--purpbd);background:transparent;color:var(--purple);font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer">
+                    ✏️ Cambiar mi descripción y mejorar de nuevo
+                    </button>
+                </div>
+
+                <button class="btn-navy mt-2" id="rc-step3-next" disabled>Continuar →</button>
+                <button class="btn-back" id="rc-step3-back">← Cambiar selección</button>
+                </div>
+
+                <!-- ── PASO 4 — Resumen y guardar ── -->
+                <div class="step-panel" id="rc-step4">
+                <div class="step-lbl">Resumen y estado</div>
+                <div class="d-flex flex-wrap gap-2 mb-3" id="rc-summary"></div>
+                <div class="ai-result on mb-3">
+                    <div class="ai-result-lbl">🤖 Descripción</div>
+                    <div class="ai-result-txt" id="rc-recap">—</div>
+                </div>
+                <div class="step-lbl mt-1">Estado del puesto</div>
+                <div class="sgrid">
+                    <button class="sbtn sg" data-st="sg"><span class="si">⬜</span>Sin novedad</button>
+                    <button class="sbtn so on" data-st="so"><span class="si">🟠</span>Daño reportado</button>
+                    <button class="sbtn sb" data-st="sb"><span class="si">🔵</span>En reparación</button>
+                    <button class="sbtn sv" data-st="sv"><span class="si">🟢</span>Reparado ✓</button>
+                </div>
+                <button class="btn-navy" id="rc-guardar">💾 Guardar Reporte</button>
+                <button class="btn-back" id="rc-otro">← Reportar otro daño</button>
+                </div>
+
+            </div><!-- /sheet -->
+            </div><!-- /overlay -->`,
 
         loadRender: () => {
-            const step1 = document.getElementById('w-step-1');
-            const step2 = document.getElementById('w-step-2');
-            const txtDesc = document.getElementById('w-desc');
+            // Utilidades y estado
+            const $ = id => document.getElementById(id);
+            let _dmg = '', _det = '';
+            const STEP2 = {
+                'cable': 'rc-step2-cable',
+                'enchufe': 'rc-step2-enchufe',
+                'silla': 'rc-step2-silla'
+            };
+            function goStep(id) {
+                document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('on'));
+                $(id).classList.add('on');
+            }
 
-            // Navegación entre pasos
-            document.querySelectorAll('.btn-cat').forEach(btn => {
-                btn.onclick = () => {
-                    reportData.categoria = btn.dataset.cat;
-                    step1.classList.add('d-none');
-                    step2.classList.remove('d-none');
+            // Cerrar al tocar fondo (overlay)
+            const overlayEl = $('rc-sheet');
+            if (overlayEl) {
+                overlayEl.onclick = (e) => {
+                    if (e.target && e.target.id === 'rc-sheet') {
+                        // cerrar: quitar clase 'on' y ocultar modal después de la animación
+                        overlayEl.classList.remove('on');
+                        document.body.style.overflow = '';
+                        setTimeout(() => {
+                            const modal = document.getElementById('report-modal'); if (modal) modal.classList.add('d-none');
+                        }, 300);
+                    }
+                };
+            }
+
+            // PASO 1 — elegir daño
+            document.querySelectorAll('.dmg-btn').forEach(btn => btn.onclick = () => {
+                document.querySelectorAll('.dmg-btn').forEach(b => b.classList.remove('on'));
+                btn.classList.add('on');
+                _dmg = btn.dataset.dmg;
+                $('rc-step1-next').disabled = false;
+            });
+            $('rc-step1-next').onclick = () => goStep(STEP2[_dmg] || 'rc-step2-simple');
+
+            // PASO 2 — cable
+            document.querySelectorAll('.cable-btn').forEach(btn => btn.onclick = () => {
+                document.querySelectorAll('.cable-btn').forEach(b => b.classList.remove('on'));
+                btn.classList.add('on');
+                _det = btn.dataset.cable;
+                $('rc-cable-next').disabled = false;
+            });
+            $('rc-cable-next').onclick = () => goStep('rc-step3');
+            $('rc-cable-back').onclick = () => goStep('rc-step1');
+
+            // PASO 2 — enchufe
+            ['rc-op-left','rc-op-right'].forEach(id => {
+                $(id).onclick = () => {
+                    const isSelected = $(id).classList.contains('on');
+                    // Si ya está seleccionado, deselecciona ambos y deshabilita el siguiente
+                    if (isSelected) {
+                        $('rc-op-left').classList.remove('on');
+                        $('rc-op-right').classList.remove('on');
+                        _det = '';
+                        $('rc-enc-next').disabled = true;
+                    } else {
+                        // Selecciona el actual y deselecciona el otro
+                        $('rc-op-left').classList.toggle('on', id === 'rc-op-left');
+                        $('rc-op-right').classList.toggle('on', id === 'rc-op-right');
+                        _det = 'enchufe ' + $(id).dataset.outlet;
+                        $('rc-enc-next').disabled = false;
+                    }
                 };
             });
+            $('rc-enc-next').onclick = () => goStep('rc-step3');
+            $('rc-enc-back').onclick = () => goStep('rc-step1');
 
-            document.getElementById('w-prev').onclick = () => {
-                step2.classList.add('d-none');
-                step1.classList.remove('d-none');
-            };
+            // PASO 2 — silla
+            ['rc-silla-arreglar','rc-silla-bodega'].forEach(id => $(id).onclick = () => {
+                const fix = id === 'rc-silla-arreglar';
+                _det = fix ? 'reparar aquí mismo' : 'enviar a bodega';
+                $('rc-silla-lbl').textContent = fix ? '🔨 Se reparará en el puesto' : '📦 Se enviará a bodega';
+                $('rc-silla-detail').style.display = 'block';
+                $('rc-silla-next').disabled = false;
+                document.getElementById('rc-silla-arreglar').classList.toggle('on', fix);
+                document.getElementById('rc-silla-bodega').classList.toggle('on', !fix);
+            });
+            $('rc-silla-next').onclick = () => goStep('rc-step3');
+            $('rc-silla-back').onclick = () => goStep('rc-step1');
 
-            // Simulación de guardado
-            document.getElementById('w-next').onclick = () => {
-                reportData.comentario = txtDesc.value;
-                onSave(reportData); // Esto ejecutará el console.log que definamos en ZonePage
-            };
+            // PASO 2 — simple
+            $('rc-simple-next').onclick = () => goStep('rc-step3');
+            $('rc-simple-back').onclick = () => goStep('rc-step1');
 
-            document.getElementById('w-close').onclick = onCancel;
+            // PASO 3 — textarea: activar botón IA con >= 8 caracteres
+            const notaEl = $('rc-nota');
+            if (notaEl) {
+                notaEl.oninput = () => {
+                    const len = notaEl.value.trim().length;
+                    const chars = $('rc-chars');
+                    if (chars) chars.textContent = String(len);
+                    const aiBtn = $('rc-ai-btn');
+                    if (aiBtn) aiBtn.disabled = len < 8;
+                };
+            }
+            // PASO 3 — Cambiar selección
+            if ($('rc-step3-back')) {
+                $('rc-step3-back').onclick = () => {
+                    // Limpiar selección previa del paso 2
+                    if (_dmg === 'cable') {
+                        document.querySelectorAll('.cable-btn').forEach(b => b.classList.remove('on'));
+                        $('rc-cable-next').disabled = true;
+                        _det = '';
+                        goStep('rc-step2-cable');
+                    } else if (_dmg === 'enchufe') {
+                        $('rc-op-left').classList.remove('on');
+                        $('rc-op-right').classList.remove('on');
+                        $('rc-enc-next').disabled = true;
+                        _det = '';
+                        goStep('rc-step2-enchufe');
+                    } else if (_dmg === 'silla') {
+                        document.getElementById('rc-silla-arreglar').classList.remove('on');
+                        document.getElementById('rc-silla-bodega').classList.remove('on');
+                        $('rc-silla-next').disabled = true;
+                        $('rc-silla-detail').style.display = 'none';
+                        _det = '';
+                        goStep('rc-step2-silla');
+                    } else {
+                        // Simple
+                        $('rc-simple-next').disabled = false;
+                        goStep('rc-step2-simple');
+                    }
+                };
+            }
         },
 
         open: (idPuesto) => {
-            reportData.puestoId = idPuesto;
+            // Aceptamos tanto un id (string) como el elemento con dataset.id
+            const id = (idPuesto && typeof idPuesto === 'object' && idPuesto.dataset && idPuesto.dataset.id) ? idPuesto.dataset.id : idPuesto;
+            reportData.puestoId = id || '';
             reportData.categoria = '';
             reportData.comentario = '';
-            // Limpiar UI
-            document.getElementById('w-puesto-id').innerText = idPuesto;
-            document.getElementById('w-step-1').classList.remove('d-none');
-            document.getElementById('w-step-2').classList.add('d-none');
-            document.getElementById('w-desc').value = '';
-            document.getElementById('report-modal').classList.remove('d-none');
+
+            // Poner el título con el número del puesto
+            const titulo = document.getElementById('rc-titulo');
+            if (titulo) titulo.textContent = `Puesto ${reportData.puestoId || ''}`;
+
+            // Mostrar el modal
+            const modal = document.getElementById('report-modal');
+            if (modal) modal.classList.remove('d-none');
+            // Activar animación sheet
+            const overlay = document.getElementById('rc-sheet');
+            if (overlay) overlay.classList.add('on');
+            // Evitar scroll del body mientras el modal está abierto
+            document.body.style.overflow = 'hidden';
+
+            // Reiniciar estado del wizard y limpiar selecciones
+            document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('on'));
+            const first = document.getElementById('rc-step1'); if (first) first.classList.add('on');
+            document.querySelectorAll('.dmg-btn,.cable-btn,.op-card,.yn-btn').forEach(b => b.classList.remove('on'));
+            const nota = document.getElementById('rc-nota'); if (nota) nota.value = '';
+            const chars = document.getElementById('rc-chars'); if (chars) chars.textContent = '0';
+            ['rc-step1-next','rc-cable-next','rc-enc-next','rc-silla-next','rc-ai-btn','rc-step3-next'].forEach(id => {
+                const el = document.getElementById(id); if (el) el.disabled = true;
+            });
+            const sillaDetail = document.getElementById('rc-silla-detail'); if (sillaDetail) sillaDetail.style.display = 'none';
+            // Reset estado de botones de estado (sbtn) dejando 'so' marcado
+            document.querySelectorAll('#rc-sheet .sbtn').forEach(b => b.classList.toggle('on', b.dataset.st === 'so'));
         },
 
         close: () => {
-            document.getElementById('report-modal').classList.add('d-none');
+            const overlay = document.getElementById('rc-sheet');
+            if (overlay) overlay.classList.remove('on');
+            // Restaurar scroll del body
+            document.body.style.overflow = '';
+            setTimeout(() => {
+                const modal = document.getElementById('report-modal');
+                if (modal) modal.classList.add('d-none');
+            }, 300); // Espera la animación antes de ocultar
         }
     };
 };

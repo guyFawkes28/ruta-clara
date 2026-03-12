@@ -117,10 +117,29 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 /* ── Bottom Sheet ── */
 .overlay{position:fixed;inset:0;background:rgba(15,32,68,.55);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
 .overlay.on{opacity:1;pointer-events:all;}
-.sheet{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:390px;transform:translateY(100%);transition:transform .32s cubic-bezier(.34,1.56,.64,1);padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 40px rgba(0,0,0,.2);}
+.sheet{
+  background:#fff;
+  border-radius:22px 22px 0 0;
+  width:100%;
+  max-width:390px;
+  min-height:220px;
+  overflow:visible;
+  transform:translateY(100%);
+  transition:transform .32s cubic-bezier(.34,1.56,.64,1);
+  /* espacio lateral dentro del sheet (escritorio y móvil) */
+  padding:12px 16px calc(20px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -8px 40px rgba(0,0,0,.2);
+}
+
+.step-panel { display: none; }
+.step-panel.on { display: block; }
+
+.step-panel { display: none; }
+.step-panel.on { display: block; }
+
 .overlay.on .sheet{transform:translateY(0);}
 .shandle{width:40px;height:4px;background:var(--border);border-radius:3px;margin:12px auto 14px;}
-.sheet-hd{padding:0 20px 12px;border-bottom:1.5px solid var(--border);margin-bottom:14px;}
+.sheet-hd{padding:0 16px 12px;border-bottom:1.5px solid var(--border);margin-bottom:14px;}
 .stitle{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;}
 .ssub{font-size:13px;color:var(--tsoft);font-weight:600;margin-top:2px;}
 .sheet-body{padding:0 20px;}
@@ -150,7 +169,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* ── Wrapper del módulo ── */
-.sala1-wrap{width:100%;max-width:390px;margin:0 auto;padding:12px 10px 80px;}
+.sala1-wrap{width:100%;max-width:390px;margin:0 auto;padding:12px 16px 80px;}
 
 /* ── Section header ── */
 .sh{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--slate);display:flex;align-items:center;gap:8px;margin-bottom:10px;}
@@ -171,12 +190,16 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 }
 
 .hdr-inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 8px;
-  max-width: 480px;
+  gap: 12px;
+  max-width: 980px; /* permitir más espacio en pantallas de PC */
   margin: 0 auto;
 }
+/* aseguramos que la pill esté centrada en su columna */
+.pill { justify-self: center; }
+.hdr-controls { display:flex; align-items:center; gap:8px; justify-self: end; }
 
 /* Logo */
 .logo {
@@ -236,6 +259,36 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 }
 .qr-btn:active {
   background: rgba(255,255,255,.18);
+}
+
+/* Logout button styling */
+#hdr-logout{
+  background: #ef4444; /* red-500 */
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight:800;
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+}
+#hdr-logout .logout-icon{font-size:16px;line-height:1}
+#hdr-logout .logout-text{font-size:14px}
+
+@media (max-width: 420px) {
+  /* make logout button compact on mobile: small circular red icon */
+  #hdr-logout{padding:8px;border-radius:10px;min-width:40px;min-height:40px;justify-content:center}
+  #hdr-logout .logout-text{display:none}
+  #hdr-logout .logout-icon{font-size:18px}
+}
+
+/* Header profile */
+.hdr-profile{display:flex;align-items:center;gap:8px;color:#fff;margin-left:10px}
+.hdr-profile .avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
+.hdr-profile .hdr-name{font-weight:800;font-size:14px}
+@media (max-width:420px){
+  .hdr-profile .hdr-name{display:none}
+  .hdr-profile{margin-left:6px}
+  .hdr-profile .avatar{width:34px;height:34px}
 }
 
 /* ══════════════════════════════════════
@@ -344,4 +397,142 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   background: rgba(255,255,255,.15);
   color: rgba(255,255,255,.4);
   cursor: not-allowed;
+}
+
+/* REPORT ZONE */
+
+/* ════════════════════════════════════════
+   reporteModal.css — depende de los vars
+   de global.css (:root con --navy, etc.)
+   ════════════════════════════════════════ */
+
+/* ── Botones de daño ── */
+.dmg-btn,.cable-btn{
+  width:100%;min-height:88px;border-radius:14px;
+  border:2.5px solid var(--border);background:var(--bg);
+  cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;
+  font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;
+  color:var(--tmid);transition:.18s;padding:10px 8px;text-align:center;
+}
+.cable-btn{min-height:78px;}
+.dmg-btn .di,.cable-btn .ci{font-size:28px;}
+.dmg-btn:active,.cable-btn:active{transform:scale(.95);}
+.dmg-btn.on,.cable-btn.on{background:var(--orab);border-color:var(--orange);color:var(--orange);}
+
+/* ── Cards enchufe ── */
+.op-card{
+  flex:1;max-width:160px;min-height:110px;border-radius:16px;
+  border:2.5px solid var(--border);background:var(--bg);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;
+  color:var(--tmid);transition:.2s;padding:12px;
+}
+.op-card:active{transform:scale(.95);}
+.op-card.on{background:var(--redb);border-color:var(--red);color:var(--red);}
+
+/* ── Selector estado (paso 4) ── */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.sbtn{
+  min-height:72px;border-radius:16px;border:2.5px solid;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;cursor:pointer;background:transparent;
+  font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;transition:.18s;
+}
+.sbtn .si{font-size:28px;}
+.sbtn:active{transform:scale(.96);}
+.sbtn.sg{border-color:#9CA3AF;color:var(--tmid);}
+.sbtn.so{border-color:var(--orange);color:var(--orange);}
+.sbtn.sb{border-color:var(--blue);color:var(--blue);}
+.sbtn.sv{border-color:var(--green);color:var(--green);}
+.sbtn.on.sg{background:var(--grayb);}
+.sbtn.on.so{background:var(--orab);}
+.sbtn.on.sb{background:var(--blub);}
+.sbtn.on.sv{background:var(--grnb);}
+
+/* ── Chip resumen ── */
+.dsumchip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--orab);border:1.5px solid var(--orabd);
+  border-radius:20px;padding:6px 12px;font-size:13px;font-weight:800;color:var(--orange);
+}
+
+/* ── Silla yes/no ── */
+.yn-btn{
+  min-height:90px;border-radius:18px;border:3px solid;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:18px;
+  font-weight:900;transition:.18s;background:var(--bg);width:100%;
+}
+.yn-btn:active{transform:scale(.95);}
+.yni{font-size:36px;}
+
+/* ── Bloque IA ── */
+.ai-loading{
+  background:linear-gradient(135deg,#F5F3FF,#EEF2FF);
+  border:1.5px solid #DDD6FE;border-radius:16px;
+  padding:22px 20px;text-align:center;margin:0 0 14px;display:none;
+}
+.ai-loading.on{display:block;}
+.ai-spin{font-size:36px;animation:rc-spin .9s linear infinite;display:block;margin-bottom:10px;}
+@keyframes rc-spin{to{transform:rotate(360deg)}}
+
+.ai-result{
+  background:linear-gradient(135deg,#F5F3FF,#EEF2FF);
+  border:2px solid #7C3AED;border-radius:16px;
+  padding:16px 18px;margin:0 0 14px;display:none;
+}
+.ai-result.on{display:block;}
+.ai-result-lbl{
+  font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:900;
+  letter-spacing:1.5px;text-transform:uppercase;color:#7C3AED;margin-bottom:10px;
+}
+.ai-result-txt{font-size:15px;color:#1E1B4B;line-height:1.65;font-weight:600;}
+
+.ai-improve-btn{
+  width:100%;min-height:54px;border:none;border-radius:14px;
+  background:linear-gradient(135deg,#7C3AED,#4F46E5);color:#fff;
+  font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 6px 18px rgba(124,58,237,.3);transition:.2s;margin-bottom:14px;
+}
+.ai-improve-btn:disabled{background:#9CA3AF;box-shadow:none;cursor:not-allowed;}
+.ai-improve-btn:not(:disabled):active{transform:scale(.97);}
+
+/* ── Variables extra que pueden no estar en global ── */
+:root{
+  --purple:#7C3AED;
+  --purpbd:#DDD6FE;
+  --redb:#FEF2F2;
+  --orabd:#FDBA74;
+}
+
+/* Mobile responsive tweaks */
+@media (max-width: 420px) {
+  .sheet{
+    max-width:100%;
+    border-radius:16px 16px 0 0;
+    /* mismo espacio lateral que en escritorio */
+    padding:12px 16px calc(20px + env(safe-area-inset-bottom,0px));
+    box-shadow:0 -6px 28px rgba(0,0,0,.18);
+  }
+  .sheet-hd{padding:0 12px 10px;border-bottom-width:1px;margin-bottom:10px}
+  .stitle{font-size:20px}
+  .ssub{font-size:12px}
+  .sheet-body{padding:0 12px}
+  .sala1-wrap{padding:10px 12px 80px}
+
+  /* Header: hacer responsive el nombre de la sala y respetar espacio lateral */
+  .hdr { padding: 10px 12px; }
+  .hdr-inner { grid-template-columns: auto 1fr; padding: 0 8px; max-width: 100%; }
+  .pill { grid-column: 1 / -1; justify-self: center; }
+  .pill-inner { padding: 6px 12px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hdr-controls { gap:6px }
+  .hdr-profile .hdr-name { display:none }
+}
+
+@media (max-width: 320px) {
+  .stitle{font-size:18px}
+  .dmg-btn,.cable-btn{min-height:64px}
+  .p{font-size:12px}
 }

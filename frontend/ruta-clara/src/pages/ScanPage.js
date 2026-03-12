@@ -78,7 +78,7 @@ function doScan() {
 
         setTimeout(() => {
             // CAMBIO CLAVE: Pasamos el código QR en la URL
-            window.location.hash = `#/zone/${qrCode}`; 
+            window.location.hash = `#/zona`; 
         }, 400);
     }
 

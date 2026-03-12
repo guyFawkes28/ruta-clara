@@ -1,3 +1,7 @@
+import { loginService } from "../api/auth.service.js";
+import { persistence } from "../util/persistence.js";
+import '../pages/ScanPage.js'
+
 export const loginPage = () => ({
 
     render: () => {
@@ -36,21 +40,21 @@ export const loginPage = () => ({
         const pin = pinInput.value;
 
         try {
-            // 1. Solo llamas al servicio. 
-            // Él se encargará de hablar con el backend y GUARDAR la sesión.
-            await loginService(email, pin);
+            // 1. Llamar al servicio y guardar la sesión
+            const userData = await loginService(email, pin);
+            persistence.saveSession(userData);
 
             console.log("Login exitoso, redirigiendo...");
 
             // 2. La vista solo se encarga de la navegación
-            window.location.hash = "#/scanner"; 
+            window.location.hash = "#/scanner";
             
         } catch (error) {
             // 3. La vista solo se encarga de mostrar el error
             errorMsg.style.display = 'block';
             errorMsg.textContent = error.message;
         }
-        })
+    })
 
 
     }

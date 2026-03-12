@@ -2,11 +2,13 @@ import { loginPage } from "../pages/LoginPage.js";
 import { persistence } from "../util/persistence.js";
 import { notFoundPage } from "../pages/NotFound.js";
 import { scannerPage } from "../pages/ScanPage.js";
+import { zonePage } from "../pages/ZonePage.js";
 
 const routes = {
     "#/": loginPage(),
     "#/login": loginPage(),
-    "#/scanner": scannerPage()
+    "#/scanner": scannerPage(),
+    "#/zona": zonePage()
 };
 
 export const routerManager = async () => {
