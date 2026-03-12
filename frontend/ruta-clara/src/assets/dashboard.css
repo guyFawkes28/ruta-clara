@@ -1,10 +1,3 @@
-/* ============================================================
-   dashboard.css
-   Estilos propios del módulo QInspect Dashboard
-   Depende de: assets/css/global.css (variables --navy, --amber, etc.)
-   Prefijo "db-" para no colisionar con clases globales
-   ============================================================ */
-
 /* ── Layout principal ── */
 #db-app {
   display: grid;
