@@ -33,12 +33,34 @@ export const scannerPage = () => ({
   loadRender: async () => {
     const html5QrCode = new Html5Qrcode("reader");
     
+    // Bloquea la navegación Atrás del navegador mientras esté en esta vista
+    const currentHash = window.location.hash || "#/scanner";
+
+    const handlePopState = () => {
+      window.history.pushState(null, null, window.location.href);
+    };
+
+    const handleHashChange = () => {
+      if (window.location.hash !== currentHash) {
+        window.location.hash = currentHash;
+      }
+    };
+
+    // Añadir una entrada en el historial para poder interceptar "atrás"
+    window.history.pushState(null, null, window.location.href);
+    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("hashchange", handleHashChange);
+
     const onScanSuccess = async (decodedText) => {
       try {
         const loading = document.getElementById("loading-overlay");
         if(loading) loading.classList.remove("d-none");
         
         await html5QrCode.stop();
+        
+        // Quitamos listeners para permitir la navegación hacia la nueva ruta
+        window.removeEventListener("popstate", handlePopState);
+        window.removeEventListener("hashchange", handleHashChange);
 
         // Limpieza de texto plano para evitar errores de URL
         const qrFinal = decodedText.trim();
