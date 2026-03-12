@@ -1,5 +1,27 @@
 export const reportZone = ({ onSave, onCancel }) => {
     let reportData = { puestoId: '', categoria: '', comentario: '' };
+    // Estado compartido entre loadRender / open / close
+    let selectedDamages = [];
+    let detailMap = {};
+    let detailQueue = [];
+    let currentDetailIndex = 0;
+    let currentDamage = null;
+    const DAMAGE_LABELS = {
+        'pantalla o torre': 'Pantalla/Torre',
+        'cable': 'Cable',
+        'enchufe': 'Enchufe/Toma',
+        'teclado': 'Teclado',
+        'silla': 'Silla',
+        'otro': 'Otro'
+    };
+    const STEP2 = {
+        'cable': 'rc-step2-cable',
+        'enchufe': 'rc-step2-enchufe',
+        'silla': 'rc-step2-silla',
+        'pantalla o torre': 'rc-step2-simple',
+        'teclado': 'rc-step2-simple',
+        'otro': 'rc-step2-simple'
+    };
 
     return {
         render: () => `
@@ -147,11 +169,27 @@ export const reportZone = ({ onSave, onCancel }) => {
         loadRender: () => {
             // Utilidades y estado
             const $ = id => document.getElementById(id);
-            let _dmg = '', _det = '';
+            // soporta selección múltiple de componentes dañados
+            let selectedDamages = [];
+            let detailMap = {}; // detalles por tipo: { cable: 'USB', enchufe: 'izquierdo', silla: 'arreglar' }
+            let detailQueue = [];
+            let currentDetailIndex = 0;
+            let currentDamage = null;
+            const DAMAGE_LABELS = {
+                'pantalla o torre': 'Pantalla/Torre',
+                'cable': 'Cable',
+                'enchufe': 'Enchufe/Toma',
+                'teclado': 'Teclado',
+                'silla': 'Silla',
+                'otro': 'Otro'
+            };
             const STEP2 = {
                 'cable': 'rc-step2-cable',
                 'enchufe': 'rc-step2-enchufe',
-                'silla': 'rc-step2-silla'
+                'silla': 'rc-step2-silla',
+                'pantalla o torre': 'rc-step2-simple',
+                'teclado': 'rc-step2-simple',
+                'otro': 'rc-step2-simple'
             };
             function goStep(id) {
                 document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('on'));
@@ -173,58 +211,106 @@ export const reportZone = ({ onSave, onCancel }) => {
                 };
             }
 
-            // PASO 1 — elegir daño
-            document.querySelectorAll('.dmg-btn').forEach(btn => btn.onclick = () => {
-                document.querySelectorAll('.dmg-btn').forEach(b => b.classList.remove('on'));
-                btn.classList.add('on');
-                _dmg = btn.dataset.dmg;
-                $('rc-step1-next').disabled = false;
+            // PASO 1 — elegir daño (ahora permite múltiples selecciones)
+            document.querySelectorAll('.dmg-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const raw = (btn.dataset.dmg || '').toLowerCase().trim();
+                    const idx = selectedDamages.indexOf(raw);
+                    if (idx >= 0) {
+                        // deseleccionar
+                        selectedDamages.splice(idx, 1);
+                        btn.classList.remove('on');
+                    } else {
+                        selectedDamages.push(raw);
+                        btn.classList.add('on');
+                    }
+                    $('rc-step1-next').disabled = selectedDamages.length === 0;
+                };
             });
-            $('rc-step1-next').onclick = () => goStep(STEP2[_dmg] || 'rc-step2-simple');
+            $('rc-step1-next').onclick = () => {
+                // preparar cola de pasos detalle según selección
+                detailQueue = selectedDamages.filter(d => STEP2[d]);
+                currentDetailIndex = 0;
+                if (detailQueue.length > 0) {
+                    currentDamage = detailQueue[currentDetailIndex];
+                    goStep(STEP2[currentDamage]);
+                } else {
+                    // sin detalles necesarios -> ir directo a la descripción
+                    const step3next = $('rc-step3-next'); if (step3next) step3next.disabled = false;
+                    goStep('rc-step3');
+                }
+            };
 
-            // PASO 2 — cable
+            // PASO 2 — cable (detalle por daño 'cable')
             document.querySelectorAll('.cable-btn').forEach(btn => btn.onclick = () => {
                 document.querySelectorAll('.cable-btn').forEach(b => b.classList.remove('on'));
                 btn.classList.add('on');
-                _det = btn.dataset.cable;
+                detailMap['cable'] = btn.dataset.cable;
                 $('rc-cable-next').disabled = false;
             });
-            $('rc-cable-next').onclick = () => goStep('rc-step3');
+            $('rc-cable-next').onclick = () => {
+                currentDetailIndex++;
+                if (currentDetailIndex < detailQueue.length) {
+                    currentDamage = detailQueue[currentDetailIndex];
+                    goStep(STEP2[currentDamage]);
+                } else {
+                    const step3next = $('rc-step3-next'); if (step3next) step3next.disabled = false;
+                    goStep('rc-step3');
+                }
+            };
             $('rc-cable-back').onclick = () => goStep('rc-step1');
 
+            // PASO 2 — enchufe
             // PASO 2 — enchufe
             ['rc-op-left','rc-op-right'].forEach(id => {
                 $(id).onclick = () => {
                     const isSelected = $(id).classList.contains('on');
-                    // Si ya está seleccionado, deselecciona ambos y deshabilita el siguiente
                     if (isSelected) {
                         $('rc-op-left').classList.remove('on');
                         $('rc-op-right').classList.remove('on');
-                        _det = '';
+                        delete detailMap['enchufe'];
                         $('rc-enc-next').disabled = true;
                     } else {
-                        // Selecciona el actual y deselecciona el otro
                         $('rc-op-left').classList.toggle('on', id === 'rc-op-left');
                         $('rc-op-right').classList.toggle('on', id === 'rc-op-right');
-                        _det = 'enchufe ' + $(id).dataset.outlet;
+                        detailMap['enchufe'] = $(id).dataset.outlet;
                         $('rc-enc-next').disabled = false;
                     }
                 };
             });
-            $('rc-enc-next').onclick = () => goStep('rc-step3');
+            $('rc-enc-next').onclick = () => {
+                currentDetailIndex++;
+                if (currentDetailIndex < detailQueue.length) {
+                    currentDamage = detailQueue[currentDetailIndex];
+                    goStep(STEP2[currentDamage]);
+                } else {
+                    const step3next = $('rc-step3-next'); if (step3next) step3next.disabled = false;
+                    goStep('rc-step3');
+                }
+            };
             $('rc-enc-back').onclick = () => goStep('rc-step1');
 
             // PASO 2 — silla
+            // PASO 2 — silla
             ['rc-silla-arreglar','rc-silla-bodega'].forEach(id => $(id).onclick = () => {
                 const fix = id === 'rc-silla-arreglar';
-                _det = fix ? 'reparar aquí mismo' : 'enviar a bodega';
+                detailMap['silla'] = fix ? 'reparar aquí mismo' : 'enviar a bodega';
                 $('rc-silla-lbl').textContent = fix ? '🔨 Se reparará en el puesto' : '📦 Se enviará a bodega';
                 $('rc-silla-detail').style.display = 'block';
                 $('rc-silla-next').disabled = false;
                 document.getElementById('rc-silla-arreglar').classList.toggle('on', fix);
                 document.getElementById('rc-silla-bodega').classList.toggle('on', !fix);
             });
-            $('rc-silla-next').onclick = () => goStep('rc-step3');
+            $('rc-silla-next').onclick = () => {
+                currentDetailIndex++;
+                if (currentDetailIndex < detailQueue.length) {
+                    currentDamage = detailQueue[currentDetailIndex];
+                    goStep(STEP2[currentDamage]);
+                } else {
+                    const step3next = $('rc-step3-next'); if (step3next) step3next.disabled = false;
+                    goStep('rc-step3');
+                }
+            };
             $('rc-silla-back').onclick = () => goStep('rc-step1');
 
             // PASO 2 — simple
@@ -243,59 +329,60 @@ export const reportZone = ({ onSave, onCancel }) => {
                 };
             }
             // PASO 3 — Cambiar selección
-            if ($('rc-step3-back')) {
-                $('rc-step3-back').onclick = () => {
-                    // Limpiar selección previa del paso 2
-                    if (_dmg === 'cable') {
-                        document.querySelectorAll('.cable-btn').forEach(b => b.classList.remove('on'));
-                        $('rc-cable-next').disabled = true;
-                        _det = '';
-                        goStep('rc-step2-cable');
-                    } else if (_dmg === 'enchufe') {
-                        $('rc-op-left').classList.remove('on');
-                        $('rc-op-right').classList.remove('on');
-                        $('rc-enc-next').disabled = true;
-                        _det = '';
-                        goStep('rc-step2-enchufe');
-                    } else if (_dmg === 'silla') {
-                        document.getElementById('rc-silla-arreglar').classList.remove('on');
-                        document.getElementById('rc-silla-bodega').classList.remove('on');
-                        $('rc-silla-next').disabled = true;
-                        $('rc-silla-detail').style.display = 'none';
-                        _det = '';
-                        goStep('rc-step2-silla');
-                    } else {
-                        // Simple
-                        $('rc-simple-next').disabled = false;
-                        goStep('rc-step2-simple');
+                if ($('rc-step3-back')) {
+                    // Volver a la selección múltiple (paso 1)
+                    $('rc-step3-back').onclick = () => {
+                        goStep('rc-step1');
+                    };
+
+                    // Paso 4: seleccionar estado (sbtn) y guardar
+                    document.querySelectorAll('#rc-sheet .sbtn').forEach(btn => {
+                        btn.onclick = () => {
+                            document.querySelectorAll('#rc-sheet .sbtn').forEach(b => b.classList.remove('on'));
+                            btn.classList.add('on');
+                        };
+                    });
+
+                    // Continuar desde descripción -> resumen
+                    const step3nextBtn = document.getElementById('rc-step3-next');
+                    if (step3nextBtn) {
+                        step3nextBtn.onclick = () => {
+                            // construir resumen visual
+                            const summaryEl = $('rc-summary');
+                            if (summaryEl) summaryEl.innerHTML = '';
+                            selectedDamages.forEach(d => {
+                                const lbl = DAMAGE_LABELS[d] || (d.charAt(0).toUpperCase() + d.slice(1));
+                                const det = detailMap[d] ? `: ${detailMap[d]}` : '';
+                                const chip = document.createElement('div');
+                                chip.className = 'leg';
+                                chip.style.margin = '0 6px 6px 0';
+                                chip.textContent = `${lbl}${det}`;
+                                if (summaryEl) summaryEl.appendChild(chip);
+                            });
+                            const nota = $('rc-nota');
+                            const recapEl = $('rc-recap');
+                            if (recapEl) recapEl.textContent = nota ? nota.value.trim() : '—';
+                            goStep('rc-step4');
+                        };
                     }
-                };
 
-                // Paso 4: seleccionar estado (sbtn) y guardar
-                document.querySelectorAll('#rc-sheet .sbtn').forEach(btn => {
-                    btn.onclick = () => {
-                        document.querySelectorAll('#rc-sheet .sbtn').forEach(b => b.classList.remove('on'));
-                        btn.classList.add('on');
-                    };
-                });
-
-                // Guardar reporte
-                const guardarBtn = document.getElementById('rc-guardar');
-                if (guardarBtn) {
-                    guardarBtn.onclick = () => {
-                        const estadoEl = document.querySelector('#rc-sheet .sbtn.on');
-                        const estado = estadoEl ? estadoEl.dataset.st : 'so';
-                        const comentarioEl = document.getElementById('rc-nota');
-                        reportData.categoria = _dmg || '';
-                        reportData.detalle = _det || '';
-                        reportData.estado = estado;
-                        reportData.comentario = comentarioEl ? comentarioEl.value.trim() : '';
-                        if (typeof onSave === 'function') {
-                            onSave(reportData);
-                        }
-                    };
+                    // Guardar reporte
+                    const guardarBtn = document.getElementById('rc-guardar');
+                    if (guardarBtn) {
+                        guardarBtn.onclick = () => {
+                            const estadoEl = document.querySelector('#rc-sheet .sbtn.on');
+                            const estado = estadoEl ? estadoEl.dataset.st : 'so';
+                            const comentarioEl = document.getElementById('rc-nota');
+                            reportData.categoria = selectedDamages.join(', ');
+                            reportData.detalle = Object.keys(detailMap).length ? JSON.parse(JSON.stringify(detailMap)) : '';
+                            reportData.estado = estado;
+                            reportData.comentario = comentarioEl ? comentarioEl.value.trim() : '';
+                            if (typeof onSave === 'function') {
+                                onSave(reportData);
+                            }
+                        };
+                    }
                 }
-            }
         },
 
         open: (idPuesto) => {
@@ -304,6 +391,13 @@ export const reportZone = ({ onSave, onCancel }) => {
             reportData.puestoId = id || '';
             reportData.categoria = '';
             reportData.comentario = '';
+
+            // resetear estado interno de selección múltiple
+            selectedDamages = [];
+            detailMap = {};
+            detailQueue = [];
+            currentDetailIndex = 0;
+            currentDamage = null;
 
             // Poner el título con el número del puesto
             const titulo = document.getElementById('rc-titulo');
@@ -328,6 +422,9 @@ export const reportZone = ({ onSave, onCancel }) => {
                 const el = document.getElementById(id); if (el) el.disabled = true;
             });
             const sillaDetail = document.getElementById('rc-silla-detail'); if (sillaDetail) sillaDetail.style.display = 'none';
+            // Limpiar resumen/recap
+            const summaryEl = document.getElementById('rc-summary'); if (summaryEl) summaryEl.innerHTML = '';
+            const recapEl = document.getElementById('rc-recap'); if (recapEl) recapEl.textContent = '—';
             // Reset estado de botones de estado (sbtn) dejando 'so' marcado
             document.querySelectorAll('#rc-sheet .sbtn').forEach(b => b.classList.toggle('on', b.dataset.st === 'so'));
         },
