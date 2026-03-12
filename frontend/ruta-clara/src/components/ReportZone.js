@@ -3,60 +3,61 @@ export const reportZone = ({ onSave, onCancel }) => {
 
     return {
         render: () => `
-            <!-- ── Sheet principal: Puesto ── -->
-            <div class="overlay" id="rc-sheet">
-            <div class="sheet">
-                <div class="shandle"></div>
+            <div id="report-modal" class="d-none">
+                <!-- ── Sheet principal: Puesto ── -->
+                <div class="overlay" id="rc-sheet">
+                <div class="sheet">
+                    <div class="shandle"></div>
 
-                <!-- Cabecera -->
-                <div class="sheet-hd">
-                <div class="stitle" id="rc-titulo">Puesto</div>
-                <div class="ssub"   id="rc-sub">Sala 3</div>
-                </div>
-
-                <!-- ── PASO 1 — ¿Qué tiene daño? ── -->
-                <div class="step-panel on" id="rc-step1">
-                <div class="step-lbl">¿Qué tiene daño?</div>
-                <div class="row g-2 mb-3">
-                    <div class="col-6"><button class="dmg-btn" data-dmg="pantalla o torre"><span class="di">🖥️</span>Pantalla o Torre</button></div>
-                    <div class="col-6"><button class="dmg-btn" data-dmg="cable"><span class="di">🔌</span>Cable</button></div>
-                    <div class="col-6"><button class="dmg-btn" data-dmg="enchufe"><span class="di">⚡</span>Enchufe / Toma</button></div>
-                    <div class="col-6"><button class="dmg-btn" data-dmg="teclado"><span class="di">⌨️</span>Teclado</button></div>
-                    <div class="col-6"><button class="dmg-btn" data-dmg="silla"><span class="di">🪑</span>Silla</button></div>
-                    <div class="col-6"><button class="dmg-btn" data-dmg="otro"><span class="di">🔧</span>Otro</button></div>
-                </div>
-                <button class="btn-navy" id="rc-step1-next" disabled>Siguiente →</button>
-                </div>
-
-                <!-- ── PASO 2a — Cable ── -->
-                <div class="step-panel" id="rc-step2-cable">
-                <div class="step-lbl">¿Cuál cable?</div>
-                <div class="row g-2 mb-3">
-                    <div class="col-6"><button class="cable-btn" data-cable="cable de datos (red/internet)"><span class="ci">🌐</span>Datos / Red</button></div>
-                    <div class="col-6"><button class="cable-btn" data-cable="cable de corriente (alimentación)"><span class="ci">⚡</span>Corriente</button></div>
-                    <div class="col-6"><button class="cable-btn" data-cable="cable HDMI / VGA (video)"><span class="ci">📺</span>Video HDMI/VGA</button></div>
-                    <div class="col-6"><button class="cable-btn" data-cable="cable USB"><span class="ci">⌨️</span>USB</button></div>
-                </div>
-                <button class="btn-navy" id="rc-cable-next" disabled>Siguiente →</button>
-                <button class="btn-back" id="rc-cable-back">← Volver</button>
-                </div>
-
-                <!-- ── PASO 2b — Enchufe ── -->
-                <div class="step-panel" id="rc-step2-enchufe">
-                <div class="step-lbl">¿Cuál enchufe?</div>
-                <div class="d-flex gap-3 justify-content-center mb-3">
-                    <div class="op-card" id="rc-op-left" data-outlet="izquierdo">
-                    <svg viewBox="0 0 44 48" width="48" height="52" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="42" height="46" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.5"/><rect x="3.5" y="6.5" width="37" height="23" rx="3" fill="white" stroke="#FDBA74" stroke-width="1"/><rect x="6.5" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><rect x="12" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><circle cx="11" cy="37" r="4" fill="#EA580C"/><circle cx="11" cy="37" r="2" fill="white"/><rect x="23" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><rect x="29" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><circle cx="29" cy="37" r="4" fill="#D1D5DB"/><circle cx="29" cy="37" r="2" fill="white"/><text x="4" y="47" font-size="8" fill="#EA580C" font-weight="900">← ESTE</text></svg>
-                    <div style="font-size:13px;font-weight:800">Izquierdo</div>
+                    <!-- Cabecera -->
+                    <div class="sheet-hd">
+                    <div class="stitle" id="rc-titulo">Puesto</div>
+                    <div class="ssub"   id="rc-sub">Sala 3</div>
                     </div>
-                    <div class="op-card" id="rc-op-right" data-outlet="derecho">
-                    <svg viewBox="0 0 44 48" width="48" height="52" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="42" height="46" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.5"/><rect x="3.5" y="6.5" width="37" height="23" rx="3" fill="white" stroke="#FDBA74" stroke-width="1"/><rect x="6.5" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><rect x="12" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><circle cx="11" cy="37" r="4" fill="#D1D5DB"/><circle cx="11" cy="37" r="2" fill="white"/><rect x="23" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><rect x="29" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><circle cx="29" cy="37" r="4" fill="#EA580C"/><circle cx="29" cy="37" r="2" fill="white"/><text x="22" y="47" font-size="8" fill="#EA580C" font-weight="900">ESTE →</text></svg>
-                    <div style="font-size:13px;font-weight:800">Derecho</div>
+
+                    <!-- ── PASO 1 — ¿Qué tiene daño? ── -->
+                    <div class="step-panel on" id="rc-step1">
+                    <div class="step-lbl">¿Qué tiene daño?</div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6"><button class="dmg-btn" data-dmg="pantalla o torre"><span class="di">🖥️</span>Pantalla o Torre</button></div>
+                        <div class="col-6"><button class="dmg-btn" data-dmg="cable"><span class="di">🔌</span>Cable</button></div>
+                        <div class="col-6"><button class="dmg-btn" data-dmg="enchufe"><span class="di">⚡</span>Enchufe / Toma</button></div>
+                        <div class="col-6"><button class="dmg-btn" data-dmg="teclado"><span class="di">⌨️</span>Teclado</button></div>
+                        <div class="col-6"><button class="dmg-btn" data-dmg="silla"><span class="di">🪑</span>Silla</button></div>
+                        <div class="col-6"><button class="dmg-btn" data-dmg="otro"><span class="di">🔧</span>Otro</button></div>
                     </div>
-                </div>
-                <button class="btn-navy" id="rc-enc-next" disabled>Siguiente →</button>
-                <button class="btn-back" id="rc-enc-back">← Volver</button>
-                </div>
+                    <button class="btn-navy" id="rc-step1-next" disabled>Siguiente →</button>
+                    </div>
+
+                    <!-- ── PASO 2a — Cable ── -->
+                    <div class="step-panel" id="rc-step2-cable">
+                    <div class="step-lbl">¿Cuál cable?</div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6"><button class="cable-btn" data-cable="cable de datos (red/internet)"><span class="ci">🌐</span>Datos / Red</button></div>
+                        <div class="col-6"><button class="cable-btn" data-cable="cable de corriente (alimentación)"><span class="ci">⚡</span>Corriente</button></div>
+                        <div class="col-6"><button class="cable-btn" data-cable="cable HDMI / VGA (video)"><span class="ci">📺</span>Video HDMI/VGA</button></div>
+                        <div class="col-6"><button class="cable-btn" data-cable="cable USB"><span class="ci">⌨️</span>USB</button></div>
+                    </div>
+                    <button class="btn-navy" id="rc-cable-next" disabled>Siguiente →</button>
+                    <button class="btn-back" id="rc-cable-back">← Volver</button>
+                    </div>
+
+                    <!-- ── PASO 2b — Enchufe ── -->
+                    <div class="step-panel" id="rc-step2-enchufe">
+                    <div class="step-lbl">¿Cuál enchufe?</div>
+                    <div class="d-flex gap-3 justify-content-center mb-3">
+                        <div class="op-card" id="rc-op-left" data-outlet="izquierdo">
+                        <svg viewBox="0 0 44 48" width="48" height="52" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="42" height="46" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.5"/><rect x="3.5" y="6.5" width="37" height="23" rx="3" fill="white" stroke="#FDBA74" stroke-width="1"/><rect x="6.5" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><rect x="12" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><circle cx="11" cy="37" r="4" fill="#EA580C"/><circle cx="11" cy="37" r="2" fill="white"/><rect x="23" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><rect x="29" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><circle cx="29" cy="37" r="4" fill="#D1D5DB"/><circle cx="29" cy="37" r="2" fill="white"/><text x="4" y="47" font-size="8" fill="#EA580C" font-weight="900"></text></svg>
+                        <div style="font-size:13px;font-weight:800">Izquierdo</div>
+                        </div>
+                        <div class="op-card" id="rc-op-right" data-outlet="derecho">
+                        <svg viewBox="0 0 44 48" width="48" height="52" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="42" height="46" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.5"/><rect x="3.5" y="6.5" width="37" height="23" rx="3" fill="white" stroke="#FDBA74" stroke-width="1"/><rect x="6.5" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><rect x="12" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><circle cx="11" cy="37" r="4" fill="#D1D5DB"/><circle cx="11" cy="37" r="2" fill="white"/><rect x="23" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><rect x="29" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><circle cx="29" cy="37" r="4" fill="#EA580C"/><circle cx="29" cy="37" r="2" fill="white"/><text x="22" y="47" font-size="8" fill="#EA580C" font-weight="900"></text></svg>
+                        <div style="font-size:13px;font-weight:800">Derecho</div>
+                        </div>
+                    </div>
+                    <button class="btn-navy" id="rc-enc-next" disabled>Siguiente →</button>
+                    <button class="btn-back" id="rc-enc-back">← Volver</button>
+                    </div>
 
                 <!-- ── PASO 2c — Componente simple ── -->
                 <div class="step-panel" id="rc-step2-simple">
@@ -269,6 +270,31 @@ export const reportZone = ({ onSave, onCancel }) => {
                         goStep('rc-step2-simple');
                     }
                 };
+
+                // Paso 4: seleccionar estado (sbtn) y guardar
+                document.querySelectorAll('#rc-sheet .sbtn').forEach(btn => {
+                    btn.onclick = () => {
+                        document.querySelectorAll('#rc-sheet .sbtn').forEach(b => b.classList.remove('on'));
+                        btn.classList.add('on');
+                    };
+                });
+
+                // Guardar reporte
+                const guardarBtn = document.getElementById('rc-guardar');
+                if (guardarBtn) {
+                    guardarBtn.onclick = () => {
+                        const estadoEl = document.querySelector('#rc-sheet .sbtn.on');
+                        const estado = estadoEl ? estadoEl.dataset.st : 'so';
+                        const comentarioEl = document.getElementById('rc-nota');
+                        reportData.categoria = _dmg || '';
+                        reportData.detalle = _det || '';
+                        reportData.estado = estado;
+                        reportData.comentario = comentarioEl ? comentarioEl.value.trim() : '';
+                        if (typeof onSave === 'function') {
+                            onSave(reportData);
+                        }
+                    };
+                }
             }
         },
 
