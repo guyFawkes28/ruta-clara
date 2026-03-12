@@ -1,3 +1,6 @@
+import { loginService } from "../api/auth.service.js"
+import { persistence } from "../util/persistence.js"
+
 export const loginPage = () => ({
 
     render: () => {
@@ -24,36 +27,34 @@ export const loginPage = () => ({
 `
     },
 
-    loadRender: ()=>{
-
-    const loginBtn = document.querySelector('.login-btn');
-    const emailInput = document.getElementById('login-email');
-    const pinInput = document.getElementById('login-pass');
-    const errorMsg = document.getElementById('login-err');
-
-    loginBtn.addEventListener('click', async () => {
-        const email = emailInput.value;
-        const pin = pinInput.value;
-
-        try {
-            // 1. Solo llamas al servicio. 
-            // Él se encargará de hablar con el backend y GUARDAR la sesión.
-            await loginService(email, pin);
-
-            console.log("Login exitoso, redirigiendo...");
-
-            // 2. La vista solo se encarga de la navegación
-            window.location.hash = "#/scanner"; 
+        loadRender: ()=>{
+    
+            const loginBtn = document.querySelector('.login-btn')
+            const emailInput = document.getElementById('login-email')
+            const pinInput = document.getElementById('login-pass')
+            const errorMsg = document.getElementById('login-err')
+    
+           loginBtn.addEventListener('click', async () => {
+    
+            try {
+            const user = await loginService(emailInput.value, pinInput.value);
             
-        } catch (error) {
-            // 3. La vista solo se encarga de mostrar el error
-            errorMsg.style.display = 'block';
+            
+            persistence.saveSession(user); 
+            
+          
+            window.location.hash = "#/scanner"; 
+            } catch (error) {
+       
             errorMsg.textContent = error.message;
+            errorMsg.style.display = 'block';
+            }
+            });
+    
+    
         }
-        })
+   
 
-
-    }
 
 
 

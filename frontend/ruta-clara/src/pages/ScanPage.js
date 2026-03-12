@@ -1,87 +1,73 @@
+import maintenanceService from '../api/maintenance.service.js'
+import { Html5Qrcode } from 'html5-qrcode'
 
 export const scannerPage = () => ({
-
   render: () => `
-    <!-- ══ SCAN SCREEN ══ -->
     <div id="scan-screen">
-
-      <!-- Logo -->
-      <div class="bc fw-bold text-white text-center lh-1 mb-1" style="font-size:44px">
-        Ruta<em style="color:var(--amber);font-style:normal">Clara</em>
-      </div>
-      <div class="text-center mb-4"
-           style="font-size:13px;color:rgba(255,255,255,.4);font-weight:600;letter-spacing:.3px">
-        Escanea la zona para comenzar
-      </div>
-
-      <!-- Marco QR animado -->
+      <div class="login-logo bc">Ruta<em>Clara</em></div>
+      <div class="login-sub">Módulo de Mantenimiento</div>
+      
       <div class="scan-frame-wrap">
         <div class="scan-ring"></div>
         <div class="scan-frame">
-          <div class="sc tl"></div>
-          <div class="sc tr"></div>
-          <div class="sc bl"></div>
-          <div class="sc br"></div>
+          <div id="reader" style="width: 100%; height: 100%; object-fit: cover;"></div>
+          
+          <div class="sc tl" style="top:-2px; left:-2px; border-top:4px solid; border-left:4px solid;"></div>
+          <div class="sc tr" style="top:-2px; right:-2px; border-top:4px solid; border-right:4px solid;"></div>
+          <div class="sc bl" style="bottom:-2px; left:-2px; border-bottom:4px solid; border-left:4px solid;"></div>
+          <div class="sc br" style="bottom:-2px; right:-2px; border-bottom:4px solid; border-right:4px solid;"></div>
+          
           <div class="scan-line"></div>
-          <span style="font-size:64px;opacity:.18">📱</span>
         </div>
       </div>
 
-      <!-- Texto instrucción -->
-      <div id="scan-txt"
-           class="text-white text-center fw-bold mb-2"
-           style="font-size:16px;line-height:1.5">
+      <div id="scan-txt" class="text-white text-center fw-bold">
         Apunta al código QR de la zona
       </div>
 
-      <!-- Estado: detectando -->
-      <div class="scan-detecting" id="scan-detecting">
-        ✅ Sala 3 — Piso 4 detectada
+      <div id="loading-overlay" class="d-none" style="margin-top:20px;">
+         <div class="spinner-border text-warning" role="status"></div>
       </div>
+    </div>`,
 
-      <!-- Botón escanear -->
-      <button class="scan-btn" id="scan-btn">
-        📷 Escanear QR
-      </button>
+  loadRender: async () => {
+    const html5QrCode = new Html5Qrcode("reader");
+    
+    const onScanSuccess = async (decodedText) => {
+      try {
+        const loading = document.getElementById("loading-overlay");
+        if(loading) loading.classList.remove("d-none");
+        
+        await html5QrCode.stop();
 
-    </div>
+        // Limpieza de texto plano para evitar errores de URL
+        const qrFinal = decodedText.trim();
+        
+        // Llamamos al servicio (asegúrate que maintenanceService esté bien importado)
+        const data = await maintenanceService.getZoneByQR(encodeURIComponent(qrFinal));
+        
+        window.location.hash = `#/zone/${data.info_zona.id}`;
+      } catch (error) {
+        alert(error.error || "Zona no encontrada o error de red");
+        location.reload(); // Reinicio rápido si falla
+      }
+    };
 
-    <!-- Toast (compartido, vive aquí mientras no haya layout global) -->
-    <div class="toast-app" id="toast"></div>
-  `,
+    const config = { 
+      fps: 15, 
+      qrbox: { width: 200, height: 200 },
+      aspectRatio: 1.0 // Fuerza cuadrado para que encaje en tu .scan-frame
+    };
 
-  loadRender: () => {
-
-function doScan() {
-        const btn = document.getElementById('scan-btn');
-        btn.disabled = true;
-        btn.innerHTML = '⏳ Leyendo código QR…';
-
-        setTimeout(() => {
-            // Simulamos que el QR leído es "SALA1-P1"
-            // En el futuro, aquí es donde usarías una librería de cámara real
-            const qrDetectado = "SALA3-P4"; 
-
-            const det = document.getElementById('scan-detecting');
-            det.style.display = 'block';
-            det.innerHTML = `✅ Zona ${qrDetectado} detectada`; // Dinámico
-            document.getElementById('scan-txt').style.opacity = '0';
-
-            setTimeout(() => enterApp(qrDetectado), 1100);
-        }, 2000);
-    }
-
-    function enterApp(qrCode) {
-        const sc = document.getElementById('scan-screen');
-        sc.style.opacity = '0';
-        sc.style.transition = 'opacity .4s';
-
-        setTimeout(() => {
-            // CAMBIO CLAVE: Pasamos el código QR en la URL
-            window.location.hash = `#/zone/${qrCode}`; 
-        }, 400);
-    }
-
-    document.getElementById('scan-btn').addEventListener('click', doScan);
-}
+    // Iniciar cámara
+    html5QrCode.start(
+      { facingMode: "environment" }, 
+      config,
+      onScanSuccess
+    ).catch(err => {
+      console.error("No se pudo iniciar la cámara:", err);
+      document.getElementById("scan-txt").innerHTML = 
+        '<span style="color:#FCA5A5">Error: Permiso de cámara denegado o sin HTTPS</span>';
+    });
+  }
 });

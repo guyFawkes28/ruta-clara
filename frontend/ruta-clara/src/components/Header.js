@@ -1,5 +1,5 @@
 
-import { persistence } from '../utils/persistence.js';
+import { persistence } from '../util/persistence.js';
 
 export function headerView({ zona = 'Sala 3 — Piso 1', onScan = () => {} } = {}) {
   return {

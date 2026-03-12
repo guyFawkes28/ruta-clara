@@ -1,4 +1,3 @@
-
 :root {
   --navy:   #0F2044;
   --amber:  #FBBF24;
@@ -83,27 +82,65 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .prow{display:flex;gap:3px;justify-content:center;width:100%;}
 
 /* ── Puesto ── */
-.p{
-  width:calc(25% - 3px);
-  max-width:calc(25% - 3px);
-  flex:0 0 calc(25% - 3px);
-  aspect-ratio:0.85;
-  border-radius:6px;
-  border:2px solid;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;gap:1px;
-  transition:transform .13s;
-  font-size:clamp(10px,3.5vw,18px);
-  line-height:1;
-  user-select:none;
-  overflow:hidden;
+/* ── Puesto CORREGIDO ── */
+.p {
+  width: calc(25% - 3px);
+  max-width: calc(25% - 3px);
+  flex: 0 0 calc(25% - 3px);
+  aspect-ratio: 0.85;
+  border-radius: 6px;
+  border: 2px solid;
+  display: flex; 
+  flex-direction: column; /* Alinea los elementos en columna */
+  align-items: center; 
+  justify-content: center;
+  cursor: pointer;
+  gap: 2px; /* Espacio entre el emoji y el texto */
+  transition: transform .13s;
+  user-select: none;
+  overflow: hidden;
+  position: relative; /* Importante para el flujo */
 }
+
+/* AGREGA ESTO: El emoji para cada puesto */
+.p::before {
+  content: '💻';
+  font-size: 16px; /* Ajusta el tamaño según prefieras */
+  line-height: 1;
+  display: block;
+}
+
+.p:active { transform: scale(.86); }
+
+/* Ajustamos la etiqueta de texto para que no se pegue */
+.plbl-in {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(7px, 1.8vw, 10px);
+  font-weight: 900;
+  color: var(--tsoft);
+  line-height: 1;
+}
+
 .p:active{transform:scale(.86);}
 .plbl-in{font-family:'Barlow Condensed',sans-serif;font-size:clamp(7px,1.8vw,10px);font-weight:900;color:var(--tsoft);line-height:1;}
 .p.sg{background:var(--grayb);border-color:#9CA3AF;}
 .p.so{background:var(--orab);border-color:var(--orange);}
 .p.sb{background:var(--blub);border-color:var(--blue);}
 .p.sv{background:var(--grnb);border-color:var(--green);}
+
+/* Icono para Ventiladores */
+.fan::before {
+  content: '🌀';
+  font-size: 20px;
+  display: block;
+}
+
+/* Icono para Puesto TL (Profesor/Líder) */
+.p-tl::before {
+  content: '👨‍🏫';
+  font-size: 20px;
+  display: block;
+}
 
 /* ── Leyenda ── */
 .leyenda{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:12px;}
@@ -117,7 +154,25 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 /* ── Bottom Sheet ── */
 .overlay{position:fixed;inset:0;background:rgba(15,32,68,.55);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
 .overlay.on{opacity:1;pointer-events:all;}
-.sheet{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:390px;transform:translateY(100%);transition:transform .32s cubic-bezier(.34,1.56,.64,1);padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 40px rgba(0,0,0,.2);}
+.sheet{
+  background:#fff;
+  border-radius:22px 22px 0 0;
+  width:100%;
+  max-width:390px;
+  min-height:220px;
+  overflow:visible;
+  transform:translateY(100%);
+  transition:transform .32s cubic-bezier(.34,1.56,.64,1);
+  padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -8px 40px rgba(0,0,0,.2);
+}
+
+.step-panel { display: none; }
+.step-panel.on { display: block; }
+
+.step-panel { display: none; }
+.step-panel.on { display: block; }
+
 .overlay.on .sheet{transform:translateY(0);}
 .shandle{width:40px;height:4px;background:var(--border);border-radius:3px;margin:12px auto 14px;}
 .sheet-hd{padding:0 20px 12px;border-bottom:1.5px solid var(--border);margin-bottom:14px;}
@@ -256,37 +311,51 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 /* ── Marco QR ── */
 .scan-frame-wrap {
   position: relative;
-  width: 230px; height: 230px;
+  width: 230px; 
+  height: 230px;
   margin-bottom: 28px;
+  /* Crucial: permite que las esquinas amarillas sobresalgan */
+  overflow: visible !important; 
 }
+
 .scan-frame {
-  width: 100%; height: 100%;
+  width: 100%; 
+  height: 100%;
   border: 2px solid rgba(255,255,255,.1);
   border-radius: 24px;
   position: relative;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,.03);
+  background: transparent;
+  overflow: hidden; /* Esto mantiene el video redondeado por dentro */
+  z-index: 10;
 }
 
+/* Asegura que el video de la cámara ocupe todo el marco */
+.scan-frame video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 /* Esquinas amber */
 .sc {
   position: absolute;
-  width: 32px; height: 32px;
-  border-color: var(--amber);
+  width: 32px; 
+  height: 32px;
+  border-color: var(--amber) !important; /* Asegura el color amarillo */
   border-style: solid;
+  z-index: 100; /* Un valor alto para estar por encima del video */
+  pointer-events: none; /* Para que no bloquee clics en el scanner */
 }
-.sc.tl { top:-2px;    left:-2px;  border-width: 4px 0 0 4px; border-radius: 8px 0 0 0; }
-.sc.tr { top:-2px;    right:-2px; border-width: 4px 4px 0 0; border-radius: 0 8px 0 0; }
-.sc.bl { bottom:-2px; left:-2px;  border-width: 0 0 4px 4px; border-radius: 0 0 0 8px; }
-.sc.br { bottom:-2px; right:-2px; border-width: 0 4px 4px 0; border-radius: 0 0 8px 0; }
 
 /* Línea de escaneo animada */
 .scan-line {
   position: absolute;
-  left: 12px; right: 12px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  left: 15px; 
+  right: 15px;
+  height: 3px;
+  background: var(--amber);
+  box-shadow: 0 0 12px var(--amber); /* Le da ese efecto neon de la imagen */
   animation: scanmove 2s ease-in-out infinite;
+  z-index: 50;
 }
 @keyframes scanmove {
   0%   { top: 14px;               opacity: .4; }
@@ -344,4 +413,112 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   background: rgba(255,255,255,.15);
   color: rgba(255,255,255,.4);
   cursor: not-allowed;
+}
+
+/* REPORT ZONE */
+
+/* ════════════════════════════════════════
+   reporteModal.css — depende de los vars
+   de global.css (:root con --navy, etc.)
+   ════════════════════════════════════════ */
+
+/* ── Botones de daño ── */
+.dmg-btn,.cable-btn{
+  width:100%;min-height:88px;border-radius:14px;
+  border:2.5px solid var(--border);background:var(--bg);
+  cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;
+  font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;
+  color:var(--tmid);transition:.18s;padding:10px 8px;text-align:center;
+}
+.cable-btn{min-height:78px;}
+.dmg-btn .di,.cable-btn .ci{font-size:28px;}
+.dmg-btn:active,.cable-btn:active{transform:scale(.95);}
+.dmg-btn.on,.cable-btn.on{background:var(--orab);border-color:var(--orange);color:var(--orange);}
+
+/* ── Cards enchufe ── */
+.op-card{
+  flex:1;max-width:160px;min-height:110px;border-radius:16px;
+  border:2.5px solid var(--border);background:var(--bg);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;
+  color:var(--tmid);transition:.2s;padding:12px;
+}
+.op-card:active{transform:scale(.95);}
+.op-card.on{background:var(--redb);border-color:var(--red);color:var(--red);}
+
+/* ── Selector estado (paso 4) ── */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.sbtn{
+  min-height:72px;border-radius:16px;border:2.5px solid;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;cursor:pointer;background:transparent;
+  font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;transition:.18s;
+}
+.sbtn .si{font-size:28px;}
+.sbtn:active{transform:scale(.96);}
+.sbtn.sg{border-color:#9CA3AF;color:var(--tmid);}
+.sbtn.so{border-color:var(--orange);color:var(--orange);}
+.sbtn.sb{border-color:var(--blue);color:var(--blue);}
+.sbtn.sv{border-color:var(--green);color:var(--green);}
+.sbtn.on.sg{background:var(--grayb);}
+.sbtn.on.so{background:var(--orab);}
+.sbtn.on.sb{background:var(--blub);}
+.sbtn.on.sv{background:var(--grnb);}
+
+/* ── Chip resumen ── */
+.dsumchip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--orab);border:1.5px solid var(--orabd);
+  border-radius:20px;padding:6px 12px;font-size:13px;font-weight:800;color:var(--orange);
+}
+
+/* ── Silla yes/no ── */
+.yn-btn{
+  min-height:90px;border-radius:18px;border:3px solid;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:18px;
+  font-weight:900;transition:.18s;background:var(--bg);width:100%;
+}
+.yn-btn:active{transform:scale(.95);}
+.yni{font-size:36px;}
+
+/* ── Bloque IA ── */
+.ai-loading{
+  background:linear-gradient(135deg,#F5F3FF,#EEF2FF);
+  border:1.5px solid #DDD6FE;border-radius:16px;
+  padding:22px 20px;text-align:center;margin:0 0 14px;display:none;
+}
+.ai-loading.on{display:block;}
+.ai-spin{font-size:36px;animation:rc-spin .9s linear infinite;display:block;margin-bottom:10px;}
+@keyframes rc-spin{to{transform:rotate(360deg)}}
+
+.ai-result{
+  background:linear-gradient(135deg,#F5F3FF,#EEF2FF);
+  border:2px solid #7C3AED;border-radius:16px;
+  padding:16px 18px;margin:0 0 14px;display:none;
+}
+.ai-result.on{display:block;}
+.ai-result-lbl{
+  font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:900;
+  letter-spacing:1.5px;text-transform:uppercase;color:#7C3AED;margin-bottom:10px;
+}
+.ai-result-txt{font-size:15px;color:#1E1B4B;line-height:1.65;font-weight:600;}
+
+.ai-improve-btn{
+  width:100%;min-height:54px;border:none;border-radius:14px;
+  background:linear-gradient(135deg,#7C3AED,#4F46E5);color:#fff;
+  font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 6px 18px rgba(124,58,237,.3);transition:.2s;margin-bottom:14px;
+}
+.ai-improve-btn:disabled{background:#9CA3AF;box-shadow:none;cursor:not-allowed;}
+.ai-improve-btn:not(:disabled):active{transform:scale(.97);}
+
+/* ── Variables extra que pueden no estar en global ── */
+:root{
+  --purple:#7C3AED;
+  --purpbd:#DDD6FE;
+  --redb:#FEF2F2;
+  --orabd:#FDBA74;
 }

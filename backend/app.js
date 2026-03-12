@@ -3,7 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
 import {authRoutes} from './src/routes/auth.routes.js'
-import { maintenanceRoutes } from './src/routes/zona.routes.js'
+import { maintenanceRoutes } from './src/routes/maintenance.routes.js'
 import cookieParser from 'cookie-parser'
 import { verifyToken } from './src/middlewares/auth.middleware.js'
 
