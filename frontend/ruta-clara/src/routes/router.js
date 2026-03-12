@@ -3,12 +3,15 @@ import { persistence } from "../util/persistence.js";
 import { notFoundPage } from "../pages/NotFound.js";
 import { scannerPage } from "../pages/ScanPage.js";
 import { zonePage } from "../pages/ZonePage.js";
+import { chatPage } from "../pages/ChatPage.js";
+import { roomPage } from "../pages/RoomPage.js";
 
 const routes = {
     "#/": loginPage(),
     "#/login": loginPage(),
     "#/scanner": scannerPage(),
-    
+    "#/chat": chatPage(),
+    "#/room": roomPage()
 };
 
 export const routerManager = async () => {
