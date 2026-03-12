@@ -1,10 +1,12 @@
-import { LoginPage } from "../pages/LoginPage.js"
-import { persistence } from "../utils/persistence.js"
-import { NotFoundPage } from "../pages/NotFoundPage.js"
+import { loginPage } from "../pages/LoginPage.js";
+import { persistence } from "../util/persistence.js";
+import { notFoundPage } from "../pages/NotFound.js";
+import { scannerPage } from "../pages/ScanPage.js";
+
 const routes = {
-    "#/": LoginPage(),
-    "#/login": LoginPage(),
-    "#/scanner": ScannerPage()
+    "#/": loginPage(),
+    "#/login": loginPage(),
+    "#/scanner": scannerPage()
 };
 
 export const routerManager = async () => {
@@ -16,7 +18,7 @@ export const routerManager = async () => {
 
     if (!view) {
         // Si la ruta no está registrada, mostrar NotFound (no redirigir)
-        const notFound = NotFoundPage()
+        const notFound = notFoundPage()
         root.innerHTML = notFound.render()
         await notFound.loadRender()
         return
