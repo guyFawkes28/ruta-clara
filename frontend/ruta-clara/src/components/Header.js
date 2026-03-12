@@ -19,7 +19,6 @@ export function headerView({ zona = 'Sala 3 — Piso 1', onScan = () => {} } = {
             </div>
             <div class="hdr-controls">
               <div class="hdr-profile" id="hdr-profile">
-                <div class="avatar" id="hdr-avatar">A</div>
                 <div class="hdr-name" id="hdr-name">Usuario</div>
               </div>
               <button class="qr-btn" id="hdr-scan">📷</button>

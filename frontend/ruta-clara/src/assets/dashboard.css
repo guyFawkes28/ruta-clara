@@ -1,0 +1,227 @@
+/* ============================================================
+   dashboard.css
+   Estilos propios del módulo QInspect Dashboard
+   Depende de: assets/css/global.css (variables --navy, --amber, etc.)
+   Prefijo "db-" para no colisionar con clases globales
+   ============================================================ */
+
+/* ── Layout principal ── */
+#db-app {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100dvh;
+}
+
+/* ── Sidebar ── */
+#db-sidebar {
+  background: var(--navy);
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow-y: auto;
+  border-right: 1px solid rgba(255,255,255,.08);
+}
+.db-logo {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.db-logo em { color: var(--amber); font-style: normal; }
+.db-logo-icon {
+  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--amber), var(--purple));
+}
+.db-sidebar-card {
+  background: rgba(255,255,255,.02);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+.db-nav { list-style: none; flex: 1; }
+.db-nav li { margin-bottom: .5rem; }
+.db-nav a {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .5rem 0.9rem; border-radius: 8px;
+  color: #fff; text-decoration: none;
+  cursor: pointer; font-size: .95rem; font-weight: 700;
+  transition: all .2s;
+}
+.db-nav a:hover  { background: rgba(255,255,255,.08); color: #fff; }
+.db-nav a.active {
+  background: linear-gradient(135deg, var(--amber), var(--orange));
+  color: #000; font-weight: 900;
+  padding: .5rem 0.9rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+.db-sidebar-footer {
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,.1);
+  color: rgba(255,255,255,.35);
+  font-size: .8rem; font-weight: 700;
+}
+
+/* ── Main ── */
+#db-main { overflow-y: auto; padding: 1.75rem; }
+
+/* ── Page header ── */
+.db-ph {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 1.75rem; padding-bottom: 1.25rem;
+  border-bottom: 2px solid var(--border);
+}
+.db-ph h1 { font-size: 2rem; font-weight: 900; color: var(--navy); }
+.db-ph p  { font-size: .9rem; color: var(--tsoft); margin-top: .2rem; font-weight: 600; }
+.db-ph-actions { display: flex; gap: .75rem; }
+
+/* ── Botones ── */
+.db-btn {
+  padding: .5rem 1.1rem; border: none; border-radius: 10px;
+  cursor: pointer; font-size: .875rem; font-weight: 800;
+  font-family: 'Nunito', sans-serif;
+  transition: all .2s; display: inline-flex; align-items: center; gap: .4rem;
+}
+.db-btn:active { transform: none; }
+.db-btn:focus,
+.db-btn:focus-visible {
+  outline: 2px solid rgba(0,0,0,0.08);
+  outline-offset: 2px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.db-btn-primary { background: var(--navy); color: #fff; }
+.db-btn-primary:hover { background: #1A3260; box-shadow: 0 4px 12px rgba(15,32,68,.25); }
+.db-btn-secondary {
+  background: var(--grayb); color: var(--tmid);
+  border: 1.5px solid var(--border);
+}
+.db-btn-secondary:hover { background: #E5E7EB; }
+.db-btn-sm { padding: .25rem .7rem; font-size: .75rem; border-radius: 8px; }
+
+/* ── Cards grid ── */
+.db-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.1rem; margin-bottom: 1.75rem;
+}
+.db-card {
+  background: #fff; border-radius: 14px; padding: 1.1rem;
+  border: 1.5px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  transition: all .25s; position: relative; overflow: hidden;
+}
+.db-card::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--amber), transparent);
+}
+.db-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,.10); transform: translateY(-2px); }
+.db-card-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: .75rem;
+}
+.db-card-title {
+  font-size: .75rem; color: var(--tsoft); font-weight: 900;
+  text-transform: uppercase; letter-spacing: .8px;
+}
+
+
+.db-nav a:focus,
+.db-nav a:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.18);
+  outline-offset: 2px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.db-nav a.active {
+  background: linear-gradient(135deg, var(--amber), var(--orange));
+  color: #000; font-weight: 900;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+}
+.db-nav a.active:focus,
+.db-nav a.active:focus-visible {
+  outline: 2px solid rgba(0,0,0,0.18);
+  outline-offset: 2px;
+}
+
+.db-section-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 1rem; padding-bottom: .875rem;
+  border-bottom: 1.5px solid var(--border);
+}
+.db-section-title { font-size: 1.1rem; font-weight: 900; color: var(--navy); }
+
+/* ── Gráfico de barras ── */
+.db-chart {
+  height: 240px; display: flex; align-items: flex-end;
+  justify-content: space-around; gap: 1rem;
+  padding: 1.25rem 0 2rem;
+}
+.db-bar {
+  flex: 1; border-radius: 8px 8px 0 0; min-height: 20px;
+  transition: filter .2s; position: relative;
+  background: linear-gradient(180deg, var(--blue), var(--blub));
+  border: 1.5px solid var(--border);
+}
+.db-bar:hover { filter: brightness(1.08); box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+.db-bar-val {
+  position: absolute; top: -24px; left: 50%; transform: translateX(-50%);
+  font-size: .9rem; font-weight: 900; color: var(--navy); white-space: nowrap;
+}
+.db-bar-lbl {
+  position: absolute; bottom: -26px; left: 50%; transform: translateX(-50%);
+  font-size: .72rem; color: var(--tsoft); font-weight: 700; white-space: nowrap;
+}
+
+/* ── Tabla ── */
+.db-table-wrap { overflow-x: auto; }
+.db-table { width: 100%; border-collapse: collapse; }
+.db-table th {
+  background: var(--grayb); padding: .8rem 1rem; text-align: left;
+  font-size: .85rem; font-weight: 900; letter-spacing: .4px;
+  color: var(--tmid); border-bottom: 1.5px solid var(--border);
+}
+.db-table td {
+  padding: .8rem 1rem; border-bottom: 1px solid #F3F4F6;
+  font-size: .875rem; color: var(--text);
+}
+.db-table tr:hover td { background: var(--grayb); }
+
+/* ── Status badges ── */
+.db-status {
+  display: inline-block; padding: .2rem .75rem;
+  border-radius: 20px; font-size: .75rem; font-weight: 800;
+}
+.db-status-ok      { background: var(--grnb);  color: var(--green);  }
+.db-status-pending { background: var(--orab);  color: var(--orange); }
+.db-status-error   { background: #FEF2F2;       color: #DC2626;       }
+.db-status-off     { background: var(--grayb); color: var(--slate);  }
+
+/* ── Animación ── */
+@keyframes dbFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.db-fade { animation: dbFade .3s ease forwards; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  #db-app { grid-template-columns: 1fr; }
+  #db-sidebar {
+    position: fixed; left: -260px; width: 250px;
+    height: 100dvh; z-index: 1000; transition: left .3s;
+  }
+  #db-sidebar.open { left: 0; }
+  #db-main { padding: 1rem; }
+  .db-cards { grid-template-columns: 1fr 1fr; }
+  .db-ph { flex-direction: column; gap: .75rem; }
+}
+@media (max-width: 420px) {
+  .db-cards { grid-template-columns: 1fr; }
+}
