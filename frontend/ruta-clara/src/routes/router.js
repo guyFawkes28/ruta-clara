@@ -8,6 +8,7 @@ const routes = {
     "#/": loginPage(),
     "#/login": loginPage(),
     "#/scanner": scannerPage(),
+    "#/zona": zonePage()
     
 };
 
