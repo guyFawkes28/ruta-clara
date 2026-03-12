@@ -17,9 +17,9 @@ export const zonePage = () => {
     onCancel: () => { modalReporte.close(); }
   });
 
-  // Función auxiliar para generar puestos rápidamente
+  // Función auxiliar para generar puestos rápidamente con tooltip
   const crearPuesto = (clase, id, label) => `
-    <div class="p ${clase}" data-id="${id}">
+    <div class="p ${clase}" data-id="${id}" data-bs-toggle="tooltip" data-bs-placement="top" title="Pantalla, Mouse, Teclado, Silla" data-bs-custom-class="puesto-tooltip">
       <div class="plbl-in">${label}</div>
     </div>`;
 
@@ -47,13 +47,13 @@ export const zonePage = () => {
             <div class="tl-row">
               <div class="tl-wrap">
                 <div class="tl-lbl">Puesto TL</div>
-                <div class="p-tl" data-id="TL"><div class="tlbl">TL</div></div>
+                <div class="p-tl" data-id="TL" data-bs-toggle="tooltip" data-bs-placement="top" title="Puesto TL"><div class="tlbl">TL</div></div>
               </div>
             </div>
 
             <div class="bloques">
               <div class="bloque">
-                <div class="fan sv" data-id="V1"><div class="fan-lbl">V1</div></div>
+                <div class="fan sv" data-id="V1" data-bs-toggle="tooltip" data-bs-placement="top" title="Ventilador V1"><div class="fan-lbl">V1</div></div>
                 
                 <div class="mesa"><div class="prow">
                   ${crearPuesto('sg', 'A-P4', 'P4')} ${crearPuesto('so', 'A-P3', 'P3')}
@@ -79,13 +79,13 @@ export const zonePage = () => {
                   ${crearPuesto('sg', 'E-P2', 'P2')} ${crearPuesto('sb', 'E-P1', 'P1')}
                 </div></div>
 
-                <div class="fan so" data-id="V2"><div class="fan-lbl">V2</div></div>
+                <div class="fan so" data-id="V2" data-bs-toggle="tooltip" data-bs-placement="top" title="Ventilador V2"><div class="fan-lbl">V2</div></div>
               </div>
 
               <div class="divider"></div>
 
               <div class="bloque">
-                <div class="fan sg" data-id="V3"><div class="fan-lbl">V3</div></div>
+                <div class="fan sg" data-id="V3" data-bs-toggle="tooltip" data-bs-placement="top" title="Ventilador V3"><div class="fan-lbl">V3</div></div>
 
                 <div class="mesa"><div class="prow">
                   ${crearPuesto('sv', 'F-P1', 'P1')} ${crearPuesto('sg', 'F-P2', 'P2')}
@@ -112,7 +112,7 @@ export const zonePage = () => {
                   ${crearPuesto('sv', 'J-P3', 'P3')}
                 </div></div>
 
-                <div class="fan sg" data-id="V4"><div class="fan-lbl">V4</div></div>
+                <div class="fan sg" data-id="V4" data-bs-toggle="tooltip" data-bs-placement="top" title="Ventilador V4"><div class="fan-lbl">V4</div></div>
               </div>
             </div>
           </div>
@@ -123,7 +123,36 @@ export const zonePage = () => {
 
     loadRender: () => {
       header.loadRender();
-      
+      // Inicializar tooltips de Bootstrap
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      if (window.bootstrap && window.bootstrap.Tooltip) {
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+          const tooltip = new window.bootstrap.Tooltip(tooltipTriggerEl, {
+            trigger: 'hover focus',
+            customClass: tooltipTriggerEl.getAttribute('data-bs-custom-class') || ''
+          });
+          // Adaptar para mobile: mostrar con tap y ocultar con tap fuera
+          tooltipTriggerEl.addEventListener('touchend', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (tooltip._isShown()) {
+              tooltip.hide();
+            } else {
+              tooltip.show();
+              // Ocultar si se toca fuera
+              const hideOnTouch = (ev) => {
+                if (!tooltipTriggerEl.contains(ev.target)) {
+                  tooltip.hide();
+                  document.removeEventListener('touchend', hideOnTouch);
+                }
+              };
+              setTimeout(() => {
+                document.addEventListener('touchend', hideOnTouch);
+              }, 0);
+            }
+          });
+        });
+      }
       // Eventos para todos los elementos clickeables
       const elementos = document.querySelectorAll('.p, .p-tl, .fan');
       elementos.forEach(el => {
@@ -132,7 +161,6 @@ export const zonePage = () => {
           modalReporte.open(id);
         };
       });
-
       if (modalReporte.loadRender) modalReporte.loadRender();
     }
   };

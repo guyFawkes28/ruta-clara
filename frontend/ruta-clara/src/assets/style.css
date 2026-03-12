@@ -252,6 +252,20 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   font-style: normal;
 }
 
+/* Ensure logo items are vertically centered with header controls */
+.logo { display: flex; align-items: center; gap: 6px; }
+.logo-lg, .logo-sm { line-height: 1; display: inline-block; vertical-align: middle; }
+.logo-sm { margin: 0; padding: 0; }
+
+/* Logo responsive: solo 'RC' en mobile (≤600px), 'RutaClara' en desktop */
+.logo-sm { display: none !important; }
+.logo-lg { display: inline-block !important; }
+
+@media (max-width: 600px) {
+  .logo-sm { display: inline-block !important; font-size: 22px; font-weight: 900; color: #fff; }
+  .logo-lg { display: none !important; }
+}
+
 /* Pill de sala */
 .pill {
   flex: 1;
@@ -559,6 +573,19 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 }
 
 /* Mobile responsive tweaks */
+/* Medium mobile/tablet tweaks: mantener logo, zona y controles alineados */
+@media (max-width: 600px) {
+  .hdr { padding: 10px 12px; }
+  /* Usar flex para mantener todo en una sola línea sin saltos */
+  .hdr-inner { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; max-width: 100%; flex-wrap: nowrap; }
+  .logo { flex: 0 0 auto; margin-right: 6px; }
+  .pill { flex: 1 1 auto; display: flex; justify-content: center; }
+  .pill-inner { padding: 6px 10px; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+  .hdr-controls { flex: 0 0 auto; display: flex; gap: 6px; align-items: center; }
+  /* Mostrar nombre del usuario en pantallas <=600px (pero ocultarlo en pantallas muy pequeñas <=420px) */
+  .hdr-profile .hdr-name { display: inline-block; font-size: 12px; }
+}
+
 @media (max-width: 420px) {
   .sheet{
     max-width:100%;
@@ -582,8 +609,73 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   .hdr-profile .hdr-name { display:none }
 }
 
+/* Compact header tweaks for mobile/tablet to align RC, pill and controls */
+@media (max-width: 600px) {
+  .hdr { padding: 8px 10px; }
+  .hdr-inner { grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; }
+  .logo { margin-left: 4px; }
+  .logo-sm { font-size: 18px !important; }
+  .pill-inner { font-size: 12px; padding: 5px 10px; max-width: 160px; }
+  .pill { justify-self: center; }
+  .hdr-controls { gap: 6px; justify-self: end; }
+  .hdr-profile .avatar { width: 30px; height: 30px; }
+  .hdr-profile .hdr-name { display: inline-block; font-size: 12px; }
+  .qr-btn { width: 34px; height: 34px; font-size: 16px; border-radius: 8px; }
+  #hdr-logout { padding: 6px; border-radius: 8px; min-width: 36px; min-height: 36px; }
+}
+
+@media (max-width: 420px) {
+  /* Very small screens: hide username, tighten spacing */
+  .logo-sm { font-size: 18px !important; }
+  .pill-inner { font-size: 11px; max-width: 140px; padding: 4px 8px; }
+  .hdr-profile .avatar { width: 30px; height: 30px; }
+  .hdr-profile .hdr-name { display: none; }
+  .qr-btn { width: 32px; height: 32px; font-size: 16px; }
+  #hdr-logout { min-width: 36px; min-height: 36px; padding: 6px; }
+  .hdr { padding: 8px 8px; }
+}
+
 @media (max-width: 320px) {
   .stitle{font-size:18px}
   .dmg-btn,.cable-btn{min-height:64px}
   .p{font-size:12px}
+}
+
+/* Tooltip personalizado para puestos */
+.puesto-tooltip {
+  --bs-tooltip-bg: #222;
+  --bs-tooltip-color: #fff;
+  --bs-tooltip-font-size: 0.75rem;
+  --bs-tooltip-padding-x: 0.5rem;
+  --bs-tooltip-padding-y: 0.25rem;
+  --bs-tooltip-border-radius: 0.4rem;
+  --bs-tooltip-opacity: 0.95;
+  text-align: center;
+}
+
+/* Tooltip personalizado para puestos - versión clara y ancha */
+.puesto-tooltip.bs-tooltip-auto[data-popper-placement^=top],
+.puesto-tooltip.bs-tooltip-top {
+  --bs-tooltip-bg: #f9fafb;
+  --bs-tooltip-color: #222;
+  --bs-tooltip-font-size: 0.85rem;
+  --bs-tooltip-padding-x: 1.1rem;
+  --bs-tooltip-padding-y: 0.38rem;
+  --bs-tooltip-border-radius: 12px;
+  --bs-tooltip-opacity: 0.98;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.10);
+  border: none;
+  text-align: center;
+  letter-spacing: 0.01em;
+  min-width: 120px;
+  max-width: 220px;
+}
+
+.puesto-tooltip .tooltip-inner {
+  padding: 0.38rem 1.1rem;
+  font-size: 0.85rem;
+  border-radius: 12px;
+  background: #bdbdbd;
+  color: #222;
+  box-shadow: none;
 }

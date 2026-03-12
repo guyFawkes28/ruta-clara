@@ -1,4 +1,3 @@
-
 import { persistence } from '../util/persistence.js';
 
 export function headerView({ zona = 'Sala 3 — Piso 1', onScan = () => {} } = {}) {
@@ -8,7 +7,10 @@ export function headerView({ zona = 'Sala 3 — Piso 1', onScan = () => {} } = {
       return `
         <div class="hdr" id="app-header">
           <div class="hdr-inner">
-            <div class="logo">Ruta<em>Clara</em></div>
+            <div class="logo">
+              <span class="logo-lg">Ruta<em>Clara</em></span>
+              <span class="logo-sm">R<em>C</em></span>
+            </div>
             <div class="pill">
               <div class="pill-inner">
                 <span class="rdot"></span>
