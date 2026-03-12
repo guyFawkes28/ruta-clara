@@ -1,34 +1,35 @@
 import 'dotenv/config'
-import express from 'express'
-import cors from 'cors'
-import morgan from 'morgan'
-import {authRoutes} from './src/routes/auth.routes.js'
-import { maintenanceRoutes } from './src/routes/zona.routes.js'
-import cookieParser from 'cookie-parser'
-import { verifyToken } from './src/middlewares/auth.middleware.js'
+import express from "express";
+import cors from "cors";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
 
-const app = express()
+import { authRoutes } from "./src/routes/auth.routes.js";
+import { maintenanceRoutes } from "./src/routes/zona.routes.js";
+import cleaningRoutes from "./src/routes/cleaning.routes.js";
+import { verifyToken } from "./src/middlewares/auth.middleware.js";
+
+const app = express();
 
 app.use(cors({
-    origin: 'http://localhost:5173',
-    credentials: true               
+  origin: "http://localhost:5173",
+  credentials: true
 }));
 
-app.use(morgan('dev'))
-
-app.use(express.json())
-
-app.use(cookieParser())
+app.use(morgan("dev"));
+app.use(express.json());
+app.use(cookieParser());
 
 
-app.use('/api/auth',authRoutes)
-app.use('/api/maintenance',verifyToken,maintenanceRoutes)
+app.use("/api/auth", authRoutes);
+app.use("/api/maintenance", verifyToken, maintenanceRoutes);
 
 
+app.use("/api", cleaningRoutes);
 
-const PORT = process.env.PORT || 4000
+const PORT = process.env.PORT || 4000;
 
-app.listen(PORT, ()=>{
+app.listen(PORT, () => {
+  console.log(`servidor listo y escuchando en http://localhost:${PORT}`)
+});
 
-    console.log(`servidor listo y escuchando en http://localhost:${PORT}`)
-})
