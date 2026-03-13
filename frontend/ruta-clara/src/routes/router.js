@@ -13,7 +13,7 @@ const routeFactories = {
     "#/scanner": () => scannerPage(),
     "#/zona": () => zonePage(),
     "#/dashboard": () => dashboardPage(),
-    "#/home": () => HomePage()
+    "#/home": () => HomePage(),
 };
 
 export const routerManager = async () => {
