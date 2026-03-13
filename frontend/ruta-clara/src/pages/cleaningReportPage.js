@@ -8,7 +8,6 @@ export const cleaningReportPage = () => ({
 
 	<div class="page-container">
 
-		<!-- Header -->
 		<div class="header-banner">
 			<div class="header-icon">R</div>
 
@@ -18,26 +17,21 @@ export const cleaningReportPage = () => ({
 			</div>
 		</div>
 
-
-		<!-- Main Container -->
 		<div class="container">
 
-			<!-- Active Zone Info -->
 			<div class="active-zone">
 
 				<div class="active-zone-label">Zona Activa</div>
 
-				<h3 class="active-zone-title">Sala 2</h3>
+				<h3 class="active-zone-title" id="zone-name">Cargando...</h3>
 
 				<div class="zone-tags">
 					<div class="zone-tag">📍 Belabs</div>
-					<div class="zone-tag">🏪 Sala 2</div>
+					<div class="zone-tag" id="zone-tag-name">...</div>
 				</div>
 
 			</div>
 
-
-			<!-- Responsable -->
 			<div class="form-section">
 
 				<div class="form-section-header">
@@ -50,14 +44,14 @@ export const cleaningReportPage = () => ({
 					<label>Nombre de quien limpia</label>
 
 					<input 
+						id="clean-user"
 						type="text"
 						class="form-control"
-						placeholder="Nombre de quien limpia..."
-						value="Mariana"
+						readonly
 					>
 
 					<p style="font-size:12px;color:#9CA3AF;margin-top:6px;">
-						Personal de aseo - Sala 2
+						Personal de aseo
 					</p>
 
 				</div>
@@ -65,7 +59,6 @@ export const cleaningReportPage = () => ({
 			</div>
 
 
-			<!-- Fecha y Hora -->
 			<div class="form-section">
 
 				<div class="form-section-header">
@@ -76,7 +69,7 @@ export const cleaningReportPage = () => ({
 				<div class="form-row">
 
 					<div class="form-group">
-						<label>Fecha <span class="input-badge">Auto</span></label>
+						<label>Fecha</label>
 
 						<input
 							id="clean-date"
@@ -87,11 +80,11 @@ export const cleaningReportPage = () => ({
 					</div>
 
 					<div class="form-group">
-						<label>Hora <span class="input-badge">En vivo</span></label>
+						<label>Hora</label>
 
 						<input
 							id="clean-time"
-							type="text"
+													type="text"
 							class="form-control"
 							readonly
 						>
@@ -102,7 +95,6 @@ export const cleaningReportPage = () => ({
 			</div>
 
 
-			<!-- Descripción -->
 			<div class="form-section">
 
 				<div class="form-section-header">
@@ -113,17 +105,17 @@ export const cleaningReportPage = () => ({
 				<div class="form-group">
 
 					<textarea
+						id="clean-description"
 						class="form-control"
 						style="min-height:100px;resize:vertical;"
 						placeholder="Ej. Se barrió y trapeo. Mesas desinfectadas..."
-					>Todo limpio</textarea>
+					></textarea>
 
 				</div>
 
 			</div>
 
 
-			<!-- Botones -->
 			<div class="button-group">
 
 				<button class="btn btn-secondary" id="cancel-clean">
@@ -145,7 +137,7 @@ export const cleaningReportPage = () => ({
 `
 	},
 
-	loadRender: () => {
+	loadRender: async () => {
 
 		const dateInput = document.getElementById("clean-date")
 		const timeInput = document.getElementById("clean-time")
@@ -163,8 +155,28 @@ export const cleaningReportPage = () => ({
 		}
 
 		updateDateTime()
-
 		setInterval(updateDateTime, 1000)
+
+		let zone_id = null
+		let user_name = null
+
+		try {
+
+			const res = await fetch("http://localhost:4000/api/cleanings/info");
+			const data = await res.json();
+
+			zone_id = data.zone_id;
+			user_name = data.user_name;
+
+			document.getElementById("clean-user").value = data.user_name;
+			document.getElementById("zone-name").textContent = data.zone_name;
+			document.getElementById("zone-tag-name").textContent = data.zone_name;
+
+		} catch (error) {
+
+			console.error("Error cargando datos de limpieza", error)
+
+		}
 
 
 		const cancelBtn = document.getElementById("cancel-clean")
@@ -179,9 +191,52 @@ export const cleaningReportPage = () => ({
 		const submitBtn = document.getElementById("submit-clean")
 
 		if (submitBtn) {
-			submitBtn.addEventListener("click", () => {
-				console.log("Registrar limpieza")
+
+			submitBtn.addEventListener("click", async () => {
+
+				const descriptions = document
+					.getElementById("clean-description")
+					.value
+
+				if (!descriptions) {
+					alert("Debe escribir una descripción")
+					return
+				}
+
+				try {
+
+					const res = await fetch("http://localhost:4000/api/cleaning",  {
+
+						method: "POST",
+
+						headers: {
+							"Content-Type": "application/json"
+						},
+
+						body: JSON.stringify({
+							zone_id,
+							user_name,
+							descriptions
+						})
+
+					})
+
+					const result = await res.json()
+
+					alert("Limpieza registrada correctamente")
+
+					document.getElementById("clean-description").value = ""
+
+					console.log(result)
+
+				} catch (error) {
+
+					console.error("Error registrando limpieza", error)
+
+				}
+
 			})
+
 		}
 
 	}

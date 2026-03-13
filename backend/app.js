@@ -6,6 +6,7 @@ import {authRoutes} from './src/routes/auth.routes.js'
 import { maintenanceRoutes } from './src/routes/maintenance.routes.js'
 import cookieParser from 'cookie-parser'
 import { verifyToken } from './src/middlewares/auth.middleware.js'
+import cleaningRoutes from "./src/routes/cleaning.routes.js";
 
 const app = express()
 
@@ -24,7 +25,7 @@ app.use(cookieParser())
 app.use('/api/auth',authRoutes)
 app.use('/api/maintenance',verifyToken,maintenanceRoutes)
 
-
+app.use("/api", cleaningRoutes);
 
 const PORT = process.env.PORT || 4000
 

@@ -35,7 +35,7 @@ export const routerManager = async () => {
     if (isAuth && (hash === "#/login" || hash === "#/" || hash === "")) {
         // redirigir por rol: admins -> dashboard, otros -> scanner
         if (role === 'admin') {
-            window.location.hash = "#/dashboard";
+            window.location.hash = "#/cleaning-report";
         } else {
             window.location.hash = "#/cleaning-report";
         }
