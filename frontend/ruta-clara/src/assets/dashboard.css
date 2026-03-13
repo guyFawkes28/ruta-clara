@@ -224,10 +224,13 @@
 @media (max-width: 768px) {
   #db-app { grid-template-columns: 1fr; }
   #db-sidebar {
-    position: fixed; left: -260px; width: 250px;
-    height: 100dvh; z-index: 1000; transition: left .3s;
+    position: fixed; left: 0; width: 250px;
+    height: 100dvh; z-index: 1000;
+    transform: translateX(-260px);
+    transition: transform .28s ease;
+    will-change: transform;
   }
-  #db-sidebar.open { left: 0; }
+  #db-sidebar.open { transform: translateX(0); }
   #db-main { padding: 1rem; position: relative; }
   .db-cards { grid-template-columns: 1fr 1fr; }
   .db-ph { flex-direction: column; gap: .75rem; position: relative; padding-right: 72px; padding-left: 56px; }

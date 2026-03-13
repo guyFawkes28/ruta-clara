@@ -45,8 +45,15 @@ export const loginPage = () => ({
               console.log('[LoginPage] Sesión guardada')
               console.log('[LoginPage] Autenticado según persistence:', persistence.isAuthentication())
               
-              console.log('[LoginPage] Redirigiendo a #/home')
-              window.location.hash = "#/home"
+                            const savedUser = user
+                            const role = savedUser?.rol ? String(savedUser.rol).toLowerCase() : null
+                            if (role === 'admin') {
+                                console.log('[LoginPage] Rol admin detectado, redirigiendo a #/dashboard')
+                                window.location.hash = '#/dashboard'
+                            } else {
+                                console.log('[LoginPage] Rol no-admin, redirigiendo a #/home')
+                                window.location.hash = '#/home'
+                            }
             } catch (error) {
               console.error('[LoginPage] Error durante login:', error)
               errorMsg.textContent = error.message || 'Error en la autenticación'
