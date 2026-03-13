@@ -50,8 +50,6 @@ export const reportZone = ({ onSave, onCancel }) => {
                     </div>
                     <button class="btn-navy" id="rc-step1-next">Siguiente →</button>
                     <div id="rc-step1-err" style="color:#dc2626;font-weight:800;margin-top:8px;display:none;font-size:13px">&nbsp;</div>
-                    <button class="btn-navy" id="rc-step1-next">Siguiente →</button>
-                    <div id="rc-step1-err" style="color:#dc2626;font-weight:800;margin-top:8px;display:none;font-size:13px">&nbsp;</div>
                     </div>
 
                     <!-- PASO 2a — Cable -->
@@ -389,13 +387,14 @@ export const reportZone = ({ onSave, onCancel }) => {
                 }
         },
 
-        open: (idPuesto) => {
-            // Aceptamos tanto un id (string) como el elemento con dataset.id
-            const id = (idPuesto && typeof idPuesto === 'object' && idPuesto.dataset && idPuesto.dataset.id) ? idPuesto.dataset.id : idPuesto;
+        open: (idPuesto, esFan = false) => {
+            // Aceptamos tanto un id (string) como el elemento DOM con dataset.id
+            const isElement = (idPuesto && typeof idPuesto === 'object' && idPuesto.dataset && idPuesto.dataset.id);
+            const isFanElement = (idPuesto && typeof idPuesto === 'object' && idPuesto.classList && idPuesto.classList.contains('fan'));
+            const id = isElement ? idPuesto.dataset.id : idPuesto;
             reportData.puestoId = id || '';
             reportData.categoria = '';
             reportData.comentario = '';
-            reportData.isFan = esFan;
 
             selectedDamages = [];
             detailMap = {};
@@ -405,7 +404,9 @@ export const reportZone = ({ onSave, onCancel }) => {
 
             // Poner el título con el número del puesto
             const titulo = document.getElementById('rc-titulo');
-            if (titulo) titulo.textContent = `Puesto ${reportData.puestoId || ''}`;
+            const isFan = Boolean(esFan) || isFanElement || (typeof id === 'string' && id && id.toString().toUpperCase().startsWith('V'));
+            reportData.isFan = !!isFan;
+            if (titulo) titulo.textContent = `${isFan ? 'Ventilador' : 'Puesto'} ${reportData.puestoId || ''}`;
 
             const modal = document.getElementById('report-modal');
             if (modal) modal.classList.remove('d-none');
