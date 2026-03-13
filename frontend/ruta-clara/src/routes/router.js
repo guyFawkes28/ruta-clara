@@ -1,22 +1,28 @@
-import { loginPage } from "../pages/LoginPage.js";
-import { persistence } from "../util/persistence.js";
-import { notFoundPage } from "../pages/NotFound.js";
-import { scannerPage } from "../pages/ScanPage.js";
-import { zonePage } from "../pages/ZonePage.js";
-import { dashboardPage } from "../pages/DashboardPage.js";
+import { loginPage } from "../pages/LoginPage.js"
+import { persistence } from "../util/persistence.js"
+import { notFoundPage } from "../pages/NotFound.js"
+import { scannerPage } from "../pages/ScanPage.js"
+import { zonePage } from "../pages/ZonePage.js"
+import { dashboardPage } from "../pages/DashboardPage.js"
+import { HomePage } from "../pages/HomePage.js"
 
-const routes = {
-    "#/": loginPage(),
-    "#/login": loginPage(),
-    "#/scanner": scannerPage(),
-    "#/zona": zonePage(),
-    "#/dashboard":dashboardPage()
-    
+// Factory pattern: no se ejecutan hasta que se llamen
+const routeFactories = {
+    "#/": () => loginPage(),
+    "#/login": () => loginPage(),
+    "#/scanner": () => scannerPage(),
+    "#/zona": () => zonePage(),
+    "#/dashboard": () => dashboardPage(),
+    "#/home": () => HomePage()
 };
 
 export const routerManager = async () => {
+    console.log('[Router] routerManager ejecutado - hash actual:', window.location.hash)
     const root = document.getElementById("root");
     const hash = window.location.hash || "#/login";
+
+    console.log('[Router] root elemento existe?', !!root)
+    console.log('[Router] hash procesado:', hash)
 
     // 1. VALIDACIÓN DE AUTENTICACIÓN (Lo primero siempre)
     const isAuth = persistence.isAuthentication();
@@ -35,7 +41,7 @@ export const routerManager = async () => {
         if (role === 'admin') {
             window.location.hash = "#/dashboard";
         } else {
-            window.location.hash = "#/scanner";
+            window.location.hash = "#/home";
         }
         return;
     }
@@ -56,14 +62,14 @@ export const routerManager = async () => {
         return; // Detenemos aquí la ejecución
     }
 
-    // 3. DETECCIÓN DE RUTAS ESTÁTICAS
-    const view = routes[hash];
+    // 3. DETECCIÓN DE RUTAS ESTÁTICAS - Crear la vista bajo demanda
+    const factory = routeFactories[hash];
 
     // 4. PROTECCIONES POR ROL (rutas estáticas)
     // - Operators no pueden acceder a dashboard
     // - Admins no pueden acceder a scanner ni a zona
     if (role === 'operator' && hash === '#/dashboard') {
-        window.location.hash = '#/scanner'
+        window.location.hash = '#/home'
         return
     }
     if (role === 'admin' && (hash === '#/scanner' || hash === '#/zona' || hash.startsWith('#/zone/'))) {
@@ -71,14 +77,23 @@ export const routerManager = async () => {
         return
     }
 
-    if (!view) {
+    console.log("Cargando la ruta:", hash);
+    console.log('[Router] isAuth:', isAuth, 'role:', role);
+
+    if (!factory) {
+        console.log('[Router] Ruta no encontrada:', hash)
         const notFound = notFoundPage();
         root.innerHTML = notFound.render();
         await notFound.loadRender();
         return;
     }
 
-    // Renderizado normal para Login o Scanner
+    // Crear la vista bajo demanda y renderizarla
+    console.log('[Router] Creando vista para ruta:', hash)
+    const view = factory();
+    console.log('[Router] Vista creada, renderizando...')
     root.innerHTML = view.render();
+    console.log('[Router] Vista renderizada, ejecutando loadRender...')
     await view.loadRender();
+    console.log('[Router] Ruta completada:', hash)
 };
