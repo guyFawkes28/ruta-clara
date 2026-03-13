@@ -53,6 +53,15 @@ export const Sidebar = ({ onNavigate } = {}) => {
       const menuToggle = document.getElementById('menu-toggle');
       const title = document.getElementById('current-view-title');
 
+      function setActiveNav(view) {
+        const navItems = document.querySelectorAll('#sidebar-wrapper [data-view]');
+        navItems.forEach((item) => item.classList.remove('active'));
+        const activeItem = document.querySelector(`#sidebar-wrapper [data-view="${view}"]`);
+        if (activeItem && view !== 'salir') {
+          activeItem.classList.add('active');
+        }
+      }
+
       function setInitialState() {
         if (window.innerWidth < 768) {
           wrapper.classList.add('toggled');
@@ -65,6 +74,7 @@ export const Sidebar = ({ onNavigate } = {}) => {
         }
       }
       setInitialState();
+      setActiveNav(currentView);
 
       function openMenu() {
         wrapper.classList.remove('toggled');
@@ -124,6 +134,7 @@ export const Sidebar = ({ onNavigate } = {}) => {
         }
         
         currentView = view;
+        setActiveNav(view);
         title && (title.innerText = btn.innerText.trim());
         onNavigate && onNavigate(view);
       });

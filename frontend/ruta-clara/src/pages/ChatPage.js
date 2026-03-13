@@ -21,8 +21,9 @@ export const chatPage = () => ({
             <div class="p-3 border-top bg-light chat-composer">
                 <form id="chatForm" class="d-flex gap-2 align-items-center position-relative">
                   <input id="chatInput" type="text" class="form-control rounded-pill px-4" placeholder="Escribe para corregir...">
-                  <button type="submit" class="btn btn-send rounded-circle ms-auto">
+                  <button type="submit" class="btn btn-send rounded-pill ms-auto" aria-label="Enviar mensaje">
                     <i class="bi bi-send-fill"></i>
+                    <span class="btn-send-label">Enviar</span>
                   </button>
                 </form>
             </div>

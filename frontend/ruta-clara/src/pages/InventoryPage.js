@@ -1,22 +1,22 @@
 // Inventario: patrón consistente con otras páginas (render + loadRender)
 export const inventoryPage = () => ({
     render: () => `
-  <div class="container-fluid p-4">
+  <div class="container-fluid p-4 rc-inventory">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
-        <h1 class="h3 mb-0">Inventario</h1>
-        <p class="text-muted">Gestión de materiales y stock</p>
+        <h1 class="h3 mb-0 rc-inventory-title">Inventario</h1>
+        <p class="text-muted rc-inventory-subtitle">Gestión de materiales y stock</p>
       </div>
-      <button id="openAddMaterialBtn" class="btn btn-primary" type="button">
+      <button id="openAddMaterialBtn" class="btn rc-btn-add-material" type="button">
         <i class="bi bi-plus-lg"></i> Añadir Material
       </button>
     </div>
 
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 rc-inventory-card">
       <div class="card-body p-0">
         <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead class="bg-light text-muted">
+          <table class="table table-hover mb-0 rc-inventory-table">
+            <thead>
               <tr>
                 <th class="ps-4">Material</th>
                 <th>Categoría</th>
@@ -34,7 +34,7 @@ export const inventoryPage = () => ({
   <div class="modal fade" id="addMaterialModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header bg-dark text-white">
+        <div class="modal-header rc-inventory-modal-header text-white">
           <h5 class="modal-title">Registrar / Editar Material</h5>
           <button type="button" id="closeAddMaterialBtn" class="btn-close btn-close-white" aria-label="Cerrar"></button>
         </div>
@@ -43,21 +43,21 @@ export const inventoryPage = () => ({
             <input type="hidden" name="itemId" value="">
             <div class="mb-3">
               <label class="form-label">Nombre</label>
-              <input name="nombre" type="text" class="form-control" required>
+              <input name="nombre" type="text" class="form-control rc-inv-input" required>
             </div>
             <div class="mb-3">
               <label class="form-label">Categoría</label>
-              <input name="categoria" type="text" class="form-control" placeholder="Ej. Redes" required>
+              <input name="categoria" type="text" class="form-control rc-inv-input" placeholder="Ej. Redes" required>
             </div>
             <div class="mb-3">
               <label class="form-label">Cantidad</label>
-              <input name="cantidad" type="number" min="0" class="form-control" value="0" required>
+              <input name="cantidad" type="number" min="0" class="form-control rc-inv-input" value="0" required>
             </div>
             <div class="mb-3">
               <label class="form-label">Descripción (opcional)</label>
-              <textarea name="descripcion" class="form-control" rows="2"></textarea>
+              <textarea name="descripcion" class="form-control rc-inv-input" rows="2"></textarea>
             </div>
-            <button type="submit" class="btn btn-success w-100">Guardar</button>
+            <button type="submit" class="btn rc-btn-save-material w-100">Guardar</button>
           </form>
         </div>
       </div>
@@ -82,8 +82,8 @@ export const inventoryPage = () => ({
             + '<td>' + it.categoria + '</td>'
             + '<td>' + Number(it.cantidad) + ' disponibles</td>'
             + '<td class="text-end pe-4">'
-            + '<button class="btn btn-sm btn-outline-secondary me-1 btn-edit" data-id="' + it.id + '">Editar</button>'
-            + '<button class="btn btn-sm btn-outline-danger btn-delete" data-id="' + it.id + '">Eliminar</button>'
+            + '<button class="btn btn-sm me-1 btn-edit rc-btn-edit" data-id="' + it.id + '">Editar</button>'
+            + '<button class="btn btn-sm btn-delete rc-btn-delete" data-id="' + it.id + '">Eliminar</button>'
             + '</td></tr>';
         }
         tbody.innerHTML = html;
