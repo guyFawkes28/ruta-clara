@@ -38,22 +38,27 @@
   margin-bottom: 1rem;
   width: 100%;
 }
-.db-nav { list-style: none; flex: 1; }
-.db-nav li { margin-bottom: .5rem; }
+.db-nav { list-style: none; flex: 1; padding: 6px 0; }
+.db-nav li { margin-bottom: .5rem; display: block; }
 .db-nav a {
   display: flex; align-items: center; gap: .75rem;
-  padding: .5rem 0.9rem; border-radius: 8px;
-  color: #fff; text-decoration: none;
-  cursor: pointer; font-size: .95rem; font-weight: 700;
-  transition: all .2s;
+  padding: .65rem 0.9rem; border-radius: 8px;
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  cursor: pointer; font-size: .95rem; font-weight: 600;
+  letter-spacing: .2px;
+  transition: background .18s, color .18s, transform .18s;
+  border-left: 4px solid transparent;
+  width: 100%;
+  box-sizing: border-box;
 }
-.db-nav a:hover  { background: rgba(255,255,255,.08); color: #fff; }
+.db-nav a:hover  { background: rgba(255,255,255,0.04); color: #fff; transform: translateX(2px); }
 .db-nav a.active {
-  background: linear-gradient(135deg, var(--amber), var(--orange));
-  color: #000; font-weight: 900;
-  padding: .5rem 0.9rem;
+  background: rgba(255,255,255,0.12);
+  color: #fff; font-weight: 800;
+  padding: .6rem 0.9rem;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  box-shadow: 0 6px 18px rgba(2,6,23,0.35);
+  border-left-color: var(--amber);
 }
 .db-sidebar-footer {
   padding-top: 1rem;
@@ -72,8 +77,19 @@
   border-bottom: 2px solid var(--border);
 }
 .db-ph h1 { font-size: 2rem; font-weight: 900; color: var(--navy); }
+.db-ph h1 { display: flex; align-items: center; gap: .5rem; }
+.section-emoji { display: inline-block; font-size: 1.35rem; line-height: 1; margin-right: .35rem; }
 .db-ph p  { font-size: .9rem; color: var(--tsoft); margin-top: .2rem; font-weight: 600; }
 .db-ph-actions { display: flex; gap: .75rem; }
+
+/* Mobile menu toggle (hidden on desktop) */
+.db-mobile-toggle {
+  display: none;
+  background: #0F2044; border: none; color: rgba(255,255,255,0.95);
+  font-size: 1.25rem; padding: 6px 8px; margin-right: .5rem;
+  border-radius: 8px; cursor: pointer;
+}
+.db-mobile-toggle:focus { outline: 2px solid rgba(255,255,255,0.12); }
 
 /* ── Botones ── */
 .db-btn {
@@ -133,13 +149,14 @@
 }
 
 .db-nav a.active {
-  background: linear-gradient(135deg, var(--amber), var(--orange));
-  color: #000; font-weight: 900;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  background: rgba(255,255,255,0.12);
+  color: #fff; font-weight: 800;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.35);
+  border-left-color: var(--amber);
 }
 .db-nav a.active:focus,
 .db-nav a.active:focus-visible {
-  outline: 2px solid rgba(0,0,0,0.18);
+  outline: 2px solid rgba(255,255,255,0.18);
   outline-offset: 2px;
 }
 
@@ -213,8 +230,77 @@
   #db-sidebar.open { left: 0; }
   #db-main { padding: 1rem; }
   .db-cards { grid-template-columns: 1fr 1fr; }
-  .db-ph { flex-direction: column; gap: .75rem; }
+  .db-ph { flex-direction: column; gap: .75rem; position: relative; padding-right: 72px; }
+  .db-mobile-toggle { display: inline-flex; align-items: center; }
+  .db-sidebar-card { padding-left: 8px; padding-right: 8px; }
 }
 @media (max-width: 420px) {
   .db-cards { grid-template-columns: 1fr; }
+}
+.db-nav a .nav-emoji {
+  display: inline-block; width: 1.25rem; text-align: center;
+  font-size: 1.05rem; line-height: 1; margin-right: .5rem; transform: translateY(1px);
+}
+.db-nav a .nav-label { display: inline-block; vertical-align: middle; white-space: nowrap; }
+
+/* Ensure active pill fills the sidebar card width and centers content */
+.db-sidebar-card { padding: 12px; }
+.db-nav a { align-items: center; }
+.db-nav a .nav-label { margin-right: 6px; }
+
+/* Backdrop for mobile sidebar */
+#db-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+  opacity: 0; visibility: hidden; transition: opacity .18s ease;
+  z-index: 990;
+}
+#db-backdrop.visible { opacity: 1; visibility: visible; }
+
+/* Close button inside sidebar (mobile) */
+.db-sidebar-close {
+  display: none; position: absolute; top: 12px; right: 12px;
+  background: transparent; border: none; color: #fff; font-size: 1.05rem;
+  padding: 6px; cursor: pointer; border-radius: 8px;
+}
+.db-sidebar-close:focus { outline: 2px solid rgba(255,255,255,0.12); }
+
+@media (max-width: 768px) {
+  .db-sidebar-close { display: inline-flex; }
+  #db-sidebar { padding-top: 2.5rem; }
+}
+
+/* Mobile: place logout next to title and stack other actions on the right */
+@media (max-width: 768px) {
+  .db-ph { padding-right: 96px; }
+  .db-ph > div { display: flex; flex-direction: column; }
+  .db-ph > div h1 { display: flex; align-items: center; gap: .5rem; }
+
+  .db-ph .db-ph-actions {
+    position: absolute; right: 12px; top: 12px;
+    display: flex; flex-direction: column; gap: .5rem; align-items: flex-end;
+    background: transparent; padding: 0; margin: 0;
+  }
+  .db-ph .db-ph-actions .db-btn { padding: .35rem .8rem; font-size: .78rem; }
+  .db-ph .db-ph-actions .db-btn:first-child {
+    /* treat first button (logout) visually like aligned with title */
+    background: transparent; color: rgba(255,255,255,0.95); border: none; padding: 0.1rem 0.4rem;
+  }
+}
+
+/* Forzar colores claros en sidebar: texto base ligero, hover/activo blanco puro.
+   Evitar fondos sólidos blancos que oculten el texto. */
+#db-sidebar .db-nav a,
+#db-sidebar .db-nav a:visited {
+  color: rgba(255,255,255,0.85) !important;
+  background: transparent !important;
+}
+#db-sidebar .db-nav a:hover,
+#db-sidebar .db-nav a:focus {
+  color: #ffffff !important;
+  background: rgba(255,255,255,0.06) !important;
+}
+#db-sidebar .db-nav a.active {
+  color: #ffffff !important;
+  background: rgba(255,255,255,0.12) !important;
+  border-left-color: var(--amber) !important;
 }

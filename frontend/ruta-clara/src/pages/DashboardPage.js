@@ -58,8 +58,8 @@ function subDashboard() {
   return `
     <div class="db-ph">
       <div>
-        <h1>Dashboard</h1>
-        <p>Bienvenido de vuelta, Don Antonio</p>
+        <h1><button class="db-mobile-toggle" aria-label="Abrir menú">☰</button>Dashboard</h1>
+        <p>Bienvenido de vuelta, ${persistence.getUser()?.name || persistence.getUser()?.email || 'Usuario'}</p>
       </div>
       <div class="db-ph-actions">
         <button class="db-btn db-btn-secondary" id="db-logout">🔒 Cerrar sesión</button>
@@ -71,7 +71,6 @@ function subDashboard() {
       <div class="db-card db-fade">
         <div class="db-card-head">
           <span class="db-card-title">Equipos Activos</span>
-          <span class="db-badge db-badge-ok">+3</span>
         </div>
         <div class="db-card-value">${equipos.activos}</div>
         <div class="db-card-stat">De ${equipos.total} totales</div>
@@ -151,7 +150,7 @@ function subEquipos() {
 
   return `
     <div class="db-ph">
-      <h1>Gestión de Equipos</h1>
+      <h1><button class="db-mobile-toggle" aria-label="Abrir menú">☰</button>Gestión de Equipos</h1>
       <div class="db-ph-actions">
         <button class="db-btn db-btn-secondary">🔍 Filtrar</button>
         <button class="db-btn db-btn-primary">+ Registrar Equipo</button>
@@ -190,16 +189,26 @@ function subInspecciones() {
   const { inspecciones } = state
   const rows = inspecciones.lista.map(i => `
     <tr>
-      <td><strong>${i.id}</strong></td>
-      <td>${i.equipo}</td>
-      <td>${i.fecha}</td>
-      <td>${i.tecnico}</td>
-      <td>${i.hallazgos}</td>
-      <td>${statusBadge(i.estado)}</td>
+      <td><strong>${i.id || ''}</strong></td>
+      <td>${i.equipo || ''}</td>
+      <td>${i.fecha || ''}</td>
+      <td>${i.tecnico || ''}</td>
+      <td>${i.hallazgos || ''}</td>
+      <td>${statusBadge(i.estado || 'pendiente')}</td>
     </tr>`).join('')
 
   return `
-    `
+    <div class="db-ph">
+      <h1><button class="db-mobile-toggle" aria-label="Abrir menú">☰</button>Inspecciones</h1>
+    </div>
+    <div class="db-table-wrap">
+      <table class="db-table">
+        <thead>
+          <tr><th>ID</th><th>Equipo</th><th>Fecha</th><th>Técnico</th><th>Hallazgos</th><th>Estado</th></tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="6" style="text-align:center;color:var(--tsoft)">No hay inspecciones</td></tr>'}</tbody>
+      </table>
+    </div>`
 }
 
 function subReportes() {
@@ -218,7 +227,7 @@ function subReportes() {
 
   return `
     <div class="db-ph">
-      <h1>Reportes</h1>
+      <h1><button class="db-mobile-toggle" aria-label="Abrir menú">☰</button>Reportes</h1>
       <div class="db-ph-actions">
         <button class="db-btn db-btn-secondary">📥 Importar</button>
         <button class="db-btn db-btn-primary">+ Generar Reporte</button>
@@ -249,57 +258,11 @@ function subReportes() {
     </div>`
 }
 
-function subUsuarios() {
-  const { tecnicos } = state
-  const rows = tecnicos.lista.map(t => `
-    <tr>
-      <td><strong>${t.nombre}</strong></td>
-      <td>${t.email}</td>
-      <td>${t.rol}</td>
-      <td>${t.inspecciones}</td>
-      <td>${statusBadge(t.estado)}</td>
-      <td><button class="db-btn db-btn-secondary db-btn-sm">Editar</button></td>
-    </tr>`).join('')
-
-  return `
-    <div class="db-ph">
-      <h1>Gestión de Usuarios</h1>
-      <div class="db-ph-actions">
-        <button class="db-btn db-btn-secondary">🔍 Buscar</button>
-        <button class="db-btn db-btn-primary">+ Nuevo Usuario</button>
-      </div>
-    </div>
-    <div class="db-cards">
-      <div class="db-card db-fade">
-        <div class="db-card-title">Total Usuarios</div>
-        <div class="db-card-value">${tecnicos.total}</div>
-      </div>
-      <div class="db-card db-fade" style="animation-delay:.06s">
-        <div class="db-card-title">Activos Hoy</div>
-        <div class="db-card-value" style="color:var(--green)">${tecnicos.disponibles}</div>
-      </div>
-    </div>
-    <div class="db-section">
-      <div class="db-section-head">
-        <h2 class="db-section-title">Técnicos</h2>
-      </div>
-      <div class="db-table-wrap">
-        <table class="db-table">
-          <thead>
-            <tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Inspecciones</th><th>Estado</th><th>Acciones</th></tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    </div>`
-}
-
 const subRenders = {
   dashboard:    subDashboard,
   equipos:      subEquipos,
   inspecciones: subInspecciones,
-  reportes:     subReportes,
-  usuarios:     subUsuarios,
+  reportes:     subReportes
 }
 
 // ─── página principal ────────────────────────────────────────
@@ -314,11 +277,10 @@ export const dashboardPage = () => ({
         <div class="db-sidebar-card">
           <nav>
             <ul class="db-nav">
-              <li><a class="active" data-db-page="dashboard">📊 Dashboard</a></li>
-              <li><a data-db-page="equipos">🔧 Equipos</a></li>
-              <li><a data-db-page="inspecciones">📋 Inspecciones</a></li>
-              <li><a data-db-page="reportes">📈 Reportes</a></li>
-              <li><a data-db-page="usuarios">👥 Usuarios</a></li>
+              <li><a class="active" data-db-page="dashboard"><span class="nav-emoji">📊</span><span class="nav-label">Dashboard</span></a></li>
+              <li><a data-db-page="equipos"><span class="nav-emoji">🔧</span><span class="nav-label">Equipos</span></a></li>
+              <li><a data-db-page="inspecciones"><span class="nav-emoji">📋</span><span class="nav-label">Inspecciones</span></a></li>
+              <li><a data-db-page="reportes"><span class="nav-emoji">📈</span><span class="nav-label">Reportes</span></a></li>
             </ul>
           </nav>
         </div>
@@ -339,6 +301,46 @@ export const dashboardPage = () => ({
       if (!content) return
 
       content.innerHTML = subRenders[page]?.() ?? subRenders.dashboard()
+
+      // Mobile menu toggles (abre/cierra el sidebar) + backdrop + close button
+      const sidebar = document.getElementById('db-sidebar')
+
+      // ensure backdrop exists
+      let backdrop = document.getElementById('db-backdrop')
+      if (!backdrop) {
+        backdrop = document.createElement('div')
+        backdrop.id = 'db-backdrop'
+        document.body.appendChild(backdrop)
+      }
+      backdrop.onclick = () => {
+        sidebar.classList.remove('open')
+        backdrop.classList.remove('visible')
+      }
+
+      // ensure close button exists inside sidebar
+      let closeBtn = sidebar.querySelector('.db-sidebar-close')
+      if (!closeBtn) {
+        closeBtn = document.createElement('button')
+        closeBtn.className = 'db-sidebar-close'
+        closeBtn.setAttribute('aria-label', 'Cerrar menú')
+        closeBtn.innerText = '✕'
+        sidebar.insertBefore(closeBtn, sidebar.firstChild)
+      }
+      closeBtn.onclick = () => { sidebar.classList.remove('open'); backdrop.classList.remove('visible') }
+
+      const mobileBtns = document.querySelectorAll('.db-mobile-toggle')
+      mobileBtns.forEach(b => b.addEventListener('click', () => {
+        const opening = !sidebar.classList.contains('open')
+        if (opening) { sidebar.classList.add('open'); backdrop.classList.add('visible') }
+        else { sidebar.classList.remove('open'); backdrop.classList.remove('visible') }
+      }))
+
+      // close sidebar when clicking a sidebar link on mobile
+      document.querySelectorAll('#db-sidebar [data-db-page]').forEach(link => {
+        link.addEventListener('click', () => {
+          if (window.innerWidth <= 768) { sidebar.classList.remove('open'); backdrop.classList.remove('visible') }
+        })
+      })
 
       document.querySelectorAll('[data-db-page]').forEach(link => {
         link.classList.toggle('active', link.dataset.dbPage === page)
