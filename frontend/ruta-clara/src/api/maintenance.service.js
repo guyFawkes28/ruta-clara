@@ -40,6 +40,19 @@ const maintenanceService = {
             throw error;
         }
     }
+    ,
+    // 5. Obtener solo el conteo de tareas pendientes (y métricas rápidas)
+    getPendingCount: async () => {
+        try {
+            const response = await urlApi.get(`/maintenance/pendientes`);
+            const data = response.data;
+            const pending = data?.total ?? (Array.isArray(data?.tareas) ? data.tareas.length : 0);
+            const completedToday = data?.completedToday ?? 0;
+            return { pending, completedToday };
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 export default maintenanceService;
