@@ -1,6 +1,8 @@
 
 import { persistence } from "../util/persistence.js";
 import maintenanceService from "../api/maintenance.service.js";
+import sidebarView from "../components/Sidebar.js";
+import { reportZone } from "../components/ReportZone.js";
 
 // Estado dinámico reemplazando los datos "quemados"
 const state = {
@@ -58,7 +60,7 @@ function subDashboard() {
   return `
     <div class="db-ph">
       <div>
-        <h1><button class="db-mobile-toggle" aria-label="Abrir menú">☰</button>Dashboard</h1>
+        <h1>Dashboard</h1>
         <p>Bienvenido de vuelta, ${persistence.getUser()?.name || persistence.getUser()?.email || 'Usuario'}</p>
       </div>
       <div class="db-ph-actions">
@@ -150,9 +152,9 @@ function subEquipos() {
 
   return `
     <div class="db-ph">
-      <h1><button class="db-mobile-toggle" aria-label="Abrir menú">☰</button>Gestión de Equipos</h1>
+      <h1>Gestión de Equipos</h1>
       <div class="db-ph-actions">
-        <button class="db-btn db-btn-secondary">🔍 Filtrar</button>
+        <button id="db-filter-equipos" class="db-btn db-btn-secondary">🔍 Filtrar</button>
         <button class="db-btn db-btn-primary">+ Registrar Equipo</button>
       </div>
     </div>
@@ -199,7 +201,7 @@ function subInspecciones() {
 
   return `
     <div class="db-ph">
-      <h1><button class="db-mobile-toggle" aria-label="Abrir menú">☰</button>Inspecciones</h1>
+      <h1>Inspecciones</h1>
     </div>
     <div class="db-table-wrap">
       <table class="db-table">
@@ -227,7 +229,7 @@ function subReportes() {
 
   return `
     <div class="db-ph">
-      <h1><button class="db-mobile-toggle" aria-label="Abrir menú">☰</button>Reportes</h1>
+      <h1>Reportes</h1>
       <div class="db-ph-actions">
         <button class="db-btn db-btn-secondary">📥 Importar</button>
         <button class="db-btn db-btn-primary">+ Generar Reporte</button>
@@ -271,22 +273,9 @@ export const dashboardPage = () => ({
 
   render: () => `
     <div id="db-app">
-      <aside id="db-sidebar">
-        <div class="db-logo">Ruta<em>Clara</em></div>
-
-        <div class="db-sidebar-card">
-          <nav>
-            <ul class="db-nav">
-              <li><a class="active" data-db-page="dashboard"><span class="nav-emoji">📊</span><span class="nav-label">Dashboard</span></a></li>
-              <li><a data-db-page="equipos"><span class="nav-emoji">🔧</span><span class="nav-label">Equipos</span></a></li>
-              <li><a data-db-page="inspecciones"><span class="nav-emoji">📋</span><span class="nav-label">Inspecciones</span></a></li>
-              <li><a data-db-page="reportes"><span class="nav-emoji">📈</span><span class="nav-label">Reportes</span></a></li>
-            </ul>
-          </nav>
-        </div>
-
-      </aside>
+      ${sidebarView({ activePage: 'dashboard' }).render()}
       <main id="db-main">
+        <button id="db-global-toggle" class="db-mobile-toggle" aria-label="Abrir menú">☰</button>
         <div id="db-content"></div>
       </main>
     </div>
@@ -301,6 +290,12 @@ export const dashboardPage = () => ({
       if (!content) return
 
       content.innerHTML = subRenders[page]?.() ?? subRenders.dashboard()
+
+      // wire sidebar navigation handlers
+      try {
+        const sb = sidebarView({ activePage: page, onNavigate: renderPage })
+        sb.loadRender()
+      } catch (e) { /* ignore if sidebar not present */ }
 
       // Mobile menu toggles (abre/cierra el sidebar) + backdrop + close button
       const sidebar = document.getElementById('db-sidebar')
@@ -328,12 +323,12 @@ export const dashboardPage = () => ({
       }
       closeBtn.onclick = () => { sidebar.classList.remove('open'); backdrop.classList.remove('visible') }
 
-      const mobileBtns = document.querySelectorAll('.db-mobile-toggle')
-      mobileBtns.forEach(b => b.addEventListener('click', () => {
+      const globalToggle = document.getElementById('db-global-toggle')
+      if (globalToggle) globalToggle.addEventListener('click', () => {
         const opening = !sidebar.classList.contains('open')
         if (opening) { sidebar.classList.add('open'); backdrop.classList.add('visible') }
         else { sidebar.classList.remove('open'); backdrop.classList.remove('visible') }
-      }))
+      })
 
       // close sidebar when clicking a sidebar link on mobile
       document.querySelectorAll('#db-sidebar [data-db-page]').forEach(link => {
@@ -353,10 +348,96 @@ export const dashboardPage = () => ({
       document.getElementById('db-see-all')?.addEventListener('click', () => {
         renderPage('inspecciones')
       })
+      // Nuevo reporte: abrir modal wizard
       document.getElementById('db-new-report')?.addEventListener('click', () => {
-        // TODO: conectar con tu servicio real
-        alert('📋 Nuevo reporte')
+        // insertar modal en el body si aún no existe
+        if (!document.getElementById('report-modal')) {
+          const container = document.createElement('div')
+          container.innerHTML = reportZone({
+            onSave: async (data) => {
+              try {
+                await maintenanceService.createReport(data)
+                try { window.alert('Reporte guardado correctamente') } catch (e) {}
+                // cerrar modal
+                const rz = reportZone({});
+                rz.close && rz.close()
+              } catch (err) {
+                try { window.alert('Error al guardar el reporte') } catch (e) {}
+              }
+            },
+            onCancel: () => {
+              const rz = reportZone({});
+              rz.close && rz.close()
+            }
+          }).render()
+          // container contiene el markup del modal; agregar al body
+          document.body.insertAdjacentHTML('beforeend', container.innerHTML)
+          // inicializar handlers
+          const rzInst = reportZone({
+            onSave: async (data) => {
+              try {
+                await maintenanceService.createReport(data)
+                try { window.alert('Reporte guardado correctamente') } catch (e) {}
+                // cerrar
+                const modal = document.getElementById('report-modal'); if (modal) modal.classList.add('d-none')
+                document.body.style.overflow = ''
+              } catch (err) {
+                try { window.alert('Error al guardar el reporte') } catch (e) {}
+              }
+            }
+          })
+          rzInst.loadRender && rzInst.loadRender()
+        }
+        // abrir modal y preseleccionar sin id
+        const rzOpen = reportZone({ onSave: async (data) => {} })
+        rzOpen.loadRender && rzOpen.loadRender()
+        try { const modalEl = document.getElementById('report-modal'); if (modalEl && typeof rzOpen.open === 'function') rzOpen.open('') } catch (e) {}
       })
+
+      // Filtrar equipos: toggle input and filter rows
+      const setupEquiposFilter = () => {
+        const filterBtn = document.getElementById('db-filter-equipos')
+        if (!filterBtn) return
+        filterBtn.addEventListener('click', () => {
+          const header = document.querySelector('.db-ph')
+          if (!header) return
+          let f = document.getElementById('db-filter-input')
+          if (!f) {
+            const inp = document.createElement('input')
+            inp.id = 'db-filter-input'
+            inp.placeholder = 'Filtrar por ID, nombre, ubicación o tipo...'
+            inp.style.padding = '8px 10px'; inp.style.borderRadius = '8px'; inp.style.border = '1px solid var(--border)';
+            inp.style.fontFamily = "'Nunito',sans-serif"; inp.style.marginTop = '8px'; inp.style.width = '100%';
+            header.appendChild(inp)
+            inp.addEventListener('input', (e) => {
+              const q = (e.target.value || '').toLowerCase().trim()
+              const lista = state.equipos.lista.filter(it => {
+                return String(it.id || '').toLowerCase().includes(q)
+                  || String(it.nombre || '').toLowerCase().includes(q)
+                  || String(it.ubicacion || '').toLowerCase().includes(q)
+                  || String(it.tipo || '').toLowerCase().includes(q)
+              })
+              const tbody = document.querySelector('.db-table tbody')
+              if (!tbody) return
+              tbody.innerHTML = lista.map(e => `
+                <tr>
+                  <td><strong>${e.id}</strong></td>
+                  <td>${e.nombre}</td>
+                  <td>${e.ubicacion}</td>
+                  <td>${e.tipo}</td>
+                  <td>${statusBadge(e.estado)}</td>
+                  <td><button class="db-btn db-btn-secondary db-btn-sm">Editar</button></td>
+                </tr>`).join('')
+            })
+            f = inp
+          } else {
+            // toggle visibility
+            f.remove()
+          }
+        })
+      }
+      // ejecutar setup de filtro cuando la página es equipos
+      if (currentPage === 'equipos') setTimeout(setupEquiposFilter, 60)
     }
 
     document.querySelectorAll('[data-db-page]').forEach(link => {
