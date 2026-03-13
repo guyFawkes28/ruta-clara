@@ -1,47 +1,36 @@
 
 import { persistence } from "../util/persistence.js";
-import { toast } from '../util/ux.js';
+import maintenanceService from "../api/maintenance.service.js";
+import sidebarView from "../components/Sidebar.js";
+import { reportZone } from "../components/ReportZone.js";
 
-const mockData = {
-  equipos: {
-    total: 156,
-    activos: 142,
-    inactivos: 14,
-    enMantenimiento: 5,
-    lista: [
-      { id: 'EQ-001', nombre: 'Compresor Principal', ubicacion: 'Piso 1', tipo: 'Neumático',   estado: 'activo' },
-      { id: 'EQ-002', nombre: 'Bomba Hidráulica',    ubicacion: 'Piso 2', tipo: 'Hidráulico',  estado: 'mantenimiento' },
-      { id: 'EQ-003', nombre: 'Generador Respaldo',  ubicacion: 'Piso 3', tipo: 'Eléctrico',   estado: 'inactivo' },
-    ]
-  },
-  inspecciones: {
-    total: 487,
-    completadas: 421,
-    pendientes: 66,
-    conProblemas: 45,
-    lista: [
-      { id: 'INS-2025-001', equipo: 'EQ-001', fecha: '2025-03-10', tecnico: 'Carlos Méndez', hallazgos: 'Ninguno',                   estado: 'ok' },
-      { id: 'INS-2025-002', equipo: 'EQ-042', fecha: '2025-03-10', tecnico: 'Diego López',   hallazgos: 'Aceite bajo, ruido anormal', estado: 'critico' },
-      { id: 'INS-2025-003', equipo: 'EQ-015', fecha: '2025-03-09', tecnico: 'Juan Pérez',    hallazgos: 'Mantenimiento preventivo',   estado: 'pendiente' },
-    ]
-  },
-  tecnicos: {
-    total: 12,
-    activos: 10,
-    disponibles: 8,
-    lista: [
-      { nombre: 'Carlos Méndez', email: 'carlos.mendez@qinspect.com', rol: 'Técnico Senior', inspecciones: 45, estado: 'activo' },
-      { nombre: 'Juan Pérez',    email: 'juan.perez@qinspect.com',    rol: 'Técnico',        inspecciones: 32, estado: 'activo' },
-      { nombre: 'Diego López',   email: 'diego.lopez@qinspect.com',   rol: 'Técnico',        inspecciones: 28, estado: 'inactivo' },
-    ]
-  },
-  reportes: {
-    generados: 234,
-    pendientes: 18,
-    lista: [
-      { id: 'REP-2025-089', tipo: 'Mantenimiento Mensual', fecha: '2025-03-10', autor: 'Sistema',     estado: 'disponible' },
-      { id: 'REP-2025-088', tipo: 'Análisis Trimestral',   fecha: '2025-03-08', autor: 'Admin Panel', estado: 'revision' },
-    ]
+// Estado dinámico reemplazando los datos "quemados"
+const state = {
+  equipos: { total: 0, activos: 0, inactivos: 0, enMantenimiento: 0, lista: [] },
+  inspecciones: { total: 0, completadas: 0, pendientes: 0, conProblemas: 0, lista: [] },
+  tecnicos: { total: 0, activos: 0, disponibles: 0, lista: [] },
+  reportes: { generados: 0, pendientes: 0, lista: [] }
+}
+
+// Carga activos de backend y mapea a la forma esperada por las vistas
+const loadZone = async (qrCode = 'TL') => {
+  try {
+    const data = await maintenanceService.getZoneByQR(qrCode)
+    const activos = data?.activos || []
+    state.equipos.lista = activos.map(a => ({
+      id: a.id_activo ?? a.id ?? a.codigo ?? '',
+      nombre: a.nombre ?? a.descripcion ?? a.tipos_activo?.nombre ?? 'Activo',
+      ubicacion: data?.info_zona?.nombre ?? a.ubicacion ?? '',
+      tipo: a.tipos_activo?.nombre ?? a.tipo ?? '',
+      estado: a.estado ?? a.status ?? 'activo'
+    }))
+    state.equipos.total = state.equipos.lista.length
+    const counts = state.equipos.lista.reduce((acc, it) => { acc[it.estado] = (acc[it.estado] || 0) + 1; return acc }, {})
+    state.equipos.activos = counts['activo'] || counts['ok'] || 0
+    state.equipos.inactivos = counts['inactivo'] || 0
+    state.equipos.enMantenimiento = counts['mantenimiento'] || 0
+  } catch (err) {
+    console.error('Error cargando zona:', err)
   }
 }
 
@@ -67,12 +56,12 @@ const statusBadge = (estado) => {
 // ─── sub-renders ────────────────────────────────────────────
 
 function subDashboard() {
-  const { equipos, inspecciones, tecnicos } = mockData
+  const { equipos, inspecciones, tecnicos } = state
   return `
     <div class="db-ph">
       <div>
         <h1>Dashboard</h1>
-        <p>Bienvenido de vuelta, Don Antonio</p>
+        <p>Bienvenido de vuelta, ${persistence.getUser()?.name || persistence.getUser()?.email || 'Usuario'}</p>
       </div>
       <div class="db-ph-actions">
         <button class="db-btn db-btn-secondary" id="db-logout">🔒 Cerrar sesión</button>
@@ -84,7 +73,6 @@ function subDashboard() {
       <div class="db-card db-fade">
         <div class="db-card-head">
           <span class="db-card-title">Equipos Activos</span>
-          <span class="db-badge db-badge-ok">+3</span>
         </div>
         <div class="db-card-value">${equipos.activos}</div>
         <div class="db-card-stat">De ${equipos.total} totales</div>
@@ -131,24 +119,18 @@ function subDashboard() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td><strong>EQ-001</strong></td><td>Piso 1 – Zona A</td>
-              <td>Carlos Méndez</td><td>2025-03-10</td>
-              <td>${statusBadge('completada')}</td>
-              <td><button class="db-btn db-btn-secondary db-btn-sm">Ver</button></td>
-            </tr>
-            <tr>
-              <td><strong>EQ-015</strong></td><td>Piso 2 – Zona C</td>
-              <td>Juan Pérez</td><td>2025-03-10</td>
-              <td>${statusBadge('progreso')}</td>
-              <td><button class="db-btn db-btn-secondary db-btn-sm">Ver</button></td>
-            </tr>
-            <tr>
-              <td><strong>EQ-042</strong></td><td>Piso 3 – Zona B</td>
-              <td>Diego López</td><td>2025-03-09</td>
-              <td>${statusBadge('problema')}</td>
-              <td><button class="db-btn db-btn-secondary db-btn-sm">Ver</button></td>
-            </tr>
+            ${inspecciones.lista.length === 0 ? `
+              <tr><td colspan="6" style="text-align:center;color:var(--tsoft)">No hay inspecciones recientes</td></tr>
+            ` : inspecciones.lista.map(i => `
+              <tr>
+                <td><strong>${i.id || ''}</strong></td>
+                <td>${i.equipo || i.ubicacion || ''}</td>
+                <td>${i.tecnico || ''}</td>
+                <td>${i.fecha || ''}</td>
+                <td>${statusBadge(i.estado || 'pendiente')}</td>
+                <td><button class="db-btn db-btn-secondary db-btn-sm">Ver</button></td>
+              </tr>
+            `).join('')}
           </tbody>
         </table>
       </div>
@@ -157,7 +139,7 @@ function subDashboard() {
 }
 
 function subEquipos() {
-  const { equipos } = mockData
+  const { equipos } = state
   const rows = equipos.lista.map(e => `
     <tr>
       <td><strong>${e.id}</strong></td>
@@ -172,7 +154,7 @@ function subEquipos() {
     <div class="db-ph">
       <h1>Gestión de Equipos</h1>
       <div class="db-ph-actions">
-        <button class="db-btn db-btn-secondary">🔍 Filtrar</button>
+        <button id="db-filter-equipos" class="db-btn db-btn-secondary">🔍 Filtrar</button>
         <button class="db-btn db-btn-primary">+ Registrar Equipo</button>
       </div>
     </div>
@@ -206,23 +188,33 @@ function subEquipos() {
 }
 
 function subInspecciones() {
-  const { inspecciones } = mockData
+  const { inspecciones } = state
   const rows = inspecciones.lista.map(i => `
     <tr>
-      <td><strong>${i.id}</strong></td>
-      <td>${i.equipo}</td>
-      <td>${i.fecha}</td>
-      <td>${i.tecnico}</td>
-      <td>${i.hallazgos}</td>
-      <td>${statusBadge(i.estado)}</td>
+      <td><strong>${i.id || ''}</strong></td>
+      <td>${i.equipo || ''}</td>
+      <td>${i.fecha || ''}</td>
+      <td>${i.tecnico || ''}</td>
+      <td>${i.hallazgos || ''}</td>
+      <td>${statusBadge(i.estado || 'pendiente')}</td>
     </tr>`).join('')
 
   return `
-    `
+    <div class="db-ph">
+      <h1>Inspecciones</h1>
+    </div>
+    <div class="db-table-wrap">
+      <table class="db-table">
+        <thead>
+          <tr><th>ID</th><th>Equipo</th><th>Fecha</th><th>Técnico</th><th>Hallazgos</th><th>Estado</th></tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="6" style="text-align:center;color:var(--tsoft)">No hay inspecciones</td></tr>'}</tbody>
+      </table>
+    </div>`
 }
 
 function subReportes() {
-  const { reportes } = mockData
+  const { reportes } = state
   const rows = reportes.lista.map(r => `
     <tr>
       <td><strong>${r.id}</strong></td>
@@ -268,57 +260,11 @@ function subReportes() {
     </div>`
 }
 
-function subUsuarios() {
-  const { tecnicos } = mockData
-  const rows = tecnicos.lista.map(t => `
-    <tr>
-      <td><strong>${t.nombre}</strong></td>
-      <td>${t.email}</td>
-      <td>${t.rol}</td>
-      <td>${t.inspecciones}</td>
-      <td>${statusBadge(t.estado)}</td>
-      <td><button class="db-btn db-btn-secondary db-btn-sm">Editar</button></td>
-    </tr>`).join('')
-
-  return `
-    <div class="db-ph">
-      <h1>Gestión de Usuarios</h1>
-      <div class="db-ph-actions">
-        <button class="db-btn db-btn-secondary">🔍 Buscar</button>
-        <button class="db-btn db-btn-primary">+ Nuevo Usuario</button>
-      </div>
-    </div>
-    <div class="db-cards">
-      <div class="db-card db-fade">
-        <div class="db-card-title">Total Usuarios</div>
-        <div class="db-card-value">${tecnicos.total}</div>
-      </div>
-      <div class="db-card db-fade" style="animation-delay:.06s">
-        <div class="db-card-title">Activos Hoy</div>
-        <div class="db-card-value" style="color:var(--green)">${tecnicos.disponibles}</div>
-      </div>
-    </div>
-    <div class="db-section">
-      <div class="db-section-head">
-        <h2 class="db-section-title">Técnicos</h2>
-      </div>
-      <div class="db-table-wrap">
-        <table class="db-table">
-          <thead>
-            <tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Inspecciones</th><th>Estado</th><th>Acciones</th></tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    </div>`
-}
-
 const subRenders = {
   dashboard:    subDashboard,
   equipos:      subEquipos,
   inspecciones: subInspecciones,
-  reportes:     subReportes,
-  usuarios:     subUsuarios,
+  reportes:     subReportes
 }
 
 // ─── página principal ────────────────────────────────────────
@@ -327,35 +273,69 @@ export const dashboardPage = () => ({
 
   render: () => `
     <div id="db-app">
-      <aside id="db-sidebar">
-        <div class="db-logo">Ruta<em>Clara</em></div>
-
-        <div class="db-sidebar-card">
-          <nav>
-            <ul class="db-nav">
-              <li><a class="active" data-db-page="dashboard">📊 Dashboard</a></li>
-              <li><a data-db-page="equipos">🔧 Equipos</a></li>
-              <li><a data-db-page="inspecciones">📋 Inspecciones</a></li>
-              <li><a data-db-page="reportes">📈 Reportes</a></li>
-              <li><a data-db-page="usuarios">👥 Usuarios</a></li>
-            </ul>
-          </nav>
-        </div>
-
-      </aside>
+      ${sidebarView({ activePage: 'dashboard' }).render()}
       <main id="db-main">
+        <button id="db-global-toggle" class="db-mobile-toggle" aria-label="Abrir menú">☰</button>
         <div id="db-content"></div>
       </main>
     </div>
   `,
 
   loadRender: () => {
+    let currentPage = 'dashboard'
 
     const renderPage = (page) => {
+      currentPage = page
       const content = document.getElementById('db-content')
       if (!content) return
 
       content.innerHTML = subRenders[page]?.() ?? subRenders.dashboard()
+
+      // wire sidebar navigation handlers
+      try {
+        const sb = sidebarView({ activePage: page, onNavigate: renderPage })
+        sb.loadRender()
+      } catch (e) { /* ignore if sidebar not present */ }
+
+      // Mobile menu toggles (abre/cierra el sidebar) + backdrop + close button
+      const sidebar = document.getElementById('db-sidebar')
+
+      // ensure backdrop exists
+      let backdrop = document.getElementById('db-backdrop')
+      if (!backdrop) {
+        backdrop = document.createElement('div')
+        backdrop.id = 'db-backdrop'
+        document.body.appendChild(backdrop)
+      }
+      backdrop.onclick = () => {
+        sidebar.classList.remove('open')
+        backdrop.classList.remove('visible')
+      }
+
+      // ensure close button exists inside sidebar
+      let closeBtn = sidebar.querySelector('.db-sidebar-close')
+      if (!closeBtn) {
+        closeBtn = document.createElement('button')
+        closeBtn.className = 'db-sidebar-close'
+        closeBtn.setAttribute('aria-label', 'Cerrar menú')
+        closeBtn.innerText = '✕'
+        sidebar.insertBefore(closeBtn, sidebar.firstChild)
+      }
+      closeBtn.onclick = () => { sidebar.classList.remove('open'); backdrop.classList.remove('visible') }
+
+      const globalToggle = document.getElementById('db-global-toggle')
+      if (globalToggle) globalToggle.addEventListener('click', () => {
+        const opening = !sidebar.classList.contains('open')
+        if (opening) { sidebar.classList.add('open'); backdrop.classList.add('visible') }
+        else { sidebar.classList.remove('open'); backdrop.classList.remove('visible') }
+      })
+
+      // close sidebar when clicking a sidebar link on mobile
+      document.querySelectorAll('#db-sidebar [data-db-page]').forEach(link => {
+        link.addEventListener('click', () => {
+          if (window.innerWidth <= 768) { sidebar.classList.remove('open'); backdrop.classList.remove('visible') }
+        })
+      })
 
       document.querySelectorAll('[data-db-page]').forEach(link => {
         link.classList.toggle('active', link.dataset.dbPage === page)
@@ -368,10 +348,96 @@ export const dashboardPage = () => ({
       document.getElementById('db-see-all')?.addEventListener('click', () => {
         renderPage('inspecciones')
       })
+      // Nuevo reporte: abrir modal wizard
       document.getElementById('db-new-report')?.addEventListener('click', () => {
-        // TODO: conectar con tu servicio real
-        toast('📋 Nuevo reporte', 'info')
+        // insertar modal en el body si aún no existe
+        if (!document.getElementById('report-modal')) {
+          const container = document.createElement('div')
+          container.innerHTML = reportZone({
+            onSave: async (data) => {
+              try {
+                await maintenanceService.createReport(data)
+                try { window.alert('Reporte guardado correctamente') } catch (e) {}
+                // cerrar modal
+                const rz = reportZone({});
+                rz.close && rz.close()
+              } catch (err) {
+                try { window.alert('Error al guardar el reporte') } catch (e) {}
+              }
+            },
+            onCancel: () => {
+              const rz = reportZone({});
+              rz.close && rz.close()
+            }
+          }).render()
+          // container contiene el markup del modal; agregar al body
+          document.body.insertAdjacentHTML('beforeend', container.innerHTML)
+          // inicializar handlers
+          const rzInst = reportZone({
+            onSave: async (data) => {
+              try {
+                await maintenanceService.createReport(data)
+                try { window.alert('Reporte guardado correctamente') } catch (e) {}
+                // cerrar
+                const modal = document.getElementById('report-modal'); if (modal) modal.classList.add('d-none')
+                document.body.style.overflow = ''
+              } catch (err) {
+                try { window.alert('Error al guardar el reporte') } catch (e) {}
+              }
+            }
+          })
+          rzInst.loadRender && rzInst.loadRender()
+        }
+        // abrir modal y preseleccionar sin id
+        const rzOpen = reportZone({ onSave: async (data) => {} })
+        rzOpen.loadRender && rzOpen.loadRender()
+        try { const modalEl = document.getElementById('report-modal'); if (modalEl && typeof rzOpen.open === 'function') rzOpen.open('') } catch (e) {}
       })
+
+      // Filtrar equipos: toggle input and filter rows
+      const setupEquiposFilter = () => {
+        const filterBtn = document.getElementById('db-filter-equipos')
+        if (!filterBtn) return
+        filterBtn.addEventListener('click', () => {
+          const header = document.querySelector('.db-ph')
+          if (!header) return
+          let f = document.getElementById('db-filter-input')
+          if (!f) {
+            const inp = document.createElement('input')
+            inp.id = 'db-filter-input'
+            inp.placeholder = 'Filtrar por ID, nombre, ubicación o tipo...'
+            inp.style.padding = '8px 10px'; inp.style.borderRadius = '8px'; inp.style.border = '1px solid var(--border)';
+            inp.style.fontFamily = "'Nunito',sans-serif"; inp.style.marginTop = '8px'; inp.style.width = '100%';
+            header.appendChild(inp)
+            inp.addEventListener('input', (e) => {
+              const q = (e.target.value || '').toLowerCase().trim()
+              const lista = state.equipos.lista.filter(it => {
+                return String(it.id || '').toLowerCase().includes(q)
+                  || String(it.nombre || '').toLowerCase().includes(q)
+                  || String(it.ubicacion || '').toLowerCase().includes(q)
+                  || String(it.tipo || '').toLowerCase().includes(q)
+              })
+              const tbody = document.querySelector('.db-table tbody')
+              if (!tbody) return
+              tbody.innerHTML = lista.map(e => `
+                <tr>
+                  <td><strong>${e.id}</strong></td>
+                  <td>${e.nombre}</td>
+                  <td>${e.ubicacion}</td>
+                  <td>${e.tipo}</td>
+                  <td>${statusBadge(e.estado)}</td>
+                  <td><button class="db-btn db-btn-secondary db-btn-sm">Editar</button></td>
+                </tr>`).join('')
+            })
+            f = inp
+          } else {
+            // toggle visibility
+            f.remove()
+          }
+        })
+      }
+      // ejecutar setup de filtro cuando la página es equipos
+      if (currentPage === 'equipos') setTimeout(setupEquiposFilter, 60)
     }
 
     document.querySelectorAll('[data-db-page]').forEach(link => {
@@ -381,6 +447,8 @@ export const dashboardPage = () => ({
       })
     })
 
+    // Render inicial y recarga cuando se obtengan datos del backend
     renderPage('dashboard')
+    loadZone().then(() => renderPage(currentPage))
   }
 })
