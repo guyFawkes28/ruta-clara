@@ -7,7 +7,7 @@ export const inventoryPage = () => ({
         <h1 class="h3 mb-0">Inventario</h1>
         <p class="text-muted">Gestión de materiales y stock</p>
       </div>
-      <button id="openAddMaterialBtn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMaterialModal">
+      <button id="openAddMaterialBtn" class="btn btn-primary" type="button">
         <i class="bi bi-plus-lg"></i> Añadir Material
       </button>
     </div>
@@ -36,7 +36,7 @@ export const inventoryPage = () => ({
       <div class="modal-content">
         <div class="modal-header bg-dark text-white">
           <h5 class="modal-title">Registrar / Editar Material</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          <button type="button" id="closeAddMaterialBtn" class="btn-close btn-close-white" aria-label="Cerrar"></button>
         </div>
         <div class="modal-body p-4">
           <form id="materialForm">
@@ -92,10 +92,43 @@ export const inventoryPage = () => ({
       // --- Selectores del DOM ---
       const form = document.getElementById('materialForm');
       const modalEl = document.getElementById('addMaterialModal');
-      const bsModal = (window.bootstrap && modalEl) ? new bootstrap.Modal(modalEl) : null;
+      const openAddBtn = document.getElementById('openAddMaterialBtn');
+      const closeAddBtn = document.getElementById('closeAddMaterialBtn');
+
+      function openModal() {
+        if (!modalEl) return;
+        modalEl.classList.add('modal-opened');
+        modalEl.classList.add('show');
+        modalEl.style.display = 'block';
+        modalEl.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+      }
+
+      function closeModal() {
+        if (!modalEl) return;
+        modalEl.classList.remove('modal-opened');
+        modalEl.classList.remove('show');
+        modalEl.style.display = 'none';
+        modalEl.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+      }
 
       // Pintar lista inicial
       renderList();
+
+      openAddBtn?.addEventListener('click', () => {
+        if (form) {
+          form.reset();
+          form.itemId.value = '';
+        }
+        openModal();
+      });
+
+      closeAddBtn?.addEventListener('click', closeModal);
+
+      modalEl?.addEventListener('click', (e) => {
+        if (e.target === modalEl) closeModal();
+      });
 
       // --- Event Listeners ---
 
@@ -124,7 +157,7 @@ export const inventoryPage = () => ({
           }
           renderList();
           form.reset(); form.itemId.value = '';
-          if (bsModal) bsModal.hide();
+          closeModal();
         });
       }
 
@@ -140,7 +173,7 @@ export const inventoryPage = () => ({
           form.categoria.value = item.categoria;
           form.cantidad.value = item.cantidad;
           form.descripcion.value = item.descripcion || '';
-          if (bsModal) bsModal.show();
+          openModal();
           return;
         }
         const del = e.target.closest('.btn-delete');

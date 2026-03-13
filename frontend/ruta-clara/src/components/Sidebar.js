@@ -1,3 +1,5 @@
+import { persistence } from '../util/persistence.js';
+
 export const Sidebar = ({ onNavigate } = {}) => {
   let currentView = 'inicio';
 
@@ -116,9 +118,8 @@ export const Sidebar = ({ onNavigate } = {}) => {
 
         const view = btn.getAttribute('data-view');
         if (view === 'salir') {
-          localStorage.removeItem('user');
-          // Redirige a login a través del onNavigate para que el router se encargue
-          onNavigate && onNavigate('login'); 
+          persistence.clearSession();
+          window.location.hash = '#/';
           return;
         }
         

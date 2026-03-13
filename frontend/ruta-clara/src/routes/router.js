@@ -1,35 +1,37 @@
-import { loginPage } from "../pages/LoginPage.js";
-import { persistence } from "../util/persistence.js";
 import { notFoundPage } from "../pages/NotFound.js";
 import { scannerPage } from "../pages/ScanPage.js";
 import { zonePage } from "../pages/ZonePage.js";
 import { chatPage } from "../pages/ChatPage.js";
 import { roomPage } from "../pages/RoomPage.js";
+import { dashboardPage } from "../pages/DashboardPage.js";
 
 const routes = {
-    "#/": loginPage(),
-    "#/login": loginPage(),
+    "#/": dashboardPage(),
+    "#/login": dashboardPage(),
     "#/scanner": scannerPage(),
     "#/chat": chatPage(),
-    "#/room": roomPage()
+    "#/room": roomPage(),
+    "#/dashboard": dashboardPage()
 };
 
 export const routerManager = async () => {
     const root = document.getElementById("root");
-    const hash = window.location.hash || "#/login";
+    const hash = window.location.hash || "#/";
 
-    // 1. VALIDACIÓN DE AUTENTICACIÓN (Lo primero siempre)
-    const isAuth = persistence.isAuthentication();
-
-    if (!isAuth && hash !== "#/login") {
-        window.location.hash = "#/login";
-        return;
-    }
-
-    if (isAuth && (hash === "#/login" || hash === "#/" || hash === "")) {
-        window.location.hash = "#/scanner";
-        return;
-    }
+    // Vista temporal para desarrollo:
+    // se comenta la validación de autenticación para poder visualizar
+    // directamente el sidebar y las vistas internas sin pasar por login.
+    // const isAuth = persistence.isAuthentication();
+    //
+    // if (!isAuth && hash !== "#/login") {
+    //     window.location.hash = "#/login";
+    //     return;
+    // }
+    //
+    // if (isAuth && (hash === "#/login" || hash === "#/" || hash === "")) {
+    //     window.location.hash = "#/scanner";
+    //     return;
+    // }
 
     // 2. DETECCIÓN DE RUTA DINÁMICA (Zona con ID)
     // Si el hash empieza por #/zone/ (ej: #/zone/1)
