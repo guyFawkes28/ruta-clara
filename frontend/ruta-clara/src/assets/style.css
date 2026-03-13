@@ -14,6 +14,7 @@
   --grnb:   #F0FDF4;
   --tmid:   #374151;
   --slate:  #64748B;
+  --rc-press-scale: .97;
 }
 
 /* Reset básico */
@@ -41,7 +42,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .login-inp:focus { border-color: var(--amber); }
 .login-inp::placeholder { color: rgba(255,255,255,.3); }
 .login-btn { width: 100%; min-height: 58px; background: var(--amber); color: var(--navy); border: none; border-radius: 14px; font-family: 'Nunito', sans-serif; font-size: 19px; font-weight: 900; cursor: pointer; margin-top: 22px; transition: all .2s; }
-.login-btn:active { transform: scale(.97); }
+.login-btn:active { transform: scale(var(--rc-press-scale)); }
 .login-err { color: #FCA5A5; font-size: 14px; font-weight: 700; text-align: center; margin-top: 10px; display: none; }
 
 
@@ -60,7 +61,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .tl-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;}
 .tl-lbl{font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--tsoft);}
 .p-tl{width:44px;height:48px;border-radius:8px;border:2px solid var(--blue);background:var(--blub);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:2px;transition:transform .13s;font-size:20px;user-select:none;}
-.p-tl:active{transform:scale(.88);}
+.p-tl:active{transform:scale(var(--rc-press-scale));}
 .tlbl{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:900;color:var(--blue);line-height:1;}
 
 /* ── Layout dos columnas con divisor ── */
@@ -86,7 +87,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   user-select:none;
   flex-shrink:0;
 }
-.fan:active{transform:scale(.88);}
+.fan:active{transform:scale(var(--rc-press-scale));}
 .fan-lbl{
   font-family:'Barlow Condensed',sans-serif;
   font-size:9px;
@@ -130,7 +131,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   display: block;
 }
 
-.p:active { transform: scale(.86); }
+.p:active { transform: scale(var(--rc-press-scale)); }
 
 /* Ajustamos la etiqueta de texto para que no se pegue */
 .plbl-in {
@@ -141,7 +142,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   line-height: 1;
 }
 
-.p:active{transform:scale(.86);}
+.p:active{transform:scale(var(--rc-press-scale));}
 .plbl-in{font-family:'Barlow Condensed',sans-serif;font-size:clamp(7px,1.8vw,10px);font-weight:900;color:var(--tsoft);line-height:1;}
 .p.sg{background:var(--grayb);border-color:#9CA3AF;}
 .p.so{background:var(--orab);border-color:var(--orange);}
@@ -172,7 +173,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .ldot.v{background:var(--green);}
 
 /* ── Bottom Sheet ── */
-.overlay{position:fixed;inset:0;background:rgba(15,32,68,.55);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.overlay{position:fixed;inset:0;background:rgba(15,32,68,.55);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s,transform .3s;z-index:9999;white-space:nowrap;pointer-events:none;}
 .overlay.on{opacity:1;pointer-events:all;}
 .sheet{
   background:#fff;
@@ -206,7 +207,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
 .sbtn{min-height:64px;border-radius:12px;border:2.5px solid;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;background:transparent;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;transition:.15s;}
 .sbtn span{font-size:22px;}
-.sbtn:active{transform:scale(.96);}
+.sbtn:active{transform:scale(var(--rc-press-scale));}
 .sbtn.sg{border-color:#9CA3AF;color:var(--tmid);}
 .sbtn.so{border-color:var(--orange);color:var(--orange);}
 .sbtn.sb{border-color:var(--blue);color:var(--blue);}
@@ -218,7 +219,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 
 /* ── Botones ── */
 .btn-navy{width:100%;min-height:50px;background:var(--navy);color:#fff;border:none;border-radius:13px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;}
-.btn-navy:active{transform:scale(.97);}
+.btn-navy:active{transform:scale(var(--rc-press-scale));}
 .btn-back{width:100%;min-height:44px;background:transparent;color:var(--tsoft);border:2px solid var(--border);border-radius:13px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;}
 
 /* ── Toast ── */
@@ -330,6 +331,62 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 }
 .qr-btn:active {
   background: rgba(255,255,255,.18);
+}
+/* Esto obliga al modal a estar arriba de todo y centrado */
+.rc-modal-overlay {
+    position: fixed !important; /* Lo saca del flujo normal y lo pone sobre el mapa */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    display: none; /* JS lo cambia a flex */
+    justify-content: center;
+    align-items: center;
+    z-index: 99999 !important; /* Valor altísimo para que nada lo tape */
+}
+
+/* La tarjeta blanca */
+.rc-modal-content {
+    background: white !important;
+    padding: 2rem;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Estilo para los botones de falla (los que clickeas) */
+.rc-grid-botones {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.rc-btn-falla {
+    padding: 12px;
+    border: 1px solid #ccc;
+    background: #f8f9fa;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.rc-btn-falla.active {
+    background: #007bff !important;
+    color: white !important;
+    border-color: #0056b3;
+}
+
+/* Los botones de abajo */
+.rc-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 /* Logout button styling */
@@ -477,7 +534,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   display: flex; align-items: center; justify-content: center; gap: 10px;
   transition: all .2s;
 }
-.scan-btn:active    { transform: scale(.97); }
+.scan-btn:active    { transform: scale(var(--rc-press-scale)); }
 .scan-btn:disabled  {
   background: rgba(255,255,255,.15);
   color: rgba(255,255,255,.4);
@@ -742,4 +799,106 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   background: #bdbdbd;
   color: #222;
   box-shadow: none;
+}
+
+/* Mejoras para HomePage */
+.rc-section {
+  margin: 20px 0;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.rc-section-title {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.rc-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rc-stat {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+.rc-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.rc-task {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+  transition: background-color 0.3s;
+}
+
+.rc-task:hover {
+  background-color: #f1f1f1;
+}
+
+.rc-info-boxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.rc-info-box {
+  flex: 1 1 calc(33.333% - 15px);
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+/* Estilos para habilitar scroll en vistas móviles */
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Suavidad en scroll para iOS */
+}
+
+.rc-app {
+  max-height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.rc-view {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Forzar scroll en vistas móviles */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Suavidad en scroll para iOS */
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }

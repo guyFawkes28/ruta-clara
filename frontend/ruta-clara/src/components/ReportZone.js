@@ -1,3 +1,5 @@
+import { toast } from '../util/ux.js';
+
 export const reportZone = ({ onSave, onCancel }) => {
     let reportData = { puestoId: '', categoria: '', comentario: '', isFan: false };
     // Estado compartido entre loadRender / open / close
@@ -26,18 +28,16 @@ export const reportZone = ({ onSave, onCancel }) => {
     return {
         render: () => `
             <div id="report-modal" class="d-none">
-                <!-- ── Sheet principal: Puesto ── -->
                 <div class="overlay" id="rc-sheet">
                 <div class="sheet">
                     <div class="shandle"></div>
 
-                    <!-- Cabecera -->
                     <div class="sheet-hd">
                     <div class="stitle" id="rc-titulo">Puesto</div>
                     <div class="ssub"   id="rc-sub">Sala 3</div>
                     </div>
 
-                    <!-- ── PASO 1 — ¿Qué tiene daño? ── -->
+                    <!-- PASO 1 -->
                     <div class="step-panel on" id="rc-step1">
                     <div class="step-lbl">¿Qué tiene daño?</div>
                     <div class="row g-2 mb-3">
@@ -50,9 +50,11 @@ export const reportZone = ({ onSave, onCancel }) => {
                     </div>
                     <button class="btn-navy" id="rc-step1-next">Siguiente →</button>
                     <div id="rc-step1-err" style="color:#dc2626;font-weight:800;margin-top:8px;display:none;font-size:13px">&nbsp;</div>
+                    <button class="btn-navy" id="rc-step1-next">Siguiente →</button>
+                    <div id="rc-step1-err" style="color:#dc2626;font-weight:800;margin-top:8px;display:none;font-size:13px">&nbsp;</div>
                     </div>
 
-                    <!-- ── PASO 2a — Cable ── -->
+                    <!-- PASO 2a — Cable -->
                     <div class="step-panel" id="rc-step2-cable">
                     <div class="step-lbl">¿Cuál cable?</div>
                     <div class="row g-2 mb-3">
@@ -65,16 +67,16 @@ export const reportZone = ({ onSave, onCancel }) => {
                     <button class="btn-back" id="rc-cable-back">← Volver</button>
                     </div>
 
-                    <!-- ── PASO 2b — Enchufe ── -->
+                    <!-- PASO 2b — Enchufe -->
                     <div class="step-panel" id="rc-step2-enchufe">
                     <div class="step-lbl">¿Cuál enchufe?</div>
                     <div class="d-flex gap-3 justify-content-center mb-3">
                         <div class="op-card" id="rc-op-left" data-outlet="izquierdo">
-                        <svg viewBox="0 0 44 48" width="48" height="52" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="42" height="46" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.5"/><rect x="3.5" y="6.5" width="37" height="23" rx="3" fill="white" stroke="#FDBA74" stroke-width="1"/><rect x="6.5" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><rect x="12" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><circle cx="11" cy="37" r="4" fill="#EA580C"/><circle cx="11" cy="37" r="2" fill="white"/><rect x="23" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><rect x="29" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><circle cx="29" cy="37" r="4" fill="#D1D5DB"/><circle cx="29" cy="37" r="2" fill="white"/><text x="4" y="47" font-size="8" fill="#EA580C" font-weight="900"></text></svg>
+                        <svg viewBox="0 0 44 48" width="48" height="52" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="42" height="46" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.5"/><rect x="3.5" y="6.5" width="37" height="23" rx="3" fill="white" stroke="#FDBA74" stroke-width="1"/><rect x="6.5" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><rect x="12" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><circle cx="11" cy="37" r="4" fill="#EA580C"/><circle cx="11" cy="37" r="2" fill="white"/><rect x="23" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><rect x="29" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><circle cx="29" cy="37" r="4" fill="#D1D5DB"/><circle cx="29" cy="37" r="2" fill="white"/></svg>
                         <div style="font-size:13px;font-weight:800">Izquierdo</div>
                         </div>
                         <div class="op-card" id="rc-op-right" data-outlet="derecho">
-                        <svg viewBox="0 0 44 48" width="48" height="52" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="42" height="46" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.5"/><rect x="3.5" y="6.5" width="37" height="23" rx="3" fill="white" stroke="#FDBA74" stroke-width="1"/><rect x="6.5" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><rect x="12" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><circle cx="11" cy="37" r="4" fill="#D1D5DB"/><circle cx="11" cy="37" r="2" fill="white"/><rect x="23" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><rect x="29" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><circle cx="29" cy="37" r="4" fill="#EA580C"/><circle cx="29" cy="37" r="2" fill="white"/><text x="22" y="47" font-size="8" fill="#EA580C" font-weight="900"></text></svg>
+                        <svg viewBox="0 0 44 48" width="48" height="52" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="42" height="46" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.5"/><rect x="3.5" y="6.5" width="37" height="23" rx="3" fill="white" stroke="#FDBA74" stroke-width="1"/><rect x="6.5" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><rect x="12" y="9.5" width="4" height="12" rx="2" fill="#D1D5DB"/><circle cx="11" cy="37" r="4" fill="#D1D5DB"/><circle cx="11" cy="37" r="2" fill="white"/><rect x="23" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><rect x="29" y="9.5" width="4" height="12" rx="2" fill="#EA580C"/><circle cx="29" cy="37" r="4" fill="#EA580C"/><circle cx="29" cy="37" r="2" fill="white"/></svg>
                         <div style="font-size:13px;font-weight:800">Derecho</div>
                         </div>
                     </div>
@@ -82,64 +84,62 @@ export const reportZone = ({ onSave, onCancel }) => {
                     <button class="btn-back" id="rc-enc-back">← Volver</button>
                     </div>
 
-                <!-- ── PASO 2c — Componente simple ── -->
-                <div class="step-panel" id="rc-step2-simple">
-                <div class="step-lbl">Confirmar componente</div>
-                <div class="d-flex align-items-center gap-3 rounded-3 p-3 mb-3" style="background:var(--orab);border:2px solid var(--orabd)">
-                    <span style="font-size:32px" id="rc-simple-ico">🔧</span>
-                    <div>
-                    <div style="font-size:17px;font-weight:800" id="rc-simple-name">Componente</div>
-                    <div style="font-size:13px;color:var(--tsoft);font-weight:600;margin-top:2px">Describe el daño y la IA te ayuda con el reporte</div>
+                    <!-- PASO 2c — Simple -->
+                    <div class="step-panel" id="rc-step2-simple">
+                    <div class="step-lbl">Confirmar componente</div>
+                    <div class="d-flex align-items-center gap-3 rounded-3 p-3 mb-3" style="background:var(--orab);border:2px solid var(--orabd)">
+                        <span style="font-size:32px" id="rc-simple-ico">🔧</span>
+                        <div>
+                        <div style="font-size:17px;font-weight:800" id="rc-simple-name">Componente</div>
+                        <div style="font-size:13px;color:var(--tsoft);font-weight:600;margin-top:2px">Describe el daño y la IA te ayuda con el reporte</div>
+                        </div>
                     </div>
-                </div>
-                <button class="btn-navy" id="rc-simple-next">Siguiente →</button>
-                <button class="btn-back" id="rc-simple-back">← Volver</button>
-                </div>
+                    <button class="btn-navy" id="rc-simple-next">Siguiente →</button>
+                    <button class="btn-back" id="rc-simple-back">← Volver</button>
+                    </div>
 
-                <!-- ── PASO 2d — Silla ── -->
-                <div class="step-panel" id="rc-step2-silla">
-                <div class="step-lbl">¿Qué pasa con la silla?</div>
-                <div class="row g-3 mb-3">
-                    <div class="col-6"><button class="yn-btn" id="rc-silla-arreglar" data-silla="arreglar" style="border-color:var(--blue);color:var(--blue)"><span class="yni">🔨</span>Arreglar<br>aquí mismo</button></div>
-                    <div class="col-6"><button class="yn-btn" id="rc-silla-bodega"   data-silla="bodega"   style="border-color:var(--orange);color:var(--orange)"><span class="yni">📦</span>Enviar a<br>bodega</button></div>
-                </div>
-                <div id="rc-silla-detail" class="rounded-3 p-3 mb-3" style="display:none;border:1.5px solid var(--border)">
-                    <div style="font-size:14px;font-weight:800;color:var(--tmid);margin-bottom:4px" id="rc-silla-lbl">—</div>
-                    <div style="font-size:13px;color:var(--tsoft);font-weight:600" id="rc-silla-sub">—</div>
-                </div>
-                <button class="btn-navy" id="rc-silla-next" disabled>Siguiente →</button>
-                <button class="btn-back" id="rc-silla-back">← Volver</button>
-                </div>
+                    <!-- PASO 2d — Silla -->
+                    <div class="step-panel" id="rc-step2-silla">
+                    <div class="step-lbl">¿Qué pasa con la silla?</div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6"><button class="yn-btn" id="rc-silla-arreglar" data-silla="arreglar" style="border-color:var(--blue);color:var(--blue)"><span class="yni">🔨</span>Arreglar<br>aquí mismo</button></div>
+                        <div class="col-6"><button class="yn-btn" id="rc-silla-bodega" data-silla="bodega" style="border-color:var(--orange);color:var(--orange)"><span class="yni">📦</span>Enviar a<br>bodega</button></div>
+                    </div>
+                    <div id="rc-silla-detail" class="rounded-3 p-3 mb-3" style="display:none;border:1.5px solid var(--border)">
+                        <div style="font-size:14px;font-weight:800;color:var(--tmid);margin-bottom:4px" id="rc-silla-lbl">—</div>
+                        <div style="font-size:13px;color:var(--tsoft);font-weight:600" id="rc-silla-sub">—</div>
+                    </div>
+                    <button class="btn-navy" id="rc-silla-next" disabled>Siguiente →</button>
+                    <button class="btn-back" id="rc-silla-back">← Volver</button>
+                    </div>
 
-                <!-- ── PASO 3 — Descripción + IA ── -->
-                <div class="step-panel" id="rc-step3">
-                <div class="step-lbl">Describe el daño con tus palabras</div>
-                <div class="mb-1" style="font-size:13px;font-weight:800;color:var(--tmid)">🔧 ¿Qué observas?</div>
-                <textarea id="rc-nota" class="form-control mb-1" rows="4"
-                    placeholder="Ej: el cable está pelado, la pantalla parpadea y se apaga sola…"
-                    style="font-family:'Nunito',sans-serif;font-size:16px;font-weight:600;background:var(--bg);border:2px solid var(--border);border-radius:14px;outline:none;resize:none;line-height:1.5"></textarea>
-                <div class="text-end mb-3" style="font-size:12px;color:var(--tsoft);font-weight:600"><span id="rc-chars">0</span> caracteres</div>
+                    <!-- PASO 3 — Descripción -->
+                    <div class="step-panel" id="rc-step3">
+                    <div class="step-lbl">Describe el daño con tus palabras</div>
+                    <div class="mb-1" style="font-size:13px;font-weight:800;color:var(--tmid)">🔧 ¿Qué observas?</div>
+                    <textarea id="rc-nota" class="form-control mb-1" rows="4"
+                        placeholder="Ej: el cable está pelado, la pantalla parpadea y se apaga sola…"
+                        style="font-family:'Nunito',sans-serif;font-size:16px;font-weight:600;background:var(--bg);border:2px solid var(--border);border-radius:14px;outline:none;resize:none;line-height:1.5"></textarea>
+                    <div class="text-end mb-3" style="font-size:12px;color:var(--tsoft);font-weight:600"><span id="rc-chars">0</span> caracteres</div>
 
-                <button class="ai-improve-btn" id="rc-ai-btn" disabled>
-                    <span style="font-size:22px">🤖</span> Mejorar reporte con IA
-                </button>
-
-                <!-- Cargando IA -->
-                <div class="ai-loading" id="rc-ai-loading">
-                    <span class="ai-spin">🤖</span>
-                    <div style="font-size:15px;font-weight:800;color:#4C1D95;margin-bottom:4px">Mejorando tu descripción...</div>
-                    <div style="font-size:13px;color:#6D28D9;font-weight:600" id="rc-ai-sub">Formalizando el reporte técnico</div>
-                </div>
-
-                <!-- Resultado IA -->
-                <div class="ai-result" id="rc-ai-result">
-                    <div class="ai-result-lbl">🤖 Reporte mejorado por IA</div>
-                    <div class="ai-result-txt" id="rc-ai-txt">—</div>
-                    <button id="rc-rewrite-btn" class="w-100 mt-2 rounded-3 py-2"
-                    style="border:1.5px solid var(--purpbd);background:transparent;color:var(--purple);font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer">
-                    ✏️ Cambiar mi descripción y mejorar de nuevo
+                    <button class="ai-improve-btn" id="rc-ai-btn" disabled>
+                        <span style="font-size:22px">🤖</span> Mejorar reporte con IA
                     </button>
-                </div>
+
+                    <div class="ai-loading" id="rc-ai-loading">
+                        <span class="ai-spin">🤖</span>
+                        <div style="font-size:15px;font-weight:800;color:#4C1D95;margin-bottom:4px">Mejorando tu descripción...</div>
+                        <div style="font-size:13px;color:#6D28D9;font-weight:600" id="rc-ai-sub">Formalizando el reporte técnico</div>
+                    </div>
+
+                    <div class="ai-result" id="rc-ai-result">
+                        <div class="ai-result-lbl">🤖 Reporte mejorado por IA</div>
+                        <div class="ai-result-txt" id="rc-ai-txt">—</div>
+                        <button id="rc-rewrite-btn" class="w-100 mt-2 rounded-3 py-2"
+                        style="border:1.5px solid var(--purpbd);background:transparent;color:var(--purple);font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer">
+                        ✏️ Cambiar mi descripción y mejorar de nuevo
+                        </button>
+                    </div>
 
                 <button class="btn-navy mt-2" id="rc-step3-next">Continuar →</button>
                 <div id="rc-step3-err" style="color:#dc2626;font-weight:900;margin-top:10px;display:none;font-size:14px;line-height:1.2">&nbsp;</div>
@@ -163,12 +163,9 @@ export const reportZone = ({ onSave, onCancel }) => {
                 </div>
                 <button class="btn-navy" id="rc-guardar">💾 Guardar Reporte</button>
                 </div>
-
-            </div><!-- /sheet -->
-            </div><!-- /overlay -->`,
+            </div>`,
 
         loadRender: () => {
-            // Utilidades y estado
             const $ = id => document.getElementById(id);
             // soporta selección múltiple de componentes dañados
             // (usar las variables de estado definidas en el scope superior)
@@ -193,28 +190,27 @@ export const reportZone = ({ onSave, onCancel }) => {
                 $(id).classList.add('on');
             }
 
-            // Cerrar al tocar fondo (overlay)
+            // Cerrar al tocar fondo
             const overlayEl = $('rc-sheet');
             if (overlayEl) {
                 overlayEl.onclick = (e) => {
                     if (e.target && e.target.id === 'rc-sheet') {
-                        // cerrar: quitar clase 'on' y ocultar modal después de la animación
                         overlayEl.classList.remove('on');
                         document.body.style.overflow = '';
                         setTimeout(() => {
-                            const modal = document.getElementById('report-modal'); if (modal) modal.classList.add('d-none');
+                            const modal = document.getElementById('report-modal');
+                            if (modal) modal.classList.add('d-none');
                         }, 300);
                     }
                 };
             }
 
-            // PASO 1 — elegir daño (ahora permite múltiples selecciones)
+            // PASO 1 — selección múltiple de daños
             document.querySelectorAll('.dmg-btn').forEach(btn => {
                 btn.onclick = () => {
                     const raw = (btn.dataset.dmg || '').toLowerCase().trim();
                     const idx = selectedDamages.indexOf(raw);
                     if (idx >= 0) {
-                        // deseleccionar
                         selectedDamages.splice(idx, 1);
                         btn.classList.remove('on');
                     } else {
@@ -228,6 +224,7 @@ export const reportZone = ({ onSave, onCancel }) => {
                     if (errEl && selectedDamages.length > 0) { errEl.style.display = 'none'; errEl.textContent = '' }
                 };
             });
+
             $('rc-step1-next').onclick = () => {
                 const errEl = document.getElementById('rc-step1-err');
                 if (!selectedDamages || selectedDamages.length === 0) {
@@ -300,9 +297,8 @@ export const reportZone = ({ onSave, onCancel }) => {
                 };
             $('rc-enc-back').onclick = () => goStep('rc-step1');
 
-            // PASO 2 — silla
-            // PASO 2 — silla
-            ['rc-silla-arreglar','rc-silla-bodega'].forEach(id => $(id).onclick = () => {
+            // PASO 2 — Silla
+            ['rc-silla-arreglar', 'rc-silla-bodega'].forEach(id => $(id).onclick = () => {
                 const fix = id === 'rc-silla-arreglar';
                 detailMap['silla'] = fix ? 'reparar aquí mismo' : 'enviar a bodega';
                 $('rc-silla-lbl').textContent = fix ? '🔨 Se reparará en el puesto' : '📦 Se enviará a bodega';
@@ -324,7 +320,7 @@ export const reportZone = ({ onSave, onCancel }) => {
             };
             $('rc-silla-back').onclick = () => goStep('rc-step1');
 
-            // PASO 2 — simple
+            // PASO 2 — Simple
             $('rc-simple-next').onclick = () => goStep('rc-step3');
             $('rc-simple-back').onclick = () => goStep('rc-step1');
 
@@ -448,8 +444,8 @@ export const reportZone = ({ onSave, onCancel }) => {
             reportData.puestoId = id || '';
             reportData.categoria = '';
             reportData.comentario = '';
+            reportData.isFan = esFan;
 
-            // resetear estado interno de selección múltiple
             selectedDamages = [];
             detailMap = {};
             detailQueue = [];
@@ -461,16 +457,12 @@ export const reportZone = ({ onSave, onCancel }) => {
             const isFan = isFanElement || (typeof id === 'string' && id && id.toString().toUpperCase().startsWith('V'));
             if (titulo) titulo.textContent = `${isFan ? 'Ventilador' : 'Puesto'} ${reportData.puestoId || ''}`;
 
-            // Mostrar el modal
             const modal = document.getElementById('report-modal');
             if (modal) modal.classList.remove('d-none');
-            // Activar animación sheet
             const overlay = document.getElementById('rc-sheet');
             if (overlay) overlay.classList.add('on');
-            // Evitar scroll del body mientras el modal está abierto
             document.body.style.overflow = 'hidden';
 
-            // Reiniciar estado del wizard y limpiar selecciones
             document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('on'));
             // Asegurar visibilidad por defecto del botón de volver en paso 3
             const step3Back = document.getElementById('rc-step3-back'); if (step3Back) step3Back.style.display = '';
@@ -478,6 +470,7 @@ export const reportZone = ({ onSave, onCancel }) => {
             const step4Otro = document.getElementById('rc-otro'); if (step4Otro) step4Otro.style.display = '';
             // Si es un ventilador, saltamos a la descripción (PASO 3) y prellenamos una nota breve
             document.querySelectorAll('.dmg-btn,.cable-btn,.op-card,.yn-btn').forEach(b => b.classList.remove('on'));
+
             const nota = document.getElementById('rc-nota'); if (nota) nota.value = '';
             const chars = document.getElementById('rc-chars'); if (chars) chars.textContent = '0';
             ['rc-cable-next','rc-enc-next','rc-silla-next','rc-ai-btn','rc-step3-next'].forEach(idk => {
@@ -486,10 +479,8 @@ export const reportZone = ({ onSave, onCancel }) => {
             // Ocultar posible mensaje de error de paso 1
             const errElOpen = document.getElementById('rc-step1-err'); if (errElOpen) { errElOpen.style.display = 'none'; errElOpen.textContent = '' }
             const sillaDetail = document.getElementById('rc-silla-detail'); if (sillaDetail) sillaDetail.style.display = 'none';
-            // Limpiar resumen/recap
             const summaryEl = document.getElementById('rc-summary'); if (summaryEl) summaryEl.innerHTML = '';
             const recapEl = document.getElementById('rc-recap'); if (recapEl) recapEl.textContent = '—';
-            // Reset estado de botones de estado (sbtn) dejando 'so' marcado
             document.querySelectorAll('#rc-sheet .sbtn').forEach(b => b.classList.toggle('on', b.dataset.st === 'so'));
 
             if (isFan) {
@@ -518,12 +509,11 @@ export const reportZone = ({ onSave, onCancel }) => {
         close: () => {
             const overlay = document.getElementById('rc-sheet');
             if (overlay) overlay.classList.remove('on');
-            // Restaurar scroll del body
             document.body.style.overflow = '';
             setTimeout(() => {
                 const modal = document.getElementById('report-modal');
                 if (modal) modal.classList.add('d-none');
-            }, 300); // Espera la animación antes de ocultar
+            }, 300);
         }
     };
 };

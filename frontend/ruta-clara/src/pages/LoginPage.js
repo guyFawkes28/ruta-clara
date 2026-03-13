@@ -37,19 +37,22 @@ export const loginPage = () => ({
            loginBtn.addEventListener('click', async () => {
     
             try {
-            const user = await loginService(emailInput.value, pinInput.value);
-            
-            
-            persistence.saveSession(user); 
-            
-          
-            window.location.hash = "#/scanner"; 
+              console.log('[LoginPage] Iniciando login con:', emailInput.value)
+              const user = await loginService(emailInput.value, pinInput.value)
+              console.log('[LoginPage] Usuario autenticado:', user)
+              
+              persistence.saveSession(user)
+              console.log('[LoginPage] Sesión guardada')
+              console.log('[LoginPage] Autenticado según persistence:', persistence.isAuthentication())
+              
+              console.log('[LoginPage] Redirigiendo a #/home')
+              window.location.hash = "#/home"
             } catch (error) {
-       
-            errorMsg.textContent = error.message;
-            errorMsg.style.display = 'block';
+              console.error('[LoginPage] Error durante login:', error)
+              errorMsg.textContent = error.message || 'Error en la autenticación'
+              errorMsg.style.display = 'block'
             }
-            });
+            })
     
     
         }
