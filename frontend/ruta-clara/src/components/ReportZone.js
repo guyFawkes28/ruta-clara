@@ -50,8 +50,6 @@ export const reportZone = ({ onSave, onCancel }) => {
                     </div>
                     <button class="btn-navy" id="rc-step1-next">Siguiente →</button>
                     <div id="rc-step1-err" style="color:#dc2626;font-weight:800;margin-top:8px;display:none;font-size:13px">&nbsp;</div>
-                    <button class="btn-navy" id="rc-step1-next">Siguiente →</button>
-                    <div id="rc-step1-err" style="color:#dc2626;font-weight:800;margin-top:8px;display:none;font-size:13px">&nbsp;</div>
                     </div>
 
                     <!-- PASO 2a — Cable -->
@@ -436,7 +434,7 @@ export const reportZone = ({ onSave, onCancel }) => {
                 }
         },
 
-        open: (idPuesto) => {
+        open: (idPuesto, esFan = false) => {
             // Aceptamos tanto un id (string) como el elemento DOM con dataset.id
             const isElement = (idPuesto && typeof idPuesto === 'object' && idPuesto.dataset && idPuesto.dataset.id);
             const isFanElement = (idPuesto && typeof idPuesto === 'object' && idPuesto.classList && idPuesto.classList.contains('fan'));
@@ -444,7 +442,6 @@ export const reportZone = ({ onSave, onCancel }) => {
             reportData.puestoId = id || '';
             reportData.categoria = '';
             reportData.comentario = '';
-            reportData.isFan = esFan;
 
             selectedDamages = [];
             detailMap = {};
@@ -454,7 +451,8 @@ export const reportZone = ({ onSave, onCancel }) => {
 
             // Poner el título con el número del puesto o marcar como Ventilador
             const titulo = document.getElementById('rc-titulo');
-            const isFan = isFanElement || (typeof id === 'string' && id && id.toString().toUpperCase().startsWith('V'));
+            const isFan = Boolean(esFan) || isFanElement || (typeof id === 'string' && id && id.toString().toUpperCase().startsWith('V'));
+            reportData.isFan = !!isFan;
             if (titulo) titulo.textContent = `${isFan ? 'Ventilador' : 'Puesto'} ${reportData.puestoId || ''}`;
 
             const modal = document.getElementById('report-modal');
