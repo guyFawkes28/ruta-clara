@@ -43,7 +43,7 @@ export const loginPage = () => ({
             persistence.saveSession(user); 
             
           
-            window.location.hash = "#/scanner"; 
+            window.location.hash = "#/cleaning-report"; 
             } catch (error) {
        
             errorMsg.textContent = error.message;

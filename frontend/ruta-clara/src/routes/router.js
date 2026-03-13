@@ -4,13 +4,15 @@ import { notFoundPage } from "../pages/NotFound.js";
 import { scannerPage } from "../pages/ScanPage.js";
 import { zonePage } from "../pages/ZonePage.js";
 import { dashboardPage } from "../pages/DashboardPage.js";
+import { cleaningReportPage } from "../pages/cleaningReportPage.js";
 
 const routes = {
     "#/": loginPage(),
     "#/login": loginPage(),
     "#/scanner": scannerPage(),
     "#/zona": zonePage(),
-    "#/dashboard":dashboardPage()
+    "#/dashboard":dashboardPage(),
+    "#/cleaning-report": cleaningReportPage()
     
 };
 
@@ -35,7 +37,7 @@ export const routerManager = async () => {
         if (role === 'admin') {
             window.location.hash = "#/dashboard";
         } else {
-            window.location.hash = "#/scanner";
+            window.location.hash = "#/cleaning-report";
         }
         return;
     }
