@@ -1,8 +1,8 @@
-import { Sidebar } from '../components/Sidebar.js';
-import { homePage } from './HomePage.js';
-import { roomPage } from './RoomPage.js';
-import { inventoryPage } from './InventoryPage.js';
-import { chatPage } from './ChatPage.js';
+import { Sidebar } from '../components/SidebarAdmin.js';
+import { homePage } from './HomeAdminPage.js';
+import { roomPage } from './RoomAdminPage.js';
+import { inventoryPage } from './InventoryAdminPage.js';
+import { chatPage } from './ChatAdminPage.js';
 
 const pageMap = {
   inicio: homePage,

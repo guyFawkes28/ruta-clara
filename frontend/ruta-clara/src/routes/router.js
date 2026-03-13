@@ -2,9 +2,9 @@ import { notFoundPage } from "../pages/NotFound.js";
 import { loginPage } from "../pages/LoginPage.js";
 import { scannerPage } from "../pages/ScanPage.js";
 import { zonePage } from "../pages/ZonePage.js";
-import { chatPage } from "../pages/ChatPage.js";
-import { roomPage } from "../pages/RoomPage.js";
-import { dashboardPage } from "../pages/DashboardPage.js";
+import { chatPage } from "../pages/ChatAdminPage.js";
+import { roomPage } from "../pages/RoomAdminPage.js";
+import { dashboardPage } from "../pages/DashboardAdminPage.js";
 import { persistence } from "../util/persistence.js";
 
 const OMITIR_LOGIN_DEV = true;
