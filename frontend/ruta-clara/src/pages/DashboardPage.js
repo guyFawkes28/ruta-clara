@@ -120,6 +120,7 @@ function subDashboard() {
         <button class="db-btn db-btn-primary" id="db-new-report">+ Nuevo Reporte</button>
       </div>
     </div>
+    ${state.zoneNotFound ? '<div style="padding:10px 12px;border-radius:8px;background:rgba(220,38,38,0.06);color:var(--danger);margin-bottom:12px;font-weight:700;">Zona no encontrada</div>' : ''}
     <div class="db-cards">
       <div class="db-card db-fade"><div class="db-card-head"><span class="db-card-title">Equipos Activos</span></div><div class="db-card-value">${equipos.activos}</div><div class="db-card-stat">De ${equipos.total} totales</div></div>
       <div class="db-card db-fade" style="animation-delay:.06s"><div class="db-card-head"><span class="db-card-title">Inspecciones</span><span class="db-badge db-badge-info">${inspecciones.pendientes} pend.</span></div><div class="db-card-value">${inspecciones.completadas}</div><div class="db-card-stat">Completadas este mes</div></div>
