@@ -9,10 +9,12 @@ const state = {
   inspecciones: { total: 0, completadas: 0, pendientes: 0, conProblemas: 0, lista: [] },
   tecnicos: { total: 0, activos: 0, disponibles: 0, lista: [] },
   reportes: { generados: 0, pendientes: 0, lista: [] }
+  , zoneNotFound: false
 }
 
-const loadZone = async (qrCode = 'TL') => {
+const loadZone = async (qrCode = 'SALA3-P1') => {
   try {
+    state.zoneNotFound = false
     const data = await maintenanceService.getZoneByQR(qrCode)
     const activos = data?.activos || []
     state.equipos.lista = activos.map(a => ({
@@ -27,7 +29,12 @@ const loadZone = async (qrCode = 'TL') => {
     state.equipos.activos = counts['activo'] || counts['ok'] || 0
     state.equipos.inactivos = counts['inactivo'] || 0
     state.equipos.enMantenimiento = counts['mantenimiento'] || 0
-  } catch (err) { console.error('Error cargando zona:', err) }
+  } catch (err) { 
+    console.warn('Error cargando zona:', err)
+    state.zoneNotFound = true
+    state.equipos.lista = []
+    state.equipos.total = 0
+  }
 }
 
 const statusBadge = (estado) => {
