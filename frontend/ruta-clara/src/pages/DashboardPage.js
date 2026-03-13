@@ -1,12 +1,8 @@
 
 import { persistence } from "../util/persistence.js";
-<<<<<<< HEAD
 import maintenanceService from "../api/maintenance.service.js";
 import sidebarView from "../components/Sidebar.js";
 import { reportZone } from "../components/ReportZone.js";
-=======
-import { toast } from '../util/ux.js';
->>>>>>> ce2acfee6138705148d409b39e240037cfb86a91
 
 // Estado dinámico reemplazando los datos "quemados"
 const state = {
