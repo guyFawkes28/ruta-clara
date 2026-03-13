@@ -37,7 +37,7 @@ export const routerManager = async () => {
     }
 
     if (isAuth && (hash === "#/login" || hash === "#/" || hash === "")) {
-        // redirigir por rol: admins -> dashboard, otros -> scanner
+        // redirigir por rol: admins -> dashboard, otros -> home
         if (role === 'admin') {
             window.location.hash = "#/dashboard";
         } else {
@@ -72,7 +72,8 @@ export const routerManager = async () => {
         window.location.hash = '#/home'
         return
     }
-    if (role === 'admin' && (hash === '#/scanner' || hash === '#/zona' || hash.startsWith('#/zone/'))) {
+    // Admins no deben acceder a home, scanner ni a rutas de zona
+    if (role === 'admin' && (hash === '#/scanner' || hash === '#/zona' || hash === '#/home' || hash.startsWith('#/zone/'))) {
         window.location.hash = '#/dashboard'
         return
     }

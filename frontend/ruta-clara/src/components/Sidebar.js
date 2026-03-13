@@ -10,8 +10,7 @@ export const sidebarView = ({ activePage = 'dashboard', onNavigate } = {}) => ({
             <li><a data-db-page="equipos" class="${activePage === 'equipos' ? 'active' : ''}"><span class="nav-emoji">🔧</span><span class="nav-label">Equipos</span></a></li>
             <li><a data-db-page="inspecciones" class="${activePage === 'inspecciones' ? 'active' : ''}"><span class="nav-emoji">📋</span><span class="nav-label">Inspecciones</span></a></li>
             <li><a data-db-page="reportes" class="${activePage === 'reportes' ? 'active' : ''}"><span class="nav-emoji">📈</span><span class="nav-label">Reportes</span></a></li>
-            <li><a data-db-page="usuarios" class="${activePage === 'usuarios' ? 'active' : ''}"><span class="nav-emoji">👥</span><span class="nav-label">Usuarios</span></a></li>
-          </ul>
+            <li><a data-db-page="chat" class="${activePage === 'chat' ? 'active' : ''}"><span class="nav-emoji">💬</span><span class="nav-label">Chat</span></a></li>
         </nav>
       </div>
     </aside>

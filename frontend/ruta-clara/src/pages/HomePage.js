@@ -1,5 +1,7 @@
 import { persistence } from "../util/persistence.js"
 import maintenanceService from "../api/maintenance.service.js"
+import chatService from "../api/chat.service.js"
+import socketManager from "../api/socket.js"
 
 export const HomePage = () => {
 
@@ -30,21 +32,67 @@ export const HomePage = () => {
 
   const escapeHtml = (str) => String(str).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": "&#39;" })[s])
 
-  const renderMensaje = ({ tipo, autor, texto, hora }) => `
-    <div class="rc-msg ${tipo}">
-      <div class="rc-bubble">
-        <div class="rc-msg-sender">${escapeHtml(autor)}</div>
-        <div class="rc-msg-content">${escapeHtml(texto)}</div>
-        <div class="rc-msg-time">${escapeHtml(hora)}</div>
+  const renderMensaje = (msg) => {
+    const currentUser = persistence.getUser()
+    const isSent = msg.senderEmail === currentUser?.email
+    const tipo = isSent ? 'sent' : 'received'
+
+    const hora = msg.createdAt
+      ? new Date(msg.createdAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+      : msg.hora || '00:00'
+
+    const senderLabel = isSent ? 'Tú' : (msg.senderName || msg.autor || 'Usuario')
+
+    return `
+    <div style="
+      display: flex;
+      justify-content: ${isSent ? 'flex-end' : 'flex-start'};
+      margin-bottom: 12px;
+      padding: 0 4px;
+    ">
+      <div style="
+        background: ${isSent ? '#007AFF' : '#E5E5EA'};
+        color: ${isSent ? '#fff' : '#1a1a1a'};
+        padding: 10px 14px;
+        border-radius: ${isSent ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};
+        max-width: 72%;
+        min-width: 60px;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      ">
+        <div style="
+          font-size: 11px;
+          font-weight: 800;
+          opacity: 0.75;
+          margin-bottom: 4px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 180px;
+        ">${escapeHtml(senderLabel)}</div>
+        <div style="
+          font-size: 14px;
+          line-height: 1.45;
+          white-space: pre-wrap;
+        ">${escapeHtml(msg.message || msg.texto || '')}</div>
+        <div style="
+          font-size: 10px;
+          opacity: 0.6;
+          margin-top: 5px;
+          text-align: right;
+        ">${escapeHtml(hora)}</div>
       </div>
     </div>`
-
+  }
+  
   // ── Sub-renders ───────────────────────────────────────────
 
   const renderHome = () => `
     <div class="rc-welcome">
       <h2>${obtenerSaludo()}</h2>
       <div class="rc-welcome-date">${new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+        <button class="db-btn db-btn-secondary" id="db-logout">🔒 Cerrar sesión</button>
     </div>
 
     <div class="rc-section">
@@ -80,19 +128,19 @@ export const HomePage = () => {
   `
 
   const renderChat = () => `
-    <div class="rc-chat-wrap">
-      <div class="rc-chat-header">
-        <div class="rc-chat-title">💬 Mensajes del Sistema</div>
+    <div class="rc-chat-wrap" style="height: 100%; display: flex; flex-direction: column; background: var(--bg);">
+      <div class="rc-chat-header" style="flex-shrink: 0;">
+        <div class="rc-chat-title">💬 Chat en Vivo</div>
         <div class="rc-chat-status online">● Conectado</div>
       </div>
-      <div class="rc-messages" id="rc-messages" role="log" aria-live="polite" aria-atomic="false">
-        ${state.mensajes.map(renderMensaje).join('')}
+      <div class="rc-messages" id="rc-messages" role="log" aria-live="polite" aria-atomic="false" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column;">
+        <div style="text-align:center;padding:20px;color:var(--tsoft);">Cargando mensajes...</div>
       </div>
-      <div class="rc-chat-input-area">
-        <div class="rc-chat-form">
-          <input class="rc-chat-input" id="rc-chat-input" type="text" placeholder="Escribe un mensaje...">
-          <button class="rc-chat-send" id="rc-chat-send">➤</button>
-        </div>
+      <div class="rc-chat-input-area" style="flex-shrink: 0; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg);">
+        <form class="rc-chat-form" id="rc-chat-form" onsubmit="return false;" style="display: flex; gap: 8px; align-items: stretch;">
+          <input class="rc-chat-input" id="rc-chat-input" type="text" placeholder="Escribe un mensaje..." autocomplete="off" style="flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-family: 'Nunito', sans-serif; background: var(--input-bg); color: var(--text); outline: none;" />
+          <button class="rc-chat-send" id="rc-chat-send" type="button" style="padding: 10px 16px; background: #007AFF; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; flex-shrink: 0; transition: opacity 0.2s;">Enviar</button>
+        </form>
       </div>
     </div>
   `
@@ -198,6 +246,8 @@ export const HomePage = () => {
 
     loadRender: () => {
 
+      
+
       // ── Navegación entre vistas ──────────────────────────
       const cambiarVista = (vista) => {
         state.vistaActiva = vista
@@ -227,6 +277,18 @@ export const HomePage = () => {
         scanBtn.onclick = () => { window.location.hash = '#/scanner' }
         scanBtn.setAttribute('role', 'button')
         scanBtn.setAttribute('aria-pressed', 'false')
+      }
+
+      // Botón de cerrar sesión en la vista Home (si existe)
+      const homeLogoutBtn = document.getElementById('db-logout')
+      if (homeLogoutBtn) {
+        if (!homeLogoutBtn.dataset.logoutBound) {
+          homeLogoutBtn.onclick = () => {
+            persistence.clearSession()
+            window.location.hash = '#/login'
+          }
+          homeLogoutBtn.dataset.logoutBound = '1'
+        }
       }
 
       // ── Cargar tareas pendientes y actualizar estadísticas ──
@@ -295,29 +357,107 @@ export const HomePage = () => {
       setTimeout(() => cargarTareasPendientes(), 100)
 
       // ── Chat ─────────────────────────────────────────────
-      const montarChat = () => {
+      const montarChat = async () => {
         const input = document.getElementById('rc-chat-input')
         const sendBtn = document.getElementById('rc-chat-send')
+        const form = document.getElementById('rc-chat-form')
         const container = document.getElementById('rc-messages')
-        if (!input || !sendBtn || !container) return
-
-        const enviar = () => {
-          const texto = input.value.trim()
-          if (!texto) return
-
-          const msg = { tipo: 'sent', autor: 'Tú', texto, hora: ahora() }
-          state.mensajes.push(msg)
-
-          container.insertAdjacentHTML('beforeend', renderMensaje(msg))
-          container.scrollTop = container.scrollHeight
-          input.value = ''
+        if (!input || !sendBtn || !container) {
+          console.error('[HomePage Chat] Elementos no encontrados')
+          return
         }
 
-        sendBtn.onclick = enviar
-        input.onkeydown = (e) => { if (e.key === 'Enter') enviar() }
+        // Evitar montar múltiples veces si ya hay listeners
+        if (sendBtn.dataset.homeChatBound) {
+          console.log('[HomePage Chat] Ya montado, solo cargando histórico')
+          try {
+            const mensajes = await chatService.getMessages('HOME', 50, 0)
+            state.mensajes = mensajes
+            container.innerHTML = mensajes.length === 0 
+              ? '<div style="text-align:center;padding:20px;color:var(--tsoft);">Sin mensajes</div>'
+              : mensajes.map(renderMensaje).join('')
+            container.scrollTop = container.scrollHeight
+          } catch (err) {
+            console.error('[HomePage Chat] Error recargando:', err)
+          }
+          return
+        }
 
-        // Scroll al último mensaje
-        container.scrollTop = container.scrollHeight
+        sendBtn.dataset.homeChatBound = '1'
+
+        try {
+          // Conectar al servidor de WebSocket
+          await socketManager.connect('HOME')
+          console.log('[HomePage Chat] WebSocket conectado')
+          
+          // Cargar mensajes históricos del servidor
+          const cargarMensajesHistoricos = async () => {
+            try {
+              const mensajes = await chatService.getMessages('HOME', 50, 0)
+              console.log('[HomePage Chat] Mensajes históricos cargados:', mensajes.length)
+              state.mensajes = mensajes
+              container.innerHTML = mensajes.length === 0 
+                ? '<div style="text-align:center;padding:20px;color:var(--tsoft);">Sin mensajes</div>'
+                : mensajes.map(renderMensaje).join('')
+              container.scrollTop = container.scrollHeight
+            } catch (err) {
+              console.error('[HomePage Chat] Error cargando histórico:', err)
+              container.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">Sin mensajes previos</div>'
+            }
+          }
+
+          // Escuchar nuevos mensajes en tiempo real
+          socketManager.onMessage((msg) => {
+            console.log('[HomePage Chat] Nuevo mensaje:', msg.senderName, '-', msg.message)
+            // Evitar duplicados
+            if (state.mensajes.find(m => m._id === msg._id)) {
+              console.log('[HomePage Chat] Mensaje duplicado, ignorando')
+              return
+            }
+            state.mensajes.push(msg)
+            const html = renderMensaje(msg)
+            container.insertAdjacentHTML('beforeend', html)
+            container.scrollTop = container.scrollHeight
+          })
+
+          // Enviar mensaje
+          const enviar = () => {
+            const texto = input.value.trim()
+            if (!texto) return
+
+            console.log('[HomePage Chat] Enviando mensaje:', texto)
+            const currentUser = persistence.getUser()
+            socketManager.sendMessage({
+              message: texto,
+              sender: 'HOME',
+              senderName: currentUser?.name || 'Técnico',
+              senderEmail: currentUser?.email || 'unknown@mail.com',
+              role: currentUser?.rol || 'OPERATOR',
+              recipient: 'DASHBOARD'
+            })
+            input.value = ''
+            input.focus()
+          }
+
+          // Vincular eventos (remover listeners antiguos primero)
+          sendBtn.onclick = null
+          input.onkeydown = null
+          
+          sendBtn.onclick = enviar
+          input.onkeydown = (e) => { 
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              enviar()
+            }
+          }
+          if (form) form.onsubmit = (e) => { e.preventDefault(); enviar(); return false }
+
+          // Cargar histórico al iniciar
+          await cargarMensajesHistoricos()
+        } catch (err) {
+          console.error('[HomePage Chat] Error conectando:', err)
+          container.innerHTML = '<div style="text-align:center;padding:20px;color:#f00;">Error conectando al chat</div>'
+        }
       }
 
       // ── Settings ─────────────────────────────────────────
@@ -327,10 +467,8 @@ export const HomePage = () => {
         const logoutBtn = document.getElementById('rc-logout')
         if (!logoutBtn) return
         logoutBtn.onclick = () => {
-          if (confirm('¿Cerrar sesión?')) {
-            persistence.clearSession()
-            window.location.hash = '#/login'
-          }
+          persistence.clearSession()
+          window.location.hash = '#/login'
         }
       }
 
