@@ -1,5 +1,6 @@
 
 import { persistence } from "../util/persistence.js";
+import { toast } from '../util/ux.js';
 
 const mockData = {
   equipos: {
@@ -369,7 +370,7 @@ export const dashboardPage = () => ({
       })
       document.getElementById('db-new-report')?.addEventListener('click', () => {
         // TODO: conectar con tu servicio real
-        alert('📋 Nuevo reporte')
+        toast('📋 Nuevo reporte', 'info')
       })
     }
 

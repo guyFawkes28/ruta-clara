@@ -28,12 +28,17 @@ export function headerView({ zona = 'Sala 3 — Piso 1', onScan = () => {} } = {
               </button>
             </div>
           </div>
+          <div class="hdr-cta">
+            <button id="hdr-home-btn" class="hdr-home-btn" aria-label="Ir al inicio">🏠 Volver al inicio</button>
+          </div>
         </div>
       `;
     },
 
     loadRender() {
       document.getElementById('hdr-scan').onclick = onScan;
+      const hdrHome = document.getElementById('hdr-home-btn');
+      if (hdrHome) hdrHome.onclick = () => { window.location.hash = '#/home'; };
       document.getElementById('hdr-logout').onclick = () => {
         persistence.clearSession();
         window.location.hash = '#/login';
