@@ -18,6 +18,7 @@
     "call-bind-apply-helpers": "^1.0.2",
     "call-bound": "^1.0.4",
     "chokidar": "^3.6.0",
+    "concurrently": "^9.2.1",
     "content-disposition": "^1.0.1",
     "content-type": "^1.0.5",
     "cookie": "^0.7.2",
@@ -114,7 +115,7 @@
     "ws": "^8.19.0"
   },
   "scripts": {
-    "dev": "nodemon app.js"
+    "dev": "concurrently \"nodemon app.js\" \"nodemon server.js\""
   },
   "keywords": [],
   "author": "",
