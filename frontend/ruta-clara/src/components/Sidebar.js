@@ -25,7 +25,7 @@ export const Sidebar = ({ onNavigate } = {}) => {
             <i class="bi bi-box-seam me-2"></i>Inventario
           </button>
           <button class="nav-link-custom w-100 mb-1 btn btn-link text-start text-white" data-view="chat">
-            <i class="bi bi-chat-dots me-2"></i>Chat Empleado
+            <i class="bi bi-chat-dots me-2"></i>Chat 
           </button>
         </div>
 
@@ -119,7 +119,7 @@ export const Sidebar = ({ onNavigate } = {}) => {
         const view = btn.getAttribute('data-view');
         if (view === 'salir') {
           persistence.clearSession();
-          window.location.hash = '#/';
+          window.location.hash = '#/login';
           return;
         }
         

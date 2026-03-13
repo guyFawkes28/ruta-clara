@@ -1,12 +1,7 @@
-import { headerView } from '../components/Header.js';
 import { reportZone } from '../components/ReportZone.js';
 
 export const roomPage = () => {
   const zona = 'Sala 1';
-  const header = headerView({ 
-    zona, 
-    onScan: () => { window.location.hash = '#/scanner'; } 
-  });
 
   const modalReporte = reportZone({
     onSave: (datos) => {
@@ -25,7 +20,6 @@ export const roomPage = () => {
 
   return {
     render: () => `
-      ${header.render()}
       <div class="sala1-wrap">
         <div class="sh">Estado de Equipos</div>
         
@@ -122,8 +116,6 @@ export const roomPage = () => {
     `,
 
     loadRender: () => {
-      header.loadRender();
-      
       // Eventos para todos los elementos clickeables
       const elementos = document.querySelectorAll('.p, .p-tl, .fan');
       elementos.forEach(el => {
