@@ -158,14 +158,13 @@ export const HomePage = () => {
     `
   }
 
-  // ── Vistas disponibles ────────────────────────────────────
+  // ── Vistas disponibles 
   const vistas = {
     home: renderHome,
     chat: renderChat,
     settings: renderSettings,
   }
 
-  // ─────────────────────────────────────────────────────────
   return {
 
     render: () => `
