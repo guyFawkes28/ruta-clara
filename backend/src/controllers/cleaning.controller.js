@@ -5,12 +5,13 @@ export const createCleaning = async (req, res) => {
   try {
     const db = await connectMongo();
 
-    const { zone_id, user_name, descriptions } = req.body;
+    const { zone_id, user_name, descriptions, hora_fin } = req.body;
 
     const cleaning = {
       zone_id,
       user_name,
       descriptions,
+      hora_fin: hora_fin || null,
       createdAt: new Date()
     };
 
@@ -67,31 +68,43 @@ export const getCleanings = async (req, res) => {
 
 export const getCurrentCleaningInfo = async (req, res) => {
   try {
-
-    const { codigo_qr } = req.query;
+    // FIX 1: Se leen ambos parámetros requeridos desde query
+    const { codigo_qr, user_id } = req.query;
 
     if (!codigo_qr) {
-      return res.status(400).json({ error: "codigo_qr requerido" });
+      return res.status(400).json({ error: "codigo_qr es requerido" });
     }
 
-    // Buscar la zona en Supabase
-    const { data: zona, error } = await supabase
+    if (!user_id) {
+      return res.status(400).json({ error: "user_id es requerido" });
+    }
+
+    // Buscar la zona en Supabase usando el código QR
+    const { data: zona, error: zonaError } = await supabase
       .from("zonas")
       .select("id_zona, nombre")
       .eq("codigo_qr", codigo_qr)
       .single();
 
-    if (error || !zona) {
+    if (zonaError || !zona) {
       return res.status(404).json({ error: "Zona no encontrada" });
     }
 
-    // Usuario (temporal hasta conectar login real)
-    const user_name = "Admin";
+    // FIX 2: Buscar el nombre del usuario real en la tabla usuarios
+    const { data: usuario, error: usuarioError } = await supabase
+      .from("usuarios")
+      .select("nombre")
+      .eq("id", user_id)
+      .single();
+
+    if (usuarioError || !usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
 
     res.json({
       zone_id: zona.id_zona,
       zone_name: zona.nombre,
-      user_name: user_name
+      user_name: usuario.nombre
     });
 
   } catch (error) {
