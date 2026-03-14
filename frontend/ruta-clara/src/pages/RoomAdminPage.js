@@ -13,8 +13,8 @@ export const roomPage = () => {
   });
 
   // Función auxiliar para generar puestos rápidamente
-  const crearPuesto = (clase, id, label) => `
-    <div class="p ${clase}" data-id="${id}">
+  const crearPuesto = (id, label) => `
+    <div class="p" data-id="${id}">
       <div class="plbl-in">${label}</div>
     </div>`;
 
@@ -36,8 +36,7 @@ export const roomPage = () => {
           </div>
           
           <div class="map-body">
-            <div class="pasillo">— PASILLO CENTRAL —</div>
-            
+            <div class="pasillo">— PASILLO CE
             <div class="tl-row">
               <div class="tl-wrap">
                 <div class="tl-lbl">Puesto TL</div>
@@ -47,66 +46,66 @@ export const roomPage = () => {
 
             <div class="bloques">
               <div class="bloque">
-                <div class="fan sv" data-id="V1"><div class="fan-lbl">V1</div></div>
+                <div class="fan" data-id="V1"><div class="fan-lbl">V1</div></div>
                 
                 <div class="mesa"><div class="prow">
-                  ${crearPuesto('sg', 'A-P4', 'P4')} ${crearPuesto('so', 'A-P3', 'P3')}
-                  ${crearPuesto('sv', 'A-P2', 'P2')} ${crearPuesto('sg', 'A-P1', 'P1')}
+                  ${crearPuesto('A-P4', 'P4')} ${crearPuesto('A-P3', 'P3')}
+                  ${crearPuesto('A-P2', 'P2')} ${crearPuesto('A-P1', 'P1')}
                 </div></div>
 
                 <div class="mesa"><div class="prow">
-                  ${crearPuesto('sb', 'B-P4', 'P4')} ${crearPuesto('sg', 'B-P3', 'P3')}
-                  ${crearPuesto('so', 'B-P2', 'P2')} ${crearPuesto('sv', 'B-P1', 'P1')}
+                  ${crearPuesto('B-P4', 'P4')} ${crearPuesto('B-P3', 'P3')}
+                  ${crearPuesto('B-P2', 'P2')} ${crearPuesto('B-P1', 'P1')}
                 </div></div>
 
                 <div class="mesa"><div class="prow">
-                  ${crearPuesto('sg', 'C-P4', 'P4')} ${crearPuesto('sg', 'C-P3', 'P3')}
-                  ${crearPuesto('so', 'C-P2', 'P2')} ${crearPuesto('sg', 'C-P1', 'P1')}
+                  ${crearPuesto('C-P4', 'P4')} ${crearPuesto('C-P3', 'P3')}
+                  ${crearPuesto('C-P2', 'P2')} ${crearPuesto('C-P1', 'P1')}
                 </div></div>
 
                 <div class="mesa"><div class="prow">
-                  ${crearPuesto('sv', 'D-P4', 'P4')} ${crearPuesto('sg', 'D-P3', 'P3')}
-                  ${crearPuesto('sg', 'D-P2', 'P2')} ${crearPuesto('sg', 'D-P1', 'P1')}
+                  ${crearPuesto('D-P4', 'P4')} ${crearPuesto('D-P3', 'P3')}
+                  ${crearPuesto('D-P2', 'P2')} ${crearPuesto('D-P1', 'P1')}
                 </div></div>
 
                 <div class="mesa"><div class="prow">
-                  ${crearPuesto('sg', 'E-P2', 'P2')} ${crearPuesto('sb', 'E-P1', 'P1')}
+                  ${crearPuesto('E-P2', 'P2')} ${crearPuesto('E-P1', 'P1')}
                 </div></div>
 
-                <div class="fan so" data-id="V2"><div class="fan-lbl">V2</div></div>
+                <div class="fan" data-id="V2"><div class="fan-lbl">V2</div></div>
               </div>
 
               <div class="divider"></div>
 
               <div class="bloque">
-                <div class="fan sg" data-id="V3"><div class="fan-lbl">V3</div></div>
+                <div class="fan" data-id="V3"><div class="fan-lbl">V3</div></div>
 
                 <div class="mesa"><div class="prow">
-                  ${crearPuesto('sv', 'F-P1', 'P1')} ${crearPuesto('sg', 'F-P2', 'P2')}
-                  ${crearPuesto('so', 'F-P3', 'P3')} ${crearPuesto('sb', 'F-P4', 'P4')}
+                  ${crearPuesto('F-P1', 'P1')} ${crearPuesto('F-P2', 'P2')}
+                  ${crearPuesto('F-P3', 'P3')} ${crearPuesto('F-P4', 'P4')}
                 </div></div>
 
                 <div class="mesa"><div class="prow">
-                  ${crearPuesto('sg', 'G-P1', 'P1')} ${crearPuesto('sv', 'G-P2', 'P2')}
-                  ${crearPuesto('sg', 'G-P3', 'P3')} ${crearPuesto('so', 'G-P4', 'P4')}
+                  ${crearPuesto('G-P1', 'P1')} ${crearPuesto('G-P2', 'P2')}
+                  ${crearPuesto('G-P3', 'P3')} ${crearPuesto('G-P4', 'P4')}
                 </div></div>
 
                 <div class="mesa"><div class="prow">
-                  ${crearPuesto('sg', 'H-P1', 'P1')} ${crearPuesto('sg', 'H-P2', 'P2')}
-                  ${crearPuesto('sg', 'H-P3', 'P3')} ${crearPuesto('sg', 'H-P4', 'P4')}
+                  ${crearPuesto('H-P1', 'P1')} ${crearPuesto('H-P2', 'P2')}
+                  ${crearPuesto('H-P3', 'P3')} ${crearPuesto('H-P4', 'P4')}
                 </div></div>
 
                 <div class="mesa"><div class="prow">
-                  ${crearPuesto('sg', 'I-P1', 'P1')} ${crearPuesto('sb', 'I-P2', 'P2')}
-                  ${crearPuesto('sv', 'I-P3', 'P3')}
+                  ${crearPuesto('I-P1', 'P1')} ${crearPuesto('I-P2', 'P2')}
+                  ${crearPuesto('I-P3', 'P3')}
                 </div></div>
 
                 <div class="mesa"><div class="prow">
-                  ${crearPuesto('so', 'J-P1', 'P1')} ${crearPuesto('sg', 'J-P2', 'P2')}
-                  ${crearPuesto('sv', 'J-P3', 'P3')}
+                  ${crearPuesto('J-P1', 'P1')} ${crearPuesto('J-P2', 'P2')}
+                  ${crearPuesto('J-P3', 'P3')}
                 </div></div>
 
-                <div class="fan sg" data-id="V4"><div class="fan-lbl">V4</div></div>
+                <div class="fan" data-id="V4"><div class="fan-lbl">V4</div></div>
               </div>
             </div>
           </div>
