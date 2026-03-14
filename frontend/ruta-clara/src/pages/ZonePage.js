@@ -35,8 +35,29 @@ const modalReporte = reportZone({
                     if (el) {
                         el.classList.remove('sg', 'so', 'sb', 'sv');
                         el.classList.add(claseEstado[activo.estado] || 'sg');
-                        const fallos = activo.fallos_activos?.length ? activo.fallos_activos.join(', ') : 'Sin fallos';
-                        el.setAttribute('title', `Estado: ${activo.estado} | Componentes: ${fallos}`);
+                        const estadoColorMap = { Gris: '#9CA3AF', Naranja: '#F97316', Azul: '#2563EB', Verde: '#16A34A' };
+                        const estadoColor = estadoColorMap[activo.estado] || '#999';
+                        const componentesBase = ['Pantalla', 'Teclado', 'Silla', 'Cable', 'Enchufe'];
+                        const fallos = activo.fallos_activos?.length ? activo.fallos_activos : [];
+                        const componentesHtml = componentesBase.map(c => {
+                            const damaged = fallos.some(f => f.toLowerCase().includes(c.toLowerCase()));
+                            return `
+                                <li style="display:flex;align-items:center;gap:8px;">
+                                    <span style="font-size:12px;">${damaged ? '⚠️' : '✅'}</span>
+                                    ${c}
+                                </li>`;
+                        }).join('');
+                        const tooltipHtml = `
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span style="width:10px;height:10px;border-radius:50%;background:${estadoColor};display:inline-block;"></span>
+                                <strong>Estado:</strong> ${activo.estado}
+                            </div>
+                            <div style="margin-top:6px;"><strong>Componentes:</strong></div>
+                            <ul style="margin:4px 0 0 1rem; padding:0; list-style:disc;">
+                                ${componentesHtml}
+                            </ul>
+                        `;
+                        setupPuestoTooltip(el, tooltipHtml);
                     }
                 });
             } catch (e) { console.warn('No se pudo refrescar zona:', e); }
@@ -50,6 +71,16 @@ const modalReporte = reportZone({
     },
     onCancel: () => { modalReporte.close(); }
 });
+
+    const setupPuestoTooltip = (el, htmlContent) => {
+        if (!el || !window.bootstrap?.Tooltip) return;
+        bootstrap.Tooltip.getOrCreateInstance(el, {
+            trigger: 'hover focus',
+            customClass: 'puesto-tooltip',
+            html: true,
+            title: htmlContent
+        });
+    };
 
     const crearPuesto = (etiqueta, label) => `
         <div class="p sg" data-id="${etiqueta}" style="cursor:pointer;">
@@ -162,8 +193,29 @@ const modalReporte = reportZone({
                         el.setAttribute('data-id', String(activo.id_activo));
                         el.classList.remove('sg', 'so', 'sb', 'sv');
                         el.classList.add(claseEstado[activo.estado] || 'sg');
-                        const fallos = activo.fallos_activos?.length ? activo.fallos_activos.join(', ') : 'Sin fallos';
-                        el.setAttribute('title', `Estado: ${activo.estado} | Componentes: ${fallos}`);
+                        const estadoColorMap = { Gris: '#9CA3AF', Naranja: '#F97316', Azul: '#2563EB', Verde: '#16A34A' };
+                        const estadoColor = estadoColorMap[activo.estado] || '#999';
+                        const componentesBase = ['Pantalla', 'Teclado', 'Silla', 'Cable', 'Enchufe'];
+                        const fallos = activo.fallos_activos?.length ? activo.fallos_activos : [];
+                        const componentesHtml = componentesBase.map(c => {
+                            const damaged = fallos.some(f => f.toLowerCase().includes(c.toLowerCase()));
+                            return `
+                                <li style="display:flex;align-items:center;gap:8px;">
+                                    <span style="font-size:12px;">${damaged ? '⚠️' : '✅'}</span>
+                                    ${c}
+                                </li>`;
+                        }).join('');
+                        const tooltipHtml = `
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span style="width:10px;height:10px;border-radius:50%;background:${estadoColor};display:inline-block;"></span>
+                                <strong>Estado:</strong> ${activo.estado}
+                            </div>
+                            <div style="margin-top:6px;"><strong>Componentes:</strong></div>
+                            <ul style="margin:4px 0 0 1rem; padding:0; list-style:disc;">
+                                ${componentesHtml}
+                            </ul>
+                        `;
+                        setupPuestoTooltip(el, tooltipHtml);
                     }
                 });
 

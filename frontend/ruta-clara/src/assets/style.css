@@ -55,10 +55,10 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 
 
 /* ── Mapa ── */
-.map-outer{background:#fff;border:1.5px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.07);}
+.map-outer{background:#fff;border:1.5px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.07);width:100%;max-width:100%;}
 .map-hdr{padding:8px 12px;border-bottom:1px solid var(--border);text-align:center;}
 .map-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--tsoft);}
-.map-body{padding:10px 6px 14px;}
+.map-body{padding:10px 6px 14px;overflow-x:auto;}
 
 /* ── Pasillo ── */
 .pasillo{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--tsoft);text-align:center;margin-bottom:8px;}
@@ -108,7 +108,17 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 
 /* ── Mesa ── */
 .mesa{background:#F8FAFC;border:1.5px solid var(--border);border-radius:7px;padding:4px;width:100%;}
-.prow{display:flex;gap:3px;justify-content:center;width:100%;}
+.prow{display:flex;flex-wrap:nowrap;gap:3px;justify-content:center;width:100%;min-width:0;}
+
+@media (max-width: 600px) {
+  /* En móviles dejamos los puestos en una sola fila y dejamos scroll horizontal si es necesario */
+  .prow { flex-wrap: nowrap; }
+  .p {
+    width: clamp(28px, 7vw, 42px);
+    max-width: clamp(28px, 7vw, 42px);
+    flex: 0 0 clamp(28px, 7vw, 42px);
+  }
+}
 
 /* ── Puesto ── */
 .p {
@@ -771,41 +781,43 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 
 /* Tooltip personalizado para puestos */
 .puesto-tooltip {
-  --bs-tooltip-bg: #222;
-  --bs-tooltip-color: #fff;
-  --bs-tooltip-font-size: 0.75rem;
-  --bs-tooltip-padding-x: 0.5rem;
-  --bs-tooltip-padding-y: 0.25rem;
-  --bs-tooltip-border-radius: 0.4rem;
-  --bs-tooltip-opacity: 0.95;
-  text-align: center;
+  --bs-tooltip-bg: rgba(255,255,255,0.95);
+  --bs-tooltip-color: #111;
+  --bs-tooltip-font-size: 0.85rem;
+  --bs-tooltip-padding-x: 0.75rem;
+  --bs-tooltip-padding-y: 0.6rem;
+  --bs-tooltip-border-radius: 14px;
+  --bs-tooltip-opacity: 0.99;
+  text-align: left;
 }
 
 /* Tooltip personalizado para puestos - versión clara y ancha */
 .puesto-tooltip.bs-tooltip-auto[data-popper-placement^=top],
 .puesto-tooltip.bs-tooltip-top {
-  --bs-tooltip-bg: #f9fafb;
-  --bs-tooltip-color: #222;
-  --bs-tooltip-font-size: 0.85rem;
-  --bs-tooltip-padding-x: 1.1rem;
-  --bs-tooltip-padding-y: 0.38rem;
-  --bs-tooltip-border-radius: 12px;
-  --bs-tooltip-opacity: 0.98;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.10);
-  border: none;
-  text-align: center;
-  letter-spacing: 0.01em;
-  min-width: 120px;
-  max-width: 220px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  border: 1px solid rgba(0,0,0,0.12);
+  min-width: 180px;
+  max-width: 240px;
 }
 
 .puesto-tooltip .tooltip-inner {
-  padding: 0.38rem 1.1rem;
+  padding: 0.6rem 0.8rem;
   font-size: 0.85rem;
-  border-radius: 12px;
-  background: #bdbdbd;
-  color: #222;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.98);
+  color: #111;
   box-shadow: none;
+  text-align: left;
+}
+
+.puesto-tooltip .tooltip-inner ul {
+  margin: 0.35rem 0 0 1.2rem;
+  padding: 0;
+  list-style: disc;
+}
+
+.puesto-tooltip .tooltip-inner li {
+  margin: 0.08rem 0;
 }
 
 /* Mejoras para HomePage */
@@ -910,36 +922,80 @@ html, body {
   flex-direction: column;
 }
 
-/* === OVERRIDE: Desktop map and seats larger === */
-@media (min-width: 900px) {
-  .zone-responsive {
-    max-width: 1200px;
-    min-width: 700px;
-  }
+/* === OVERRIDE: Responsive map & seats (tablet / laptop / desktop) === */
+@media (min-width: 600px) {
+  .sala1-wrap { max-width: 720px; }
+  .zone-responsive { max-width: 700px; }
+
   .map-body {
     min-height: 520px;
     max-height: 1000px;
-    padding: 40px 32px 40px;
-    gap: 24px;
+    padding: 26px 18px 30px;
+    gap: 18px;
   }
-  .bloques {
-    gap: 24px;
-  }
+  .bloques { gap: 16px; }
+
   .p {
-    font-size: clamp(14px, 2vw, 28px);
-    width: clamp(36px, 13vw, 72px);
-    max-width: clamp(36px, 13vw, 72px);
+    font-size: clamp(14px, 2vw, 22px);
+    width: clamp(36px, 8vw, 56px);
+    max-width: clamp(36px, 8vw, 56px);
     aspect-ratio: 0.85;
   }
-  .plbl-in {
-    font-size: clamp(10px, 1.2vw, 16px);
+  .plbl-in { font-size: clamp(10px, 1.2vw, 14px); }
+  .p-tl, .fan {
+    font-size: clamp(18px, 2vw, 24px);
+    width: clamp(44px, 8vw, 56px);
+    height: clamp(48px, 8vw, 60px);
+  }
+  .tlbl, .fan-lbl { font-size: clamp(9px, 1vw, 14px); }
+}
+
+@media (min-width: 900px) {
+  .sala1-wrap { max-width: 940px; }
+  .zone-responsive { max-width: 900px; }
+
+  .map-body {
+    min-height: 520px;
+    max-height: 1000px;
+    padding: 32px 24px 32px;
+    gap: 20px;
+  }
+  .bloques { gap: 18px; }
+
+  .p {
+    font-size: clamp(14px, 2vw, 24px);
+    width: clamp(36px, 7vw, 62px);
+    max-width: clamp(36px, 7vw, 62px);
+    aspect-ratio: 0.85;
   }
   .p-tl, .fan {
-    font-size: clamp(18px, 2vw, 32px);
-    width: clamp(44px, 8vw, 72px);
-    height: clamp(48px, 8vw, 76px);
+    font-size: clamp(18px, 2vw, 28px);
+    width: clamp(44px, 7vw, 64px);
+    height: clamp(48px, 7vw, 68px);
   }
-  .tlbl, .fan-lbl {
-    font-size: clamp(9px, 1vw, 18px);
+}
+
+@media (min-width: 1200px) {
+  .sala1-wrap { max-width: 1100px; }
+  .zone-responsive { max-width: 1040px; }
+
+  .map-body {
+    min-height: 520px;
+    max-height: 1000px;
+    padding: 40px 30px 40px;
+    gap: 24px;
+  }
+  .bloques { gap: 20px; }
+
+  .p {
+    font-size: clamp(14px, 2vw, 26px);
+    width: clamp(36px, 6vw, 64px);
+    max-width: clamp(36px, 6vw, 64px);
+    aspect-ratio: 0.85;
+  }
+  .p-tl, .fan {
+    font-size: clamp(18px, 2vw, 30px);
+    width: clamp(44px, 6vw, 68px);
+    height: clamp(48px, 6vw, 70px);
   }
 }
