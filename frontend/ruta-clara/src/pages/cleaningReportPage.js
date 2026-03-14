@@ -84,7 +84,7 @@ export const cleaningReportPage = () => ({
 
 						<input
 							id="clean-time"
-													type="text"
+							type="text"
 							class="form-control"
 							readonly
 						>
@@ -145,7 +145,6 @@ export const cleaningReportPage = () => ({
 		const updateDateTime = () => {
 
 			const now = new Date()
-
 			const date = now.toLocaleDateString("es-CO")
 			const time = now.toLocaleTimeString("es-CO")
 
@@ -162,19 +161,39 @@ export const cleaningReportPage = () => ({
 
 		try {
 
-			const res = await fetch("http://localhost:4000/api/cleanings/info");
+			// Leer usuario desde localStorage (guardado por persistence.saveSession en el login)
+			const session = JSON.parse(localStorage.getItem("user-data"));
+
+			if (!session) {
+				throw new Error("No hay sesión activa. Inicia sesión primero.");
+			}
+
+			// El name viene directo del localStorage, no del backend
+			user_name = session.name;
+			document.getElementById("clean-user").value = session.name;
+
+			// Lee el codigo_qr desde la URL: /cleaning-report?qr=SALA3-P1
+			const urlParams = new URLSearchParams(window.location.search);
+			const codigo_qr = urlParams.get("qr") || "SALA3-P1";
+
+			const res = await fetch(`http://localhost:4000/api/cleanings/info?codigo_qr=${codigo_qr}`);
+
+			if (!res.ok) {
+				const err = await res.json();
+				throw new Error(err.error || `Error HTTP ${res.status}`);
+			}
+
 			const data = await res.json();
 
 			zone_id = data.zone_id;
-			user_name = data.user_name;
-
-			document.getElementById("clean-user").value = data.user_name;
-			document.getElementById("zone-name").textContent = data.zone_name;
+			document.getElementById("zone-name").textContent     = data.zone_name;
 			document.getElementById("zone-tag-name").textContent = data.zone_name;
 
 		} catch (error) {
 
-			console.error("Error cargando datos de limpieza", error)
+			console.error("Error cargando datos de limpieza:", error.message);
+			document.getElementById("zone-name").textContent = "Error al cargar zona";
+			document.getElementById("clean-user").value = "Error al cargar usuario";
 
 		}
 
@@ -203,9 +222,15 @@ export const cleaningReportPage = () => ({
 					return
 				}
 
+				// Validar que los datos de zona/usuario se cargaron antes de enviar
+				if (!zone_id || !user_name) {
+					alert("No se pudieron cargar los datos de zona o usuario. Recarga la página.")
+					return
+				}
+
 				try {
 
-					const res = await fetch("http://localhost:4000/api/cleaning",  {
+					const res = await fetch("http://localhost:4000/api/cleaning", {
 
 						method: "POST",
 
@@ -221,6 +246,11 @@ export const cleaningReportPage = () => ({
 
 					})
 
+					if (!res.ok) {
+						const err = await res.json();
+						throw new Error(err.error || `Error HTTP ${res.status}`);
+					}
+
 					const result = await res.json()
 
 					alert("Limpieza registrada correctamente")
@@ -231,7 +261,8 @@ export const cleaningReportPage = () => ({
 
 				} catch (error) {
 
-					console.error("Error registrando limpieza", error)
+					console.error("Error registrando limpieza:", error.message)
+					alert("Error al registrar limpieza: " + error.message)
 
 				}
 
