@@ -11,6 +11,7 @@ import cookieParser from 'cookie-parser'
 import { verifyToken } from './src/middlewares/auth.middleware.js'
 import { connectMongo } from './src/config/db.js'
 import Chat from './src/models/Chat.model.js'
+import cleaningRoutes from "./src/routes/cleaning.routes.js";
 
 const app = express()
 const httpServer = createServer(app)
@@ -35,6 +36,8 @@ app.use(cookieParser())
 
 app.use('/api/auth',authRoutes)
 app.use('/api/maintenance',verifyToken,maintenanceRoutes)
+
+app.use("/api", cleaningRoutes);
 app.use('/api/chat', chatRoutes)
 
 // ─── Socket.io Events ───────────────────────────────────────

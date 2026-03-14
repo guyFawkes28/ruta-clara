@@ -2,6 +2,8 @@ import { persistence } from "../util/persistence.js"
 import maintenanceService from "../api/maintenance.service.js"
 import chatService from "../api/chat.service.js"
 import socketManager from "../api/socket.js"
+import { HomeHeader } from "../components/HomeHeader.js"
+import { BottomNav } from "../components/BottomNav.js"
 
 export const HomePage = () => {
 
@@ -89,11 +91,7 @@ export const HomePage = () => {
   // ── Sub-renders ───────────────────────────────────────────
 
   const renderHome = () => `
-    <div class="rc-welcome">
-      <h2>${obtenerSaludo()}</h2>
-      <div class="rc-welcome-date">${new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
-        <button class="db-btn db-btn-secondary" id="db-logout">🔒 Cerrar sesión</button>
-    </div>
+    ${HomeHeader({ title: obtenerSaludo(), showLogout: true }).render()}
 
     <div class="rc-section">
       <div class="rc-section-title">Resumen del día</div>
@@ -128,15 +126,15 @@ export const HomePage = () => {
   `
 
   const renderChat = () => `
-    <div class="rc-chat-wrap" style="height: 100%; display: flex; flex-direction: column; background: var(--bg);">
-      <div class="rc-chat-header" style="flex-shrink: 0;">
+    <div class="rc-chat-wrap">
+      <div class="rc-chat-header">
         <div class="rc-chat-title">💬 Chat en Vivo</div>
         <div class="rc-chat-status online">● Conectado</div>
       </div>
-      <div class="rc-messages" id="rc-messages" role="log" aria-live="polite" aria-atomic="false" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column;">
+      <div class="rc-messages" id="rc-messages" role="log" aria-live="polite" aria-atomic="false">
         <div style="text-align:center;padding:20px;color:var(--tsoft);">Cargando mensajes...</div>
       </div>
-      <div class="rc-chat-input-area" style="flex-shrink: 0; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg);">
+      <div class="rc-chat-input-area">
         <form class="rc-chat-form" id="rc-chat-form" onsubmit="return false;" style="display: flex; gap: 8px; align-items: stretch;">
           <input class="rc-chat-input" id="rc-chat-input" type="text" placeholder="Escribe un mensaje..." autocomplete="off" style="flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-family: 'Nunito', sans-serif; background: var(--input-bg); color: var(--text); outline: none;" />
           <button class="rc-chat-send" id="rc-chat-send" type="button" style="padding: 10px 16px; background: #007AFF; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; flex-shrink: 0; transition: opacity 0.2s;">Enviar</button>
@@ -206,14 +204,13 @@ export const HomePage = () => {
     `
   }
 
-  // ── Vistas disponibles ────────────────────────────────────
+  // ── Vistas disponibles 
   const vistas = {
     home: renderHome,
     chat: renderChat,
     settings: renderSettings,
   }
 
-  // ─────────────────────────────────────────────────────────
   return {
 
     render: () => `
@@ -227,19 +224,7 @@ export const HomePage = () => {
         </main>
 
         <!-- Bottom nav -->
-        <nav class="rc-bottom-nav">
-          <button class="rc-nav-btn active" data-rc-view="home">
-            <span class="rc-nav-icon">🏠</span>
-            Inicio
-          </button>
-          <button class="rc-nav-btn" data-rc-view="chat">
-            <span class="rc-nav-icon">💬</span>
-            Chat
-          </button>
-          <button class="rc-nav-btn" id="rc-scan-btn" aria-label="Escanear">
-            <span class="rc-nav-icon">📷</span>
-          </button>
-        </nav>
+        ${BottomNav({ active: 'home', showChat: true }).render()}
 
       </div>
     `,
@@ -271,25 +256,13 @@ export const HomePage = () => {
         btn.setAttribute('aria-pressed', btn.classList.contains('active') ? 'true' : 'false')
       })
 
-      // Botón de cámara: navegar a la ruta del scanner
-      const scanBtn = document.getElementById('rc-scan-btn')
-      if (scanBtn) {
-        scanBtn.onclick = () => { window.location.hash = '#/scanner' }
-        scanBtn.setAttribute('role', 'button')
-        scanBtn.setAttribute('aria-pressed', 'false')
-      }
-
-      // Botón de cerrar sesión en la vista Home (si existe)
-      const homeLogoutBtn = document.getElementById('db-logout')
-      if (homeLogoutBtn) {
-        if (!homeLogoutBtn.dataset.logoutBound) {
-          homeLogoutBtn.onclick = () => {
-            persistence.clearSession()
-            window.location.hash = '#/login'
-          }
-          homeLogoutBtn.dataset.logoutBound = '1'
-        }
-      }
+      // Inicializar componentes reutilizables
+      try {
+        HomeHeader({ title: obtenerSaludo(), showLogout: true }).loadRender()
+      } catch (e) { console.warn('[HomePage] HomeHeader loadRender error', e) }
+      try {
+        BottomNav({ active: 'home', showChat: true }).loadRender()
+      } catch (e) { console.warn('[HomePage] BottomNav loadRender error', e) }
 
       // ── Cargar tareas pendientes y actualizar estadísticas ──
       const cargarTareasPendientes = async () => {

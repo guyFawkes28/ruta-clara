@@ -1,3 +1,43 @@
+/* --- Fix: asegurar que .rc-view permita crecer el chat y el scroll funcione --- */
+.rc-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+/* --- End fix .rc-view --- */
+/* --- Fix scroll chat HomePage: sticky input, flex layout, no corte --- */
+.rc-chat-wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.rc-messages {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--bg);
+  padding: 16px 16px 8px 16px;
+}
+.rc-chat-input-area {
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  background: #fff;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+/* --- End fix scroll chat HomePage --- */
 /* ============================================================
    ruta-clara.css
    Estilos de la app móvil Ruta Clara - Sistema de Mantenimiento
@@ -48,6 +88,7 @@
   padding: 10px 12px 14px;
   background: transparent;
 }
+.hdr-cta-inner { width: 100%; max-width: 980px; margin: 0 auto; padding: 0 16px; display:flex; justify-content:center }
 .hdr-home-btn {
   width: calc(100% - 32px);
   max-width: 980px;
@@ -55,18 +96,32 @@
   color: var(--navy);
   border: none;
   border-radius: 14px;
-  padding: 14px 18px;
+  padding: 12px 18px;
   font-weight: 900;
   font-size: 16px;
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(245,158,11,0.18);
 }
+.hdr-home-btn { white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 8px }
 .hdr-home-btn:active { transform: scale(var(--rc-press-scale)); }
 
 @media (max-width: 420px) {
   .hdr-cta { padding: 8px 10px 12px; }
   .hdr-home-btn { width: calc(100% - 24px); font-size: 15px; padding: 12px 14px; }
 }
+
+/* Header controls: boxed user name with role emoji */
+.hdr-controls { display:flex; align-items:center; gap:10px; }
+.hdr-user-box {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:6px 10px; border-radius:10px;
+  border:1.5px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.08);
+  color: #fff; font-weight:700; cursor:pointer;
+}
+.hdr-user-box:active { transform: scale(0.99); background: rgba(255,255,255,.18); }
+.hdr-user-emoji { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; font-size:14px; }
+
 
 @keyframes rcFadeIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -90,9 +145,15 @@
   border-radius: 16px;
   margin-bottom: 20px;
   box-shadow: 0 4px 16px rgba(15,32,68,.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
-.rc-welcome h2 { font-size: 20px; margin-bottom: 4px; font-weight: 700; }
+.rc-welcome-left { display:flex; flex-direction:column }
+.rc-welcome h2 { font-size: 20px; margin:0 0 4px 0; font-weight: 700; }
 .rc-welcome-date { font-size: 13px; opacity: .85; }
+.rc-welcome-actions { display:flex; align-items:center; gap:8px }
 .rc-welcome-status {
   display: flex; align-items: center; gap: 10px;
   margin-top: 14px; font-size: 14px; font-weight: 600;
@@ -157,6 +218,16 @@
 .rc-info-box {
   background: #fff; border: 1px solid var(--border);
   border-radius: 12px; padding: 14px;
+}
+
+/* Ensure cleaner home (aseo-home) uses same welcome styling */
+.aseo-home .rc-welcome {
+  background: linear-gradient(135deg, var(--navy) 0%, #1A3260 100%);
+  color: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(15,32,68,.25);
 }
 .rc-info-label {
   font-size: 12px; color: var(--tsoft);
@@ -239,6 +310,21 @@
   transition: transform .2s; min-width: 48px;
 }
 .rc-chat-send:active { transform: scale(var(--rc-press-scale)); }
+
+/* Dashboard-specific chat: make input sticky inside dashboard chat container (not fixed) */
+.db-chat-wrap .rc-chat-input-area {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: #fff;
+}
+.db-chat-wrap .rc-messages { padding-bottom: 12px; }
+
+@media (min-width: 769px) {
+  .db-chat-wrap { height: calc(100vh - 200px); }
+}
 
 /* ════════════════════
    SETTINGS

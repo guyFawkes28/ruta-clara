@@ -1,5 +1,12 @@
 import '../assets/clean.css'
-export const cleaningReportPage = () => ({
+import maintenanceService from '../api/maintenance.service.js'
+import { toast } from '../util/ux.js'
+import { headerView } from '../components/Header.js'
+import { persistence } from '../util/persistence.js'
+
+export const cleaningReportPage = (zoneId) => {
+	const header = headerView({ zona: 'Cargando...' })
+	return {
 
 	render: () => {
 
@@ -9,15 +16,7 @@ export const cleaningReportPage = () => ({
 
 	<div class="page-container">
 
-		<!-- Header -->
-		<div class="header-banner">
-			<div class="header-icon">R</div>
-
-			<div class="header-content">
-				<h1 class="header-title">Ruta Clara</h1>
-				<p class="header-subtitle">Reporte de limpieza</p>
-			</div>
-		</div>
+			${header.render()}
 
 
 		<!-- Main Container -->
@@ -28,42 +27,34 @@ export const cleaningReportPage = () => ({
 
 				<div class="active-zone-label">Zona Activa</div>
 
-				<h3 class="active-zone-title">Sala 2</h3>
+				<h3 id="clean-zone-title" class="active-zone-title">Cargando...</h3>
 
-				<div class="zone-tags">
-					<div class="zone-tag">📍 Belabs</div>
-					<div class="zone-tag">🏪 Sala 2</div>
+				<div id="clean-zone-tags" class="zone-tags">
+					<div class="zone-tag">Cargando...</div>
 				</div>
 
 			</div>
 
 
-			<!-- Responsable -->
+			<!-- Responsable: autocompletado desde sesión -->
 			<div class="form-section">
-
 				<div class="form-section-header">
 					<div class="form-section-icon">👤</div>
 					<span class="form-section-title">Responsable</span>
 				</div>
-
 				<div class="form-group">
-
-					<label>Nombre de quien limpia</label>
-
-					<input 
+					<input
+						id="clean-responsable"
 						type="text"
 						class="form-control"
 						placeholder="Nombre de quien limpia..."
-						value="Mariana"
+						readonly
 					>
-
-					<p style="font-size:12px;color:#9CA3AF;margin-top:6px;">
-						Personal de aseo - Sala 2
-					</p>
-
 				</div>
-
 			</div>
+
+			<div class="section-divider section-divider--strong"></div>
+
 
 
 			<!-- Fecha y Hora -->
@@ -102,6 +93,7 @@ export const cleaningReportPage = () => ({
 
 			</div>
 
+			<div class="section-divider section-divider--strong"></div>
 
 			<!-- Descripción -->
 			<div class="form-section">
@@ -114,10 +106,11 @@ export const cleaningReportPage = () => ({
 				<div class="form-group">
 
 					<textarea
+						id="clean-description"
 						class="form-control"
 						style="min-height:100px;resize:vertical;"
 						placeholder="Ej. Se barrió y trapeo. Mesas desinfectadas..."
-					>Todo limpio</textarea>
+					></textarea>
 
 				</div>
 
@@ -148,43 +141,113 @@ export const cleaningReportPage = () => ({
 
 	loadRender: () => {
 
+		// Inicializar header reutilizable
+		try { header.loadRender() } catch (e) { console.warn('[cleanPage] header load error', e) }
+
+		// Datos de zona cargados desde el backend
+		let zone_id = null
+
+		// Si se pasó zoneId en la ruta (#/clean/{id}), traer info de la zona
+		;(async function cargarZona() {
+			try {
+				if (!zoneId) return
+				const resp = await maintenanceService.getZoneByQR(encodeURIComponent(zoneId))
+				const info = resp.info_zona || {}
+
+				// Guardar zone_id para usarlo al registrar la limpieza
+				zone_id = info.id_zona ?? info.id ?? zoneId
+
+				const titleEl = document.getElementById('clean-zone-title')
+				const tagsEl  = document.getElementById('clean-zone-tags')
+				if (titleEl) titleEl.textContent = `${info.nombre || 'Zona'} — Piso ${info.piso ?? ''}`
+				if (tagsEl)  tagsEl.innerHTML   = `<div class="zone-tag">📍 ${info.nombre || ''}</div><div class="zone-tag">🏪 ${info.id || ''}</div>`
+				try { header.setZona && header.setZona(info.nombre || '') } catch (e) { /* ignore */ }
+			} catch (err) {
+				console.warn('No se pudo cargar info de zona para limpieza:', err)
+				toast('No se pudo cargar la zona activa', 'error')
+			}
+		})()
+
+
 		const dateInput = document.getElementById("clean-date")
 		const timeInput = document.getElementById("clean-time")
 
+		// Autocompletar responsable desde sesión
+		const user = persistence.getUser() || {}
+		const user_name = user.name || user.fullName || user.username || user.usuario || user.email || 'Usuario'
+		const responsableInput = document.getElementById('clean-responsable')
+		if (responsableInput) {
+			responsableInput.value = user_name
+		}
+
 		const updateDateTime = () => {
-
-			const now = new Date()
-
+			const now  = new Date()
 			const date = now.toLocaleDateString("es-CO")
 			const time = now.toLocaleTimeString("es-CO")
-
 			if (dateInput) dateInput.value = date
 			if (timeInput) timeInput.value = time
-
 		}
 
 		updateDateTime()
-
 		setInterval(updateDateTime, 1000)
 
-
 		const cancelBtn = document.getElementById("cancel-clean")
-
 		if (cancelBtn) {
 			cancelBtn.addEventListener("click", () => {
-				console.log("Cancelar limpieza")
+				window.history.back()
 			})
 		}
 
-
 		const submitBtn = document.getElementById("submit-clean")
-
 		if (submitBtn) {
-			submitBtn.addEventListener("click", () => {
-				console.log("Registrar limpieza")
+			submitBtn.addEventListener("click", async () => {
+
+				const descriptions = document.getElementById("clean-description")?.value?.trim()
+
+				if (!descriptions) {
+					toast("Debe escribir una descripción", "error")
+					return
+				}
+
+				if (!zone_id) {
+					toast("No se pudo obtener la zona. Intenta de nuevo.", "error")
+					return
+				}
+
+				try {
+					submitBtn.disabled = true
+					submitBtn.textContent = "Registrando..."
+
+					// Capturar hora de fin al momento de enviar
+					const hora_fin = new Date().toLocaleTimeString("es-CO", { timeZone: "America/Bogota" })
+					console.log("[cleanPage] Hora fin:", hora_fin)
+
+					const res = await fetch("http://localhost:4000/api/cleaning", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ zone_id, user_name, descriptions, hora_fin })
+					})
+
+					if (!res.ok) {
+						const err = await res.json()
+						throw new Error(err.error || `Error HTTP ${res.status}`)
+					}
+
+					toast("✓ Limpieza registrada correctamente", "success")
+					document.getElementById("clean-description").value = ""
+
+				} catch (error) {
+					console.error("Error registrando limpieza:", error.message)
+					toast("Error al registrar: " + error.message, "error")
+				} finally {
+					submitBtn.disabled = false
+					submitBtn.textContent = "Registrar limpieza ✓"
+				}
+
 			})
 		}
 
 	}
 
-})
+}
+}

@@ -19,17 +19,22 @@ export function headerView({ zona = 'Sala 3 — Piso 1', onScan = () => {} } = {
             </div>
             <div class="hdr-controls">
               <div class="hdr-profile" id="hdr-profile">
-                <div class="hdr-name" id="hdr-name">Usuario</div>
+                <button class="hdr-user-box" id="hdr-user-box" aria-label="Perfil">
+                  <span class="hdr-user-emoji" id="hdr-role">🔎</span>
+                  <span class="hdr-name" id="hdr-name">Usuario</span>
+                </button>
               </div>
               <button class="qr-btn" id="hdr-scan">📷</button>
               <button class="btn btn-danger btn-sm" id="hdr-logout" title="Cerrar sesión">
                 <span class="logout-icon">↩</span>
-                <span class="logout-text">Exit</span>
+                <span class="logout-text">Salir</span>
               </button>
             </div>
           </div>
           <div class="hdr-cta">
-            <button id="hdr-home-btn" class="hdr-home-btn" aria-label="Ir al inicio">🏠 Volver al inicio</button>
+            <div class="hdr-cta-inner">
+              <button id="hdr-home-btn" class="hdr-home-btn" aria-label="Ir al inicio">🏠 Volver al inicio</button>
+            </div>
           </div>
         </div>
       `;
@@ -48,14 +53,26 @@ export function headerView({ zona = 'Sala 3 — Piso 1', onScan = () => {} } = {
       try {
         const user = persistence.getUser();
         const nameEl = document.getElementById('hdr-name');
-        const avatarEl = document.getElementById('hdr-avatar');
+        const roleEl = document.getElementById('hdr-role');
+        const userBox = document.getElementById('hdr-user-box');
         if (user && nameEl) {
-          // Preferencias de campo: probar varias propiedades
           const display = user.name || user.fullName || user.username || user.usuario || user.email || 'Usuario';
           nameEl.textContent = display;
-          if (avatarEl) {
-            // Mostrar inicial del nombre
-            avatarEl.textContent = (display && String(display).trim().charAt(0).toUpperCase()) || 'U';
+          // role emoji
+          try {
+            const rawRole = user?.rol ?? user?.role ?? user?.data?.rol ?? user?.data?.role ?? '';
+            const r = String(rawRole || '').toLowerCase();
+            let emoji = '';
+            if (r.includes('aseo') || r.includes('clean')) emoji = '🧹';
+            else if (r.includes('admin')) emoji = '👑';
+            else if (r.includes('maint') || r.includes('mantenimiento') || r.includes('operator')) emoji = '🔧';
+            else if (r) emoji = '🔎';
+            if (roleEl) roleEl.textContent = emoji;
+          } catch (e) { /* ignore */ }
+          // make user box clickable to go to profile/home
+          if (userBox && !userBox.dataset.bound) {
+            userBox.onclick = () => { window.location.hash = '#/profile' }
+            userBox.dataset.bound = '1'
           }
         }
       } catch (e) { /* ignore */ }
