@@ -1,24 +1,31 @@
-import { loginPage } from "../pages/LoginPage.js";
-import { persistence } from "../util/persistence.js";
-import { notFoundPage } from "../pages/NotFound.js";
-import { scannerPage } from "../pages/ScanPage.js";
-import { zonePage } from "../pages/ZonePage.js";
-import { dashboardPage } from "../pages/DashboardPage.js";
-import { cleaningReportPage } from "../pages/cleaningReportPage.js";
+import { loginPage } from "../pages/LoginPage.js"
+import { persistence } from "../util/persistence.js"
+import { notFoundPage } from "../pages/NotFound.js"
+import { scannerPage } from "../pages/ScanPage.js"
+import { zonePage } from "../pages/ZonePage.js"
+import { dashboardPage } from "../pages/DashboardPage.js"
+import { HomePage } from "../pages/HomePage.js"
+import { HomeCleanerPage } from "../pages/HomeCleaner.js"
+import { cleaningReportPage } from "../pages/cleanPage.js"
 
-const routes = {
-    "#/": loginPage(),
-    "#/login": loginPage(),
-    "#/scanner": scannerPage(),
-    "#/zona": zonePage(),
-    "#/dashboard":dashboardPage(),
-    "#/cleaning-report": cleaningReportPage()
-    
+// Factory pattern: no se ejecutan hasta que se llamen
+const routeFactories = {
+    "#/": () => loginPage(),
+    "#/login": () => loginPage(),
+    "#/scanner": () => scannerPage(),
+    "#/zona": () => zonePage(),
+    "#/dashboard": () => dashboardPage(),
+    "#/home": () => HomePage(),
+    "#/home-cleaner": () => HomeCleanerPage(),
 };
 
 export const routerManager = async () => {
+    console.log('[Router] routerManager ejecutado - hash actual:', window.location.hash)
     const root = document.getElementById("root");
     const hash = window.location.hash || "#/login";
+
+    console.log('[Router] root elemento existe?', !!root)
+    console.log('[Router] hash procesado:', hash)
 
     // 1. VALIDACIÓN DE AUTENTICACIÓN (Lo primero siempre)
     const isAuth = persistence.isAuthentication();
@@ -33,16 +40,28 @@ export const routerManager = async () => {
     }
 
     if (isAuth && (hash === "#/login" || hash === "#/" || hash === "")) {
-        // redirigir por rol: admins -> dashboard, otros -> scanner
+        // redirigir por rol: admins -> dashboard, aseo/cleaner -> home-cleaner, otros -> home
         if (role === 'admin') {
-            window.location.hash = "#/cleaning-report";
+            window.location.hash = "#/dashboard";
+        } else if (role === 'aseo' || role === 'cleaner') {
+            window.location.hash = "#/home-cleaner";
         } else {
-            window.location.hash = "#/cleaning-report";
+            window.location.hash = "#/home";
         }
         return;
     }
 
-    // 2. DETECCIÓN DE RUTA DINÁMICA (Zona con ID)
+    // 2. DETECCIÓN DE RUTAS DINÁMICAS: limpieza y zona por ID
+    // Si el hash empieza por #/clean/ (ej: #/clean/1) -> página de reporte de limpieza
+    if (hash.startsWith("#/clean/")) {
+        if (role === 'admin') { window.location.hash = '#/dashboard'; return }
+        const id = hash.split("/")[2];
+        const view = cleaningReportPage(id);
+        root.innerHTML = view.render();
+        await view.loadRender();
+        return;
+    }
+
     // Si el hash empieza por #/zone/ (ej: #/zone/1)
     if (hash.startsWith("#/zone/")) {
         // Bloqueo para admins (no deben acceder a zona dinámica)
@@ -58,29 +77,44 @@ export const routerManager = async () => {
         return; // Detenemos aquí la ejecución
     }
 
-    // 3. DETECCIÓN DE RUTAS ESTÁTICAS
-    const view = routes[hash];
+    // 3. DETECCIÓN DE RUTAS ESTÁTICAS - Crear la vista bajo demanda
+    const factory = routeFactories[hash];
 
     // 4. PROTECCIONES POR ROL (rutas estáticas)
     // - Operators no pueden acceder a dashboard
     // - Admins no pueden acceder a scanner ni a zona
     if (role === 'operator' && hash === '#/dashboard') {
-        window.location.hash = '#/scanner'
+        window.location.hash = '#/home'
         return
     }
-    if (role === 'admin' && (hash === '#/scanner' || hash === '#/zona' || hash.startsWith('#/zone/'))) {
+    // Admins no deben acceder a home, scanner ni a rutas de zona
+    if (role === 'admin' && (hash === '#/scanner' || hash === '#/zona' || hash === '#/home' || hash.startsWith('#/zone/'))) {
         window.location.hash = '#/dashboard'
         return
     }
+    // Cleaners should not access admin dashboard
+    if ((role === 'aseo' || role === 'cleaner') && (hash === '#/dashboard' || hash === '#/home')) {
+        window.location.hash = '#/home-cleaner'
+        return
+    }
 
-    if (!view) {
+    console.log("Cargando la ruta:", hash);
+    console.log('[Router] isAuth:', isAuth, 'role:', role);
+
+    if (!factory) {
+        console.log('[Router] Ruta no encontrada:', hash)
         const notFound = notFoundPage();
         root.innerHTML = notFound.render();
         await notFound.loadRender();
         return;
     }
 
-    // Renderizado normal para Login o Scanner
+    // Crear la vista bajo demanda y renderizarla
+    console.log('[Router] Creando vista para ruta:', hash)
+    const view = factory();
+    console.log('[Router] Vista creada, renderizando...')
     root.innerHTML = view.render();
+    console.log('[Router] Vista renderizada, ejecutando loadRender...')
     await view.loadRender();
+    console.log('[Router] Ruta completada:', hash)
 };

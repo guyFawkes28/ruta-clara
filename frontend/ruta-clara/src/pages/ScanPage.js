@@ -1,5 +1,7 @@
 import maintenanceService from '../api/maintenance.service.js'
+import { toast } from '../util/ux.js'
 import { Html5Qrcode } from 'html5-qrcode'
+import { persistence } from '../util/persistence.js'
 
 export const scannerPage = () => ({
   render: () => `
@@ -23,6 +25,10 @@ export const scannerPage = () => ({
 
       <div id="scan-txt" class="text-white text-center fw-bold">
         Apunta al código QR de la zona
+      </div>
+      
+      <div class="scanner-cta" style="margin-top:18px;padding:0 16px;">
+        <button id="scan-home-btn" class="hdr-home-btn" aria-label="Volver al inicio">🏠 Volver al inicio</button>
       </div>
 
       <div id="loading-overlay" class="d-none" style="margin-top:20px;">
@@ -51,15 +57,20 @@ export const scannerPage = () => ({
         window.removeEventListener("popstate", preventBack);
 
         const qrFinal = decodedText.trim();
+        console.log("Código QR detectado:", qrFinal);
         const data = await maintenanceService.getZoneByQR(encodeURIComponent(qrFinal));
         
         // REDIRECCIÓN LIMPIA: Reemplaza el scanner en el historial
-        const targetHash = `#/zone/${data.info_zona.id}`;
+        // Decide destino según rol del usuario: aseo -> pantalla de limpieza, otros -> vista de zona
+        const user = persistence.getUser()
+        const role = user?.rol ?? user?.role ?? user?.data?.rol ?? user?.data?.role ?? null
+        const roleNorm = role ? String(role).toLowerCase() : null
+        const targetHash = (roleNorm === 'aseo' || roleNorm === 'cleaner') ? `#/clean/${data.info_zona.id}` : `#/zone/${data.info_zona.id}`;
         window.location.replace(window.location.pathname + targetHash);
 
       } catch (error) {
-        alert(error.error || "Zona no encontrada");
-        location.reload(); 
+        toast(error.error || "Zona no encontrada", 'error');
+        setTimeout(() => location.reload(), 1200);
       }
     };
 
@@ -71,9 +82,20 @@ export const scannerPage = () => ({
 
     html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
       .catch(err => {
+        console.error("Error al inicializar el escáner: ", err);
         window.removeEventListener("popstate", preventBack);
         document.getElementById("scan-txt").innerHTML = 
-          '<span style="color:#FCA5A5">Error: Permiso de cámara denegado</span>';
+          '<span style="color:#FCA5A5">Error: Permiso de cámara denegado o no disponible</span>';
       });
+    
+    // Handler para el botón Volver al inicio (detiene cámara y navega a #/home)
+    const scanHomeBtn = document.getElementById('scan-home-btn');
+    if (scanHomeBtn) {
+      scanHomeBtn.onclick = async () => {
+        try { await html5QrCode.stop(); } catch(e) { /* ignore */ }
+        window.removeEventListener("popstate", preventBack);
+        window.location.hash = '#/home';
+      };
+    }
   }
 });

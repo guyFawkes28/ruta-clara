@@ -1,9 +1,13 @@
-import { Router } from "express";
-import { verifyToken } from "../middlewares/auth.middleware.js";
-import { getZonasByQr } from "../controllers/maintenance.controller.js";
+import { Router } from "express"
+import { verifyToken } from "../middlewares/auth.middleware.js"
+import { getZonasByQr,getTiposIncidencia,crearReporteMantenimiento, getPendingTasks } from "../controllers/maintenance.controller.js"
 
 const router = Router();
 
+// Rutas estáticas primero para evitar que 
+// la ruta dinámica '/:qr_code' capture solicitudes como '/incidencias'
+router.get('/incidencias', verifyToken, getTiposIncidencia)
+router.get('/pendientes', verifyToken, getPendingTasks)
 router.get('/:qr_code', verifyToken, getZonasByQr)
-
+router.post('/reportar',verifyToken,crearReporteMantenimiento)
 export { router as maintenanceRoutes };
