@@ -236,7 +236,7 @@ function subChat() {
       <h1>💬 Chat</h1>
       <div class="rc-chat-status online" style="font-size:13px;font-weight:700">● En línea — Ing. Don Antonio</div>
     </div>
-    <div style="display:flex;flex-direction:column;height:calc(100vh - 160px);background:var(--bg);border-radius:16px;border:1.5px solid var(--border);overflow:hidden;">
+    <div class="rc-chat-wrap db-chat-wrap" style="display:flex;flex-direction:column;background:var(--bg);border-radius:16px;border:1.5px solid var(--border);overflow:hidden;height:calc(100vh - 160px);">
       <div class="rc-chat-header" style="flex-shrink:0;padding:12px 16px;border-bottom:1px solid var(--border);">
         <div class="rc-chat-title">Canal de Supervisión</div>
         <div class="rc-chat-status online">● En línea — Antonio</div>
@@ -368,33 +368,31 @@ export const dashboardPage = () => ({
       })
 
       if (currentPage === 'equipos') {
-        setTimeout(() => {
-          const filterBtn = document.getElementById('db-filter-equipos')
-          if (!filterBtn) return
-          filterBtn.addEventListener('click', () => {
-            const header = document.querySelector('.db-ph')
-            if (!header) return
-            let f = document.getElementById('db-filter-input')
-            if (!f) {
-              const inp = document.createElement('input')
-              inp.id = 'db-filter-input'
-              inp.placeholder = 'Filtrar por ID, nombre, ubicación o tipo...'
-              inp.style.cssText = 'padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:Nunito,sans-serif;margin-top:8px;width:100%'
-              header.appendChild(inp)
-              inp.addEventListener('input', (e) => {
-                const q = (e.target.value || '').toLowerCase().trim()
-                const lista = state.equipos.lista.filter(it => String(it.id||'').toLowerCase().includes(q) || String(it.nombre||'').toLowerCase().includes(q) || String(it.ubicacion||'').toLowerCase().includes(q) || String(it.tipo||'').toLowerCase().includes(q))
-                const tbody = document.querySelector('.db-table tbody')
-                if (!tbody) return
-                tbody.innerHTML = lista.map(e => `<tr><td><strong>${e.id}</strong></td><td>${e.nombre}</td><td>${e.ubicacion}</td><td>${e.tipo}</td><td>${statusBadge(e.estado)}</td><td><button class="db-btn db-btn-secondary db-btn-sm">Editar</button></td></tr>`).join('')
-              })
-            } else { f.remove() }
-          })
-        }, 60)
+        const filterBtn = document.getElementById('db-filter-equipos')
+        if (!filterBtn) return
+        filterBtn.addEventListener('click', () => {
+          const header = document.querySelector('.db-ph')
+          if (!header) return
+          let f = document.getElementById('db-filter-input')
+          if (!f) {
+            const inp = document.createElement('input')
+            inp.id = 'db-filter-input'
+            inp.placeholder = 'Filtrar por ID, nombre, ubicación o tipo...'
+            inp.style.cssText = 'padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:Nunito,sans-serif;margin-top:8px;width:100%'
+            header.appendChild(inp)
+            inp.addEventListener('input', (e) => {
+              const q = (e.target.value || '').toLowerCase().trim()
+              const lista = state.equipos.lista.filter(it => String(it.id||'').toLowerCase().includes(q) || String(it.nombre||'').toLowerCase().includes(q) || String(it.ubicacion||'').toLowerCase().includes(q) || String(it.tipo||'').toLowerCase().includes(q))
+              const tbody = document.querySelector('.db-table tbody')
+              if (!tbody) return
+              tbody.innerHTML = lista.map(e => `<tr><td><strong>${e.id}</strong></td><td>${e.nombre}</td><td>${e.ubicacion}</td><td>${e.tipo}</td><td>${statusBadge(e.estado)}</td><td><button class=\"db-btn db-btn-secondary db-btn-sm\">Editar</button></td></tr>`).join('')
+            })
+          } else { f.remove() }
+        })
       }
 
       // Mapa RO: cargar estados reales
-      if (page === 'inspecciones') setTimeout(cargarEstadosMapa, 50)
+      if (page === 'inspecciones') cargarEstadosMapa()
 
       // Chat
       if (page === 'chat') {

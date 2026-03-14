@@ -126,15 +126,15 @@ export const HomePage = () => {
   `
 
   const renderChat = () => `
-    <div class="rc-chat-wrap" style="height: 100%; display: flex; flex-direction: column; background: var(--bg);">
-      <div class="rc-chat-header" style="flex-shrink: 0;">
+    <div class="rc-chat-wrap">
+      <div class="rc-chat-header">
         <div class="rc-chat-title">💬 Chat en Vivo</div>
         <div class="rc-chat-status online">● Conectado</div>
       </div>
-      <div class="rc-messages" id="rc-messages" role="log" aria-live="polite" aria-atomic="false" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column;">
+      <div class="rc-messages" id="rc-messages" role="log" aria-live="polite" aria-atomic="false">
         <div style="text-align:center;padding:20px;color:var(--tsoft);">Cargando mensajes...</div>
       </div>
-      <div class="rc-chat-input-area" style="flex-shrink: 0; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg);">
+      <div class="rc-chat-input-area">
         <form class="rc-chat-form" id="rc-chat-form" onsubmit="return false;" style="display: flex; gap: 8px; align-items: stretch;">
           <input class="rc-chat-input" id="rc-chat-input" type="text" placeholder="Escribe un mensaje..." autocomplete="off" style="flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-family: 'Nunito', sans-serif; background: var(--input-bg); color: var(--text); outline: none;" />
           <button class="rc-chat-send" id="rc-chat-send" type="button" style="padding: 10px 16px; background: #007AFF; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; flex-shrink: 0; transition: opacity 0.2s;">Enviar</button>
