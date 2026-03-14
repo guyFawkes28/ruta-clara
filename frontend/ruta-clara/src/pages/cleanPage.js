@@ -1,5 +1,12 @@
 import '../assets/clean.css'
-export const cleaningReportPage = () => ({
+import maintenanceService from '../api/maintenance.service.js'
+import { toast } from '../util/ux.js'
+import { headerView } from '../components/Header.js'
+import { persistence } from '../util/persistence.js'
+
+export const cleaningReportPage = (zoneId) => {
+	const header = headerView({ zona: 'Cargando...' })
+	return {
 
 	render: () => {
 
@@ -9,15 +16,7 @@ export const cleaningReportPage = () => ({
 
 	<div class="page-container">
 
-		<!-- Header -->
-		<div class="header-banner">
-			<div class="header-icon">R</div>
-
-			<div class="header-content">
-				<h1 class="header-title">Ruta Clara</h1>
-				<p class="header-subtitle">Reporte de limpieza</p>
-			</div>
-		</div>
+			${header.render()}
 
 
 		<!-- Main Container -->
@@ -28,42 +27,34 @@ export const cleaningReportPage = () => ({
 
 				<div class="active-zone-label">Zona Activa</div>
 
-				<h3 class="active-zone-title">Sala 2</h3>
+				<h3 id="clean-zone-title" class="active-zone-title">Cargando...</h3>
 
-				<div class="zone-tags">
-					<div class="zone-tag">📍 Belabs</div>
-					<div class="zone-tag">🏪 Sala 2</div>
+				<div id="clean-zone-tags" class="zone-tags">
+					<div class="zone-tag">Cargando...</div>
 				</div>
 
 			</div>
 
 
-			<!-- Responsable -->
+			<!-- Responsable: autocompletado desde sesión -->
 			<div class="form-section">
-
 				<div class="form-section-header">
 					<div class="form-section-icon">👤</div>
 					<span class="form-section-title">Responsable</span>
 				</div>
-
 				<div class="form-group">
-
-					<label>Nombre de quien limpia</label>
-
-					<input 
+					<input
+						id="clean-responsable"
 						type="text"
 						class="form-control"
 						placeholder="Nombre de quien limpia..."
-						value="Mariana"
+						readonly
 					>
-
-					<p style="font-size:12px;color:#9CA3AF;margin-top:6px;">
-						Personal de aseo - Sala 2
-					</p>
-
 				</div>
-
 			</div>
+
+			<div class="section-divider section-divider--strong"></div>
+
 
 
 			<!-- Fecha y Hora -->
@@ -102,6 +93,7 @@ export const cleaningReportPage = () => ({
 
 			</div>
 
+			<div class="section-divider section-divider--strong"></div>
 
 			<!-- Descripción -->
 			<div class="form-section">
@@ -148,8 +140,36 @@ export const cleaningReportPage = () => ({
 
 	loadRender: () => {
 
+			// Inicializar header reutilizable
+			try { header.loadRender() } catch (e) { console.warn('[cleanPage] header load error', e) }
+
+			// Si se pasó zoneId en la ruta (#/clean/{id}), traer info de la zona
+			(async function cargarZona() {
+				try {
+					if (!zoneId) return
+					const resp = await maintenanceService.getZoneByQR(encodeURIComponent(zoneId))
+					const info = resp.info_zona || {}
+					const titleEl = document.getElementById('clean-zone-title')
+					const tagsEl = document.getElementById('clean-zone-tags')
+					if (titleEl) titleEl.textContent = `${info.nombre || 'Zona'} — Piso ${info.piso ?? ''}`
+					if (tagsEl) tagsEl.innerHTML = `<div class="zone-tag">📍 ${info.nombre || ''}</div><div class="zone-tag">🏪 ${info.id || ''}</div>`
+					try { header.setZona && header.setZona(info.nombre || '') } catch (e) { /* ignore */ }
+				} catch (err) {
+					console.warn('No se pudo cargar info de zona para limpieza:', err)
+					toast('No se pudo cargar la zona activa', 'error')
+				}
+			})()
+
+
 		const dateInput = document.getElementById("clean-date")
 		const timeInput = document.getElementById("clean-time")
+
+		// Autocompletar responsable desde sesión
+		const user = persistence.getUser() || {}
+		const responsableInput = document.getElementById('clean-responsable')
+		if (responsableInput) {
+			responsableInput.value = user.name || user.fullName || user.username || user.usuario || user.email || 'Usuario'
+		}
 
 		const updateDateTime = () => {
 
@@ -180,11 +200,13 @@ export const cleaningReportPage = () => ({
 		const submitBtn = document.getElementById("submit-clean")
 
 		if (submitBtn) {
-			submitBtn.addEventListener("click", () => {
-				console.log("Registrar limpieza")
-			})
+				submitBtn.addEventListener("click", () => {
+					// Por ahora no guardamos localmente ni redirigimos: esperar endpoint backend
+					toast('Registro en espera del backend. Se enviará cuando exista el endpoint.', 'info')
+				})
 		}
 
 	}
 
-})
+}
+}

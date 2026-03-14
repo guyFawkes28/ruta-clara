@@ -1,6 +1,7 @@
 import maintenanceService from '../api/maintenance.service.js'
 import { toast } from '../util/ux.js'
 import { Html5Qrcode } from 'html5-qrcode'
+import { persistence } from '../util/persistence.js'
 
 export const scannerPage = () => ({
   render: () => `
@@ -60,7 +61,11 @@ export const scannerPage = () => ({
         const data = await maintenanceService.getZoneByQR(encodeURIComponent(qrFinal));
         
         // REDIRECCIÓN LIMPIA: Reemplaza el scanner en el historial
-        const targetHash = `#/zone/${data.info_zona.id}`;
+        // Decide destino según rol del usuario: aseo -> pantalla de limpieza, otros -> vista de zona
+        const user = persistence.getUser()
+        const role = user?.rol ?? user?.role ?? user?.data?.rol ?? user?.data?.role ?? null
+        const roleNorm = role ? String(role).toLowerCase() : null
+        const targetHash = (roleNorm === 'aseo' || roleNorm === 'cleaner') ? `#/clean/${data.info_zona.id}` : `#/zone/${data.info_zona.id}`;
         window.location.replace(window.location.pathname + targetHash);
 
       } catch (error) {

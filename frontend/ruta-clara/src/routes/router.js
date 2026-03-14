@@ -5,6 +5,8 @@ import { scannerPage } from "../pages/ScanPage.js"
 import { zonePage } from "../pages/ZonePage.js"
 import { dashboardPage } from "../pages/DashboardPage.js"
 import { HomePage } from "../pages/HomePage.js"
+import { HomeCleanerPage } from "../pages/HomeCleaner.js"
+import { cleaningReportPage } from "../pages/cleanPage.js"
 
 // Factory pattern: no se ejecutan hasta que se llamen
 const routeFactories = {
@@ -14,6 +16,7 @@ const routeFactories = {
     "#/zona": () => zonePage(),
     "#/dashboard": () => dashboardPage(),
     "#/home": () => HomePage(),
+    "#/home-cleaner": () => HomeCleanerPage(),
 };
 
 export const routerManager = async () => {
@@ -37,16 +40,28 @@ export const routerManager = async () => {
     }
 
     if (isAuth && (hash === "#/login" || hash === "#/" || hash === "")) {
-        // redirigir por rol: admins -> dashboard, otros -> home
+        // redirigir por rol: admins -> dashboard, aseo/cleaner -> home-cleaner, otros -> home
         if (role === 'admin') {
             window.location.hash = "#/dashboard";
+        } else if (role === 'aseo' || role === 'cleaner') {
+            window.location.hash = "#/home-cleaner";
         } else {
             window.location.hash = "#/home";
         }
         return;
     }
 
-    // 2. DETECCIÓN DE RUTA DINÁMICA (Zona con ID)
+    // 2. DETECCIÓN DE RUTAS DINÁMICAS: limpieza y zona por ID
+    // Si el hash empieza por #/clean/ (ej: #/clean/1) -> página de reporte de limpieza
+    if (hash.startsWith("#/clean/")) {
+        if (role === 'admin') { window.location.hash = '#/dashboard'; return }
+        const id = hash.split("/")[2];
+        const view = cleaningReportPage(id);
+        root.innerHTML = view.render();
+        await view.loadRender();
+        return;
+    }
+
     // Si el hash empieza por #/zone/ (ej: #/zone/1)
     if (hash.startsWith("#/zone/")) {
         // Bloqueo para admins (no deben acceder a zona dinámica)
@@ -75,6 +90,11 @@ export const routerManager = async () => {
     // Admins no deben acceder a home, scanner ni a rutas de zona
     if (role === 'admin' && (hash === '#/scanner' || hash === '#/zona' || hash === '#/home' || hash.startsWith('#/zone/'))) {
         window.location.hash = '#/dashboard'
+        return
+    }
+    // Cleaners should not access admin dashboard
+    if ((role === 'aseo' || role === 'cleaner') && (hash === '#/dashboard' || hash === '#/home')) {
+        window.location.hash = '#/home-cleaner'
         return
     }
 

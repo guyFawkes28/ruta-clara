@@ -2,6 +2,8 @@ import { persistence } from "../util/persistence.js"
 import maintenanceService from "../api/maintenance.service.js"
 import chatService from "../api/chat.service.js"
 import socketManager from "../api/socket.js"
+import { HomeHeader } from "../components/HomeHeader.js"
+import { BottomNav } from "../components/BottomNav.js"
 
 export const HomePage = () => {
 
@@ -89,11 +91,7 @@ export const HomePage = () => {
   // ── Sub-renders ───────────────────────────────────────────
 
   const renderHome = () => `
-    <div class="rc-welcome">
-      <h2>${obtenerSaludo()}</h2>
-      <div class="rc-welcome-date">${new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
-        <button class="db-btn db-btn-secondary" id="db-logout">🔒 Cerrar sesión</button>
-    </div>
+    ${HomeHeader({ title: obtenerSaludo(), showLogout: true }).render()}
 
     <div class="rc-section">
       <div class="rc-section-title">Resumen del día</div>
@@ -226,19 +224,7 @@ export const HomePage = () => {
         </main>
 
         <!-- Bottom nav -->
-        <nav class="rc-bottom-nav">
-          <button class="rc-nav-btn active" data-rc-view="home">
-            <span class="rc-nav-icon">🏠</span>
-            Inicio
-          </button>
-          <button class="rc-nav-btn" data-rc-view="chat">
-            <span class="rc-nav-icon">💬</span>
-            Chat
-          </button>
-          <button class="rc-nav-btn" id="rc-scan-btn" aria-label="Escanear">
-            <span class="rc-nav-icon">📷</span>
-          </button>
-        </nav>
+        ${BottomNav({ active: 'home', showChat: true }).render()}
 
       </div>
     `,
@@ -270,25 +256,13 @@ export const HomePage = () => {
         btn.setAttribute('aria-pressed', btn.classList.contains('active') ? 'true' : 'false')
       })
 
-      // Botón de cámara: navegar a la ruta del scanner
-      const scanBtn = document.getElementById('rc-scan-btn')
-      if (scanBtn) {
-        scanBtn.onclick = () => { window.location.hash = '#/scanner' }
-        scanBtn.setAttribute('role', 'button')
-        scanBtn.setAttribute('aria-pressed', 'false')
-      }
-
-      // Botón de cerrar sesión en la vista Home (si existe)
-      const homeLogoutBtn = document.getElementById('db-logout')
-      if (homeLogoutBtn) {
-        if (!homeLogoutBtn.dataset.logoutBound) {
-          homeLogoutBtn.onclick = () => {
-            persistence.clearSession()
-            window.location.hash = '#/login'
-          }
-          homeLogoutBtn.dataset.logoutBound = '1'
-        }
-      }
+      // Inicializar componentes reutilizables
+      try {
+        HomeHeader({ title: obtenerSaludo(), showLogout: true }).loadRender()
+      } catch (e) { console.warn('[HomePage] HomeHeader loadRender error', e) }
+      try {
+        BottomNav({ active: 'home', showChat: true }).loadRender()
+      } catch (e) { console.warn('[HomePage] BottomNav loadRender error', e) }
 
       // ── Cargar tareas pendientes y actualizar estadísticas ──
       const cargarTareasPendientes = async () => {

@@ -1,46 +1,54 @@
 import { persistence } from "../util/persistence.js"
+import { HomeHeader } from "../components/HomeHeader.js"
+import { BottomNav } from "../components/BottomNav.js"
 
 export const HomeCleanerPage = () => {
   // Puedes guardar el usuario para mostrar el nombre
   const user = persistence.getUser() || {}
-  const nombre = user.name || user.usuario || user.email || 'Usuario'
 
   return {
     render: () => `
       <div class="rc-app aseo-home">
         <main id="rc-main">
-          <div class="rc-welcome">
-            <h2>¡Hola, ${nombre}!</h2>
-            <div class="rc-welcome-date">${new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+          <div id="rc-view-home" class="rc-view active">
+            ${HomeHeader({ title: `¡Hola, ${user.name || 'Usuario'}!`, showLogout: true }).render()}
+
+            <div class="rc-section">
+              <div class="rc-section-title">¿A qué zona vas a limpiar?</div>
+              <p style="margin-bottom:16px;">Usa el botón de escanear en la barra inferior para registrar la zona que vas a limpiar.</p>
+            </div>
+            <div class="rc-section" style="margin-top:24px;">
+              <div class="rc-section-title">Última limpieza</div>
+              <div id="aseo-last-clean" style="color:#666;padding:6px 0;">Cargando...</div>
+            </div>
           </div>
-          <div class="rc-section">
-            <div class="rc-section-title">¿A qué zona vas a limpiar?</div>
-            <p style="margin-bottom:16px;">Presiona el botón para escanear el código QR de la zona que vas a limpiar.</p>
-            <button class="btn btn-primary" id="aseo-scan-btn" style="font-size:1.1em;padding:16px 24px">
-              📷 Escanear zona
-            </button>
+
+          <div id="rc-view-settings" class="rc-view">
+            <div class="rc-profile">
+              <div class="rc-avatar">${(user.name||'U').split(' ').map(n=>n[0]).join('').toUpperCase()}</div>
+              <div>
+                <div class="rc-profile-name">${user.name || 'Usuario'}</div>
+                <div class="rc-profile-email">${user.email || ''}</div>
+              </div>
+            </div>
           </div>
-          <div class="rc-section" style="margin-top:24px;">
-            <div class="rc-section-title">Última limpieza</div>
-            <div id="aseo-last-clean" style="color:#666;padding:6px 0;">Cargando...</div>
-          </div>
+
+              ${BottomNav({ active: 'home', showChat: false }).render()}
+
         </main>
       </div>
     `,
 
     loadRender: () => {
-      // Botón de escaneo
-      const scanBtn = document.getElementById("aseo-scan-btn")
-      if (scanBtn) {
-        scanBtn.onclick = () => window.location.hash = "#/scanner"
-      }
+      // Inicializar componentes reutilizables
+      try { HomeHeader({ title: `¡Hola, ${user.name || 'Usuario'}!`, showLogout: true }).loadRender() } catch (e) { console.warn('[HomeCleaner] HomeHeader loadRender error', e) }
+          try { BottomNav({ active: 'home', showChat: false }).loadRender() } catch (e) { console.warn('[HomeCleaner] BottomNav loadRender error', e) }
+
+      // El escaneo se realiza desde la barra inferior (BottomNav)
 
       // Mostrar última limpieza (si tienes endpoint o storage)
-      // Suponiendo que la API tiene /getLastCleaning (adáptalo)
       async function cargarUltimaLimpieza() {
         try {
-          // TODO: Cambia por tu verdadera API/service
-          // Ejemplo: const last = await maintenanceService.getLastCleaning(user.id)
           const last = JSON.parse(localStorage.getItem("lastCleaning") || "null")
           const el = document.getElementById("aseo-last-clean")
           if (el) {

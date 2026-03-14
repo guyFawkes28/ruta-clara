@@ -41,19 +41,13 @@ export const loginPage = () => ({
               const user = await loginService(emailInput.value, pinInput.value)
               console.log('[LoginPage] Usuario autenticado:', user)
               
-              persistence.saveSession(user)
-              console.log('[LoginPage] Sesión guardada')
-              console.log('[LoginPage] Autenticado según persistence:', persistence.isAuthentication())
-              
-                            const savedUser = user
-                            const role = savedUser?.rol ? String(savedUser.rol).toLowerCase() : null
-                            if (role === 'admin') {
-                                console.log('[LoginPage] Rol admin detectado, redirigiendo a #/dashboard')
-                                window.location.hash = '#/dashboard'
-                            } else {
-                                console.log('[LoginPage] Rol no-admin, redirigiendo a #/home')
-                                window.location.hash = '#/home'
-                            }
+                            // Guardar la sesión y delegar la redirección al router
+                            // Algunas APIs devuelven { data: {...} }, así que preferimos esa forma si existe
+                            const toSave = user?.data ?? user
+                            persistence.saveSession(toSave)
+                            console.log('[LoginPage] Sesión guardada:', toSave)
+                            // Redirigimos al enrutador para que él decida según rol
+                            window.location.hash = '#/'
             } catch (error) {
               console.error('[LoginPage] Error durante login:', error)
               errorMsg.textContent = error.message || 'Error en la autenticación'
