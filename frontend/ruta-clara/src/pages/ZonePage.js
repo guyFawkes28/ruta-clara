@@ -69,10 +69,10 @@ const modalReporte = reportZone({
                     <div class="leg"><div class="ldot v"></div>Reparado ✓</div>
                 </div>
 
-                <div class="map-outer" style="max-height:350px;overflow-y:auto;">
+                <div class="map-outer zone-responsive">
                     <div class="map-hdr"><div class="map-title">${zona}</div></div>
 
-                    <div class="map-body" style="transform:scale(0.85);transform-origin:top left;">
+                    <div class="map-body">
                         <div class="pasillo">— PASILLO CENTRAL —</div>
 
                         <div class="tl-row">
