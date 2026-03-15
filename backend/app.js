@@ -7,6 +7,10 @@ import { Server } from 'socket.io'
 import {authRoutes} from './src/routes/auth.routes.js'
 import { maintenanceRoutes } from './src/routes/maintenance.routes.js'
 import { chatRoutes } from './src/routes/chat.routes.js'
+import { inventoryRoutes } from './src/routes/inventory.routes.js'
+import { executionRoutes } from './src/routes/execution.routes.js'
+import { aiRoutes } from './src/routes/ai.routes.js'
+import { transferRoutes } from './src/routes/transfer.routes.js'
 import cookieParser from 'cookie-parser'
 import { verifyToken } from './src/middlewares/auth.middleware.js'
 import { connectMongo } from './src/config/db.js'
@@ -36,6 +40,10 @@ app.use(cookieParser())
 
 app.use('/api/auth',authRoutes)
 app.use('/api/maintenance',verifyToken,maintenanceRoutes)
+app.use('/api/inventory', inventoryRoutes)
+app.use('/api/execution', executionRoutes)
+app.use('/api/ai', aiRoutes)
+app.use('/api/transfer', transferRoutes)
 
 app.use("/api", cleaningRoutes);
 app.use('/api/chat', chatRoutes)

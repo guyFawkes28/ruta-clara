@@ -2,6 +2,12 @@ import { persistence } from "../util/persistence.js"
 import maintenanceService from "../api/maintenance.service.js"
 import chatService from "../api/chat.service.js"
 import socketManager from "../api/socket.js"
+import aiService from "../api/ai.service.js"
+import inventoryService from "../api/inventory.service.js"
+import executionService from "../api/execution.service.js"
+import { SSTProtocol } from "../components/SSTProtocol.js"
+import { TaskTimer } from "../components/TaskTimer.js"
+import { Modal } from "../components/Modal.js"
 import { HomeHeader } from "../components/HomeHeader.js"
 import { BottomNav } from "../components/BottomNav.js"
 
@@ -264,6 +270,160 @@ export const HomePage = () => {
         BottomNav({ active: 'home', showChat: true }).loadRender()
       } catch (e) { console.warn('[HomePage] BottomNav loadRender error', e) }
 
+      // ── Iniciar tarea con SST + Cronómetro ───────────────────
+      const iniciarTarea = async (tareaId) => {
+        try {
+          console.log('[HomePage] Iniciando tarea:', tareaId)
+          
+          // 1. Validar inventario (hard-lock)
+          const validationResult = await inventoryService.validateTaskStart(tareaId)
+          if (!validationResult.canStart) {
+            const faltantes = validationResult.repuestos_faltantes?.map(r => `• ${r.nombre}: ${r.requerido} necesarios, ${r.disponible} disponibles`).join('\n') || 'Repuestos no disponibles'
+            const modal = Modal({
+              title: '🚫 No se puede iniciar',
+              message: `No hay suficientes repuestos disponibles:\n\n${faltantes}`,
+              type: 'error',
+              buttons: [{ text: 'Entendido', onClick: () => {}, style: 'primary' }]
+            })
+            document.body.insertAdjacentHTML('beforeend', modal.render())
+            modal.loadRender()
+            return
+          }
+
+          console.log('[HomePage] ✓ Inventario validado, mostrando SST...')
+
+          // 2. Mostrar protocolo SST
+          const sst = SSTProtocol({
+            tareaId,
+            onSSTComplete: async (sstData) => {
+              try {
+                console.log('[HomePage] SST completado, registrando...')
+                
+                // Registrar SST en backend
+                const sstResult = await executionService.registerSST(
+                  tareaId,
+                  sstData.foto_selfie,
+                  {
+                    epp: sstData.checklist.epp,
+                    bloqueo_energias: sstData.checklist.bloqueo_energias
+                  }
+                )
+
+                if (!sstResult.success) {
+                  const modal = Modal({
+                    title: '⚠️ Error en SST',
+                    message: 'No se pudo registrar el protocolo de seguridad: ' + sstResult.error,
+                    type: 'error',
+                    buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
+                  })
+                  document.body.insertAdjacentHTML('beforeend', modal.render())
+                  modal.loadRender()
+                  return
+                }
+
+                console.log('[HomePage] ✓ SST registrado, mostrando cronómetro...')
+
+                // 3. Mostrar cronómetro
+                const timer = TaskTimer({
+                  tareaId,
+                  onFinish: async (timerData) => {
+                    console.log('[HomePage] Cronómetro terminado, finalizando tarea...')
+                    
+                    // Capturar foto final (simulada)
+                    // En producción, habría un modal para capturar la foto
+                    const fotoDespues = null // Simulado - en UI real sería capturada
+
+                    try {
+                      const finishResult = await executionService.finishTask(
+                        tareaId,
+                        fotoDespues,
+                        [] // repuestos usados
+                      )
+
+                      if (finishResult.success) {
+                        const modal = Modal({
+                          title: '✅ ¡Tarea Completada!',
+                          message: 'La tarea se ha finalizado exitosamente. Los cambios se han guardado en el sistema.',
+                          type: 'success',
+                          buttons: [{ text: 'Aceptar', onClick: () => { setTimeout(() => cargarTareasPendientes(), 500) }, style: 'primary' }],
+                          icon: '🎉'
+                        })
+                        document.body.insertAdjacentHTML('beforeend', modal.render())
+                        modal.loadRender()
+                        // Recargar lista de tareas
+                        setTimeout(() => cargarTareasPendientes(), 500)
+                      } else {
+                        const modal = Modal({
+                          title: '❌ Error',
+                          message: 'Error al completar tarea: ' + finishResult.error,
+                          type: 'error',
+                          buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
+                        })
+                        document.body.insertAdjacentHTML('beforeend', modal.render())
+                        modal.loadRender()
+                      }
+                    } catch (err) {
+                      console.error('[HomePage] Error finalizando tarea:', err)
+                      const modal = Modal({
+                        title: '⚠️ Error',
+                        message: 'Error al finalizar la tarea: ' + err.message,
+                        type: 'error',
+                        buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
+                      })
+                      document.body.insertAdjacentHTML('beforeend', modal.render())
+                      modal.loadRender()
+                    }
+                  }
+                })
+
+                document.body.insertAdjacentHTML('beforeend', timer.render())
+                timer.loadRender()
+
+                // Cerrar modal SST
+                const sstModal = document.getElementById('sst-modal')
+                if (sstModal) sstModal.remove()
+
+              } catch (err) {
+                console.error('[HomePage] Error en SST complete:', err)
+                const modal = Modal({
+                  title: '⚠️ Error en SST',
+                  message: 'Error en el protocolo de seguridad: ' + err.message,
+                  type: 'error',
+                  buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
+                })
+                document.body.insertAdjacentHTML('beforeend', modal.render())
+                modal.loadRender()
+              }
+            },
+            onCancel: () => {
+              console.log('[HomePage] SST cancelado por usuario')
+              const modal = Modal({
+                title: 'ℹ️ Cancelado',
+                message: 'Has cancelado la ejecución de la tarea.',
+                type: 'info',
+                buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
+              })
+              document.body.insertAdjacentHTML('beforeend', modal.render())
+              modal.loadRender()
+            }
+          })
+
+          document.body.insertAdjacentHTML('beforeend', sst.render())
+          sst.loadRender()
+
+        } catch (err) {
+          console.error('[HomePage] Error iniciando tarea:', err)
+          const modal = Modal({
+            title: '⚠️ Error',
+            message: 'Error al iniciar la tarea: ' + err.message,
+            type: 'error',
+            buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
+          })
+          document.body.insertAdjacentHTML('beforeend', modal.render())
+          modal.loadRender()
+        }
+      }
+
       // ── Cargar tareas pendientes y actualizar estadísticas ──
       const cargarTareasPendientes = async () => {
         try {
@@ -300,7 +460,7 @@ export const HomePage = () => {
               const badgeText = tarea.prioridad_ia > 5 ? 'Urgente' : tarea.prioridad_ia > 2 ? 'Normal' : 'Baja'
 
               return `
-                <div class="rc-task ${badgeClass === 'danger' ? 'urgent' : ''}">
+                <div class="rc-task ${badgeClass === 'danger' ? 'urgent' : ''}" data-tarea-id="${tarea.id_tarea}" style="cursor: pointer; transition: background 0.2s;">
                   <div class="rc-task-left">
                     <div>
                       <div><span class="rc-task-badge ${badgeClass}">${badgeText}</span></div>
@@ -308,7 +468,20 @@ export const HomePage = () => {
                       <div class="rc-task-meta">${incidencias}</div>
                     </div>
                   </div>
-                  <div class="rc-task-arrow">›</div>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="rc-task-improve-ai" data-tarea-id="${tarea.id_tarea}" style="
+                      padding: 6px 10px;
+                      background: #8B5CF6;
+                      color: white;
+                      border: none;
+                      border-radius: 6px;
+                      font-size: 11px;
+                      font-weight: 600;
+                      cursor: pointer;
+                      white-space: nowrap;
+                    ">✨ Mejorar</button>
+                    <div class="rc-task-arrow">›</div>
+                  </div>
                 </div>
               `
             } catch (e) {
@@ -316,6 +489,59 @@ export const HomePage = () => {
               return `<div class="rc-task"><div class="rc-task-left"><div><div class="rc-task-meta" style="color: #f00;">Error: No se pudo cargar esta tarea</div></div></div></div>`
             }
           }).join('')
+
+          // Agregar listeners de click para iniciar tareas
+          document.querySelectorAll('.rc-task').forEach(card => {
+            card.addEventListener('click', async (e) => {
+              // Si se clickea el botón "Mejorar", no continuar
+              if (e.target.classList.contains('rc-task-improve-ai')) return
+
+              const tareaId = parseInt(card.dataset.tareaId)
+              if (isNaN(tareaId)) return
+
+              // Iniciar secuencia de SST + Timer
+              await iniciarTarea(tareaId)
+            })
+          })
+
+          // Agregar listeners de botones "Mejorar"
+          document.querySelectorAll('.rc-task-improve-ai').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              e.stopPropagation()
+              const tareaId = parseInt(btn.dataset.tareaId)
+              btn.textContent = '⏳ Analizando...'
+              btn.disabled = true
+
+              try {
+                const result = await aiService.improveReport(tareaId)
+                if (result.success && result.mejoras) {
+                  const mejoras = result.mejoras
+                  const modal = Modal({
+                    title: '✨ Análisis IA',
+                    message: `🔴 Prioridad: ${mejoras.prioridad}/10\n🔧 Categoría: ${mejoras.categoria}\n⏱️ Tiempo: ~${mejoras.tiempo_estimado_minutos} min\n🛠️ Herramientas: ${mejoras.herramientas?.join(', ') || 'N/A'}\n\n💡 Recomendación:\n${mejoras.recomendaciones}`,
+                    type: 'success',
+                    buttons: [{ text: 'Cerrar', onClick: () => {}, style: 'primary' }],
+                    icon: '🧠'
+                  })
+                  document.body.insertAdjacentHTML('beforeend', modal.render())
+                  modal.loadRender()
+                }
+              } catch (err) {
+                console.error('Error mejorando reporte:', err)
+                const modal = Modal({
+                  title: '❌ Error',
+                  message: 'No se pudo analizar la tarea con IA. Intenta más tarde.',
+                  type: 'error',
+                  buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
+                })
+                document.body.insertAdjacentHTML('beforeend', modal.render())
+                modal.loadRender()
+              } finally {
+                btn.textContent = '✨ Mejorar'
+                btn.disabled = false
+              }
+            })
+          })
         } catch (err) {
           console.error('[HomePage] Error cargando tareas pendientes:', err)
           const container = document.getElementById('pending-tasks-container')
