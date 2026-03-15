@@ -192,6 +192,8 @@ export const improveDescription = async (req, res) => {
       })
     }
 
+    console.log('[improveDescription] Enviando a IA:', { descripcion, tipo_dano, activo, zona })
+
     // Enviar a IA para mejora de descripción
     const mejora = await AIService.improveReportDescription(
       descripcion.trim(),
@@ -201,6 +203,8 @@ export const improveDescription = async (req, res) => {
         zona: zona || ''
       }
     )
+
+    console.log('[improveDescription] Respuesta de IA:', mejora)
 
     if (!mejora.success) {
       console.error('[Controller] Fallo en improveDescription:', mejora)
@@ -217,11 +221,11 @@ export const improveDescription = async (req, res) => {
       mejorado: mejora.mejorado
     })
   } catch (err) {
-    console.error('[AI] Error en improveDescription:', err)
+    console.error('[improveDescription] Error:', err.message, err)
     res.status(500).json({ 
       success: false, 
-      error: err.message,
-      detail: 'Error interno del servidor'
+      error: err.message || 'Error interno del servidor',
+      detail: 'Error al procesar la solicitud'
     })
   }
 }
@@ -232,3 +236,4 @@ export default {
   suggestPurchases,
   improveDescription
 }
+

@@ -1,21 +1,50 @@
 /**
  * Componente SSTProtocol - Protocolo de Seguridad y Salud en el Trabajo
- * Valida checklist de seguridad antes de permitir ejecución de tarea
+ * Simple checklist de seguridad - sin cámara, solo checklist de EPP y bloqueo de energías
  */
 
-export const SSTProtocol = ({ tareaId, onSSTComplete, onCancel }) => {
+// Recomendaciones de seguridad por tipo de activo
+const SST_RECOMENDACIONES = {
+  'Laptop': ['Desconectar de energía', 'Dejar enfriar si estaba en uso', 'Usar pulsera antiestática'],
+  'Computadora de Escritorio': ['Apagar y desconectar', 'Esperar 30 segundos', 'Usar guantes antiestáticos'],
+  'Monitor': ['Desconectar cable de poder', 'Evitar tocar la pantalla', 'Descargar estática'],
+  'Teclado': ['Desconectar USB', 'Limpiar con paño antiestático', 'No usar agua'],
+  'Mouse': ['Desconectar USB o batería', 'Limpiar superficie', 'Secar completamente'],
+  'Impresora': ['Apagar de inmediato', 'Desconectar poder', 'Esperar a que se enfríe'],
+  'Scanner': ['Desconectar de energía', 'No abrir mientras esté caliente', 'Limpiar cristal cuidadosamente'],
+  'Servidor': ['CRÍTICO: Contactar a IT', 'No apagar sin autorización', 'Usar pulsera antiestática'],
+  'Silla': ['Inspeccionar estructura', 'Verificar estabilidad', 'Usar herramientas apropiadas'],
+  'Escritorio': ['Verificar cables sueltos', 'Revisar estructura', 'Usar herramientas manuales']
+}
+
+export const SSTProtocol = ({ tareaId, tareaData, onSSTComplete, onCancel }) => {
   const state = {
-    step: 1, // 1: Checklist, 2: Foto Selfie, 3: Confirmación
     checklist: {
       epp: false,
       bloqueo_energias: false
     },
-    fotoSelfie: null,
     error: null
   }
 
-  return {
-    render: () => `
+  // Obtener recomendaciones según tipo de activo
+  const obtenerRecomendaciones = () => {
+    if (!tareaData?.activos) return []
+    const tipoActivo = tareaData.activos?.tipos_activo?.nombre || 'Genérico'
+    return SST_RECOMENDACIONES[tipoActivo] || SST_RECOMENDACIONES['Genérico'] || [
+      'Usar equipo de protección personal (EPP)',
+      'Realizar bloqueo de energías',
+      'Verificar seguridad del área'
+    ]
+  }
+
+  // Crear objeto del componente para usarlo en callbacks
+  const component = {
+    render: () => {
+      const recomendaciones = obtenerRecomendaciones()
+      const tipoActivo = tareaData?.activos?.tipos_activo?.nombre || 'Activo'
+      const nombreActivo = tareaData?.activos?.etiqueta || 'desconocido'
+      
+      return `
       <div id="sst-modal" style="
         position: fixed;
         top: 0;
@@ -32,235 +61,158 @@ export const SSTProtocol = ({ tareaId, onSSTComplete, onCancel }) => {
           background: white;
           border-radius: 16px;
           padding: 24px;
-          max-width: 500px;
+          max-width: 600px;
           width: 90%;
           box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+          max-height: 80vh;
+          overflow-y: auto;
         ">
           <h2 style="
             font-size: 20px;
             font-weight: 700;
             color: #1a1a1a;
-            margin: 0 0 20px 0;
+            margin: 0 0 8px 0;
             display: flex;
             align-items: center;
             gap: 8px;
           ">
             🛡️ Protocolo SST
           </h2>
+          
+          <p style="
+            font-size: 13px;
+            color: #999;
+            margin: 0 0 16px 0;
+          ">
+            ${tipoActivo} - ${nombreActivo}
+          </p>
 
-          <!-- STEP 1: Checklist -->
-          <div id="sst-step-1" style="display: ${state.step === 1 ? 'block' : 'none'};">
-            <p style="color: var(--tmid); margin-bottom: 20px; font-size: 14px;">
-              Antes de starting, verifica los siguientes puntos de seguridad:
-            </p>
+          <p style="
+            font-size: 14px;
+            color: #666;
+            margin: 0 0 16px 0;
+          ">
+            Verifica que hayas completado todas las medidas de seguridad antes de iniciar la tarea.
+          </p>
 
-            <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
-              <!-- EPP Checkbox -->
-              <label style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                cursor: pointer;
-                padding: 12px;
-                border-radius: 8px;
-                background: #f5f5f5;
-                transition: background 0.2s;
-              " onmouseover="this.style.background='#efefef'" onmouseout="this.style.background='#f5f5f5'">
-                <input 
-                  type="checkbox" 
-                  id="sst-epp"
-                  style="width: 20px; height: 20px; cursor: pointer;"
-                >
-                <span style="font-weight: 600; flex: 1;">
-                  ✅ Uso de EPP Completo
-                </span>
-                <span style="font-size: 12px; color: var(--tsoft);">
-                  Guantes, botas, gafas
-                </span>
-              </label>
-
-              <!-- Bloqueo de Energías Checkbox -->
-              <label style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                cursor: pointer;
-                padding: 12px;
-                border-radius: 8px;
-                background: #f5f5f5;
-                transition: background 0.2s;
-              " onmouseover="this.style.background='#efefef'" onmouseout="this.style.background='#f5f5f5'">
-                <input 
-                  type="checkbox" 
-                  id="sst-bloqueo"
-                  style="width: 20px; height: 20px; cursor: pointer;"
-                >
-                <span style="font-weight: 600; flex: 1;">
-                  🔐 Bloqueo de Energías
-                </span>
-                <span style="font-size: 12px; color: var(--tsoft);">
-                  Breakers/Válvulas
-                </span>
-              </label>
-            </div>
-
-            <div id="sst-error" style="
-              display: ${state.error ? 'block' : 'none'};
-              background: #fee;
-              color: #c33;
-              padding: 12px;
-              border-radius: 8px;
+          <!-- Recomendaciones personalizadas -->
+          <div style="
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+          ">
+            <p style="
               font-size: 13px;
-              margin-bottom: 16px;
-            ">${state.error || ''}</div>
-
-            <div style="display: flex; gap: 10px;">
-              <button id="sst-cancel" style="
-                flex: 1;
-                padding: 12px;
-                border: 1.5px solid var(--border);
-                background: white;
-                color: var(--tmid);
-                border-radius: 8px;
-                font-weight: 600;
-                cursor: pointer;
-              ">Cancelar</button>
-              <button id="sst-next" style="
-                flex: 1;
-                padding: 12px;
-                border: none;
-                background: #007AFF;
-                color: white;
-                border-radius: 8px;
-                font-weight: 600;
-                cursor: pointer;
-              ">Siguiente →</button>
-            </div>
-          </div>
-
-          <!-- STEP 2: Foto Selfie -->
-          <div id="sst-step-2" style="display: ${state.step === 2 ? 'block' : 'none'};">
-            <p style="color: var(--tmid); margin-bottom: 20px; font-size: 14px;">
-              Toma una foto de evidencia con tu EPP puesto (selfie):
+              font-weight: 600;
+              color: #b45309;
+              margin: 0 0 8px 0;
+            ">
+              ⚠️ Recomendaciones para este equipo:
             </p>
-
-            <div style="
-              display: flex;
-              flex-direction: column;
-              gap: 16px;
+            <ul style="
+              margin: 0;
+              padding-left: 20px;
+              font-size: 13px;
+              color: #92400e;
+              line-height: 1.6;
             ">
-              <!-- Cámara -->
-              <video id="sst-camera" style="
-                width: 100%;
-                height: 300px;
-                background: #000;
-                border-radius: 12px;
-                object-fit: cover;
-              "></video>
-
-              <!-- Preview Foto -->
-              <img id="sst-photo-preview" style="
-                display: none;
-                width: 100%;
-                height: 300px;
-                border-radius: 12px;
-                object-fit: cover;
-              ">
-
-              <!-- Botones Foto -->
-              <div style="display: flex; gap: 10px;">
-                <button id="sst-take-photo" style="
-                  flex: 1;
-                  padding: 12px;
-                  border: none;
-                  background: #22C55E;
-                  color: white;
-                  border-radius: 8px;
-                  font-weight: 600;
-                  cursor: pointer;
-                ">📸 Capturar Foto</button>
-                <button id="sst-retake" style="
-                  flex: 1;
-                  padding: 12px;
-                  border: 1.5px solid var(--border);
-                  background: white;
-                  color: var(--tmid);
-                  border-radius: 8px;
-                  font-weight: 600;
-                  cursor: pointer;
-                  display: none;
-                ">Retomar</button>
-              </div>
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-top: 16px;">
-              <button id="sst-back" style="
-                flex: 1;
-                padding: 12px;
-                border: 1.5px solid var(--border);
-                background: white;
-                color: var(--tmid);
-                border-radius: 8px;
-                font-weight: 600;
-                cursor: pointer;
-              ">← Atrás</button>
-              <button id="sst-confirm" style="
-                flex: 1;
-                padding: 12px;
-                border: none;
-                background: #007AFF;
-                color: white;
-                border-radius: 8px;
-                font-weight: 600;
-                cursor: pointer;
-                opacity: 0.5;
-                cursor: not-allowed;
-              " disabled>Confirmar ✓</button>
-            </div>
+              ${recomendaciones.map(rec => `<li>${rec}</li>`).join('')}
+            </ul>
           </div>
 
-          <!-- STEP 3: Confirmación -->
-          <div id="sst-step-3" style="display: ${state.step === 3 ? 'block' : 'none'};">
-            <div style="
-              background: #f0fdf4;
-              padding: 16px;
-              border-radius: 8px;
-              border: 1.5px solid #22C55E;
-              text-align: center;
-              margin-bottom: 24px;
+          <!-- Checklist -->
+          <div style="
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+          ">
+            <label style="
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              margin-bottom: 16px;
+              cursor: pointer;
+              font-size: 15px;
+              font-weight: 600;
             ">
-              <div style="
-                font-size: 40px;
-                margin-bottom: 8px;
-              ">✅</div>
-              <h3 style="
-                margin: 0;
-                color: #15803D;
-                font-size: 16px;
-                font-weight: 700;
-              ">Protocolo SST Completado</h3>
-              <p style="
-                margin: 8px 0 0 0;
-                color: #16a34a;
-                font-size: 13px;
-              ">Estás autorizado para iniciar la tarea</p>
-            </div>
+              <input 
+                type="checkbox" 
+                id="sst-epp"
+                style="width: 20px; height: 20px; cursor: pointer;"
+              />
+              <span>✅ Equipo de Protección Personal (EPP) verificado</span>
+            </label>
 
-            <button id="sst-start-task" style="
-              width: 100%;
-              padding: 12px;
-              border: none;
-              background: #007AFF;
-              color: white;
+            <label style="
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              cursor: pointer;
+              font-size: 15px;
+              font-weight: 600;
+            ">
+              <input 
+                type="checkbox" 
+                id="sst-bloqueo"
+                style="width: 20px; height: 20px; cursor: pointer;"
+              />
+              <span>⚡ Bloqueo de energías completado</span>
+            </label>
+          </div>
+
+          <!-- Mensaje de error -->
+          <div id="sst-error" style="
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: none;
+            border: 1px solid #fcc;
+          "></div>
+
+          <!-- Botones -->
+          <div style="
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+          ">
+            <button id="sst-cancel" style="
+              padding: 12px 20px;
+              border: 2px solid #ddd;
+              background: white;
+              color: #666;
               border-radius: 8px;
+              font-size: 15px;
               font-weight: 600;
               cursor: pointer;
-              font-size: 14px;
-            ">🚀 Iniciar Tarea</button>
+              transition: all 0.3s;
+            " onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='white'">
+              Cancelar
+            </button>
+
+            <button id="sst-confirm" style="
+              padding: 12px 20px;
+              background: #2563eb;
+              color: white;
+              border: none;
+              border-radius: 8px;
+              font-size: 15px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.3s;
+            " onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+              🚀 Iniciar Tarea
+            </button>
           </div>
         </div>
       </div>
-    `,
+    `
+    },
 
     loadRender: () => {
       const modal = document.getElementById('sst-modal')
@@ -272,96 +224,33 @@ export const SSTProtocol = ({ tareaId, onSSTComplete, onCancel }) => {
         onCancel && onCancel()
       })
 
-      // Step 1 → 2
-      document.getElementById('sst-next')?.addEventListener('click', () => {
+      // Confirmar - Iniciar Tarea directamente después de validar checkboxes
+      document.getElementById('sst-confirm')?.addEventListener('click', () => {
         const epp = document.getElementById('sst-epp').checked
         const bloqueo = document.getElementById('sst-bloqueo').checked
+        const errorDiv = document.getElementById('sst-error')
 
         if (!epp || !bloqueo) {
           state.error = '⚠️ Debes confirmar TODOS los puntos de seguridad'
-          document.getElementById('sst-error').textContent = state.error
-          document.getElementById('sst-error').style.display = 'block'
+          errorDiv.textContent = state.error
+          errorDiv.style.display = 'block'
           return
         }
 
-        state.checklist = { epp, bloqueo }
+        // Si todo está bien, iniciar tarea directamente
+        state.checklist = { epp, bloqueo_energias: bloqueo }
         state.error = null
-        state.step = 2
-        this.loadRender()
-        startCamera()
-      })
-
-      // Cámara
-      const startCamera = () => {
-        const video = document.getElementById('sst-camera')
-        if (!video) return
-
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-          .then(stream => {
-            video.srcObject = stream
-          })
-          .catch(err => {
-            console.error('Error cámara:', err)
-            alert('No se pudo acceder a la cámara')
-          })
-      }
-
-      // Capturar foto
-      document.getElementById('sst-take-photo')?.addEventListener('click', () => {
-        const video = document.getElementById('sst-camera')
-        const canvas = document.createElement('canvas')
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
-        const ctx = canvas.getContext('2d')
-        ctx.drawImage(video, 0, 0)
-
-        state.fotoSelfie = canvas.toDataURL('image/jpeg', 0.8)
-
-        document.getElementById('sst-camera').style.display = 'none'
-        document.getElementById('sst-photo-preview').src = state.fotoSelfie
-        document.getElementById('sst-photo-preview').style.display = 'block'
-        document.getElementById('sst-take-photo').style.display = 'none'
-        document.getElementById('sst-retake').style.display = 'block'
-        document.getElementById('sst-confirm').disabled = false
-        document.getElementById('sst-confirm').style.opacity = '1'
-        document.getElementById('sst-confirm').style.cursor = 'pointer'
-      })
-
-      // Retomar foto
-      document.getElementById('sst-retake')?.addEventListener('click', () => {
-        const video = document.getElementById('sst-camera')
-        video.style.display = 'block'
-        document.getElementById('sst-photo-preview').style.display = 'none'
-        document.getElementById('sst-take-photo').style.display = 'block'
-        document.getElementById('sst-retake').style.display = 'none'
-        document.getElementById('sst-confirm').disabled = true
-        document.getElementById('sst-confirm').style.opacity = '0.5'
-        document.getElementById('sst-confirm').style.cursor = 'not-allowed'
-        state.fotoSelfie = null
-      })
-
-      // Atrás
-      document.getElementById('sst-back')?.addEventListener('click', () => {
-        state.step = 1
-        this.loadRender()
-      })
-
-      // Confirmar foto
-      document.getElementById('sst-confirm')?.addEventListener('click', () => {
-        state.step = 3
-        this.loadRender()
-      })
-
-      // Iniciar Tarea
-      document.getElementById('sst-start-task')?.addEventListener('click', () => {
+        errorDiv.style.display = 'none'
+        
         modal.remove()
         onSSTComplete && onSSTComplete({
-          checklist: state.checklist,
-          foto_selfie: state.fotoSelfie
+          checklist: state.checklist
         })
       })
     }
   }
+
+  return component
 }
 
 export default SSTProtocol

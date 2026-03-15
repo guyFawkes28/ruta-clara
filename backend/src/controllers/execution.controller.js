@@ -30,19 +30,31 @@ export const initializeTaskExecution = async (req, res) => {
 // Registrar SST (Protocolo de Seguridad)
 export const registerSST = async (req, res) => {
   try {
+    console.log('[registerSST] Body recibido:', JSON.stringify(req.body, null, 2))
+    
     const { tarea_id, foto_selfie, checklist } = req.body
-    // checklist = { epp: true, bloqueo_energias: true, foto_seguridad: true }
 
-    if (!tarea_id || !foto_selfie || !checklist) {
+    if (!tarea_id) {
+      console.error('[registerSST] Error: falta tarea_id')
       return res.status(400).json({ 
         success: false, 
-        error: 'Faltan datos requeridos (tarea_id, foto_selfie, checklist)',
+        error: 'Falta tarea_id',
+        canStart: false
+      })
+    }
+
+    if (!checklist) {
+      console.error('[registerSST] Error: falta checklist')
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Falta checklist',
         canStart: false
       })
     }
 
     // Validar checklist completo
     if (!checklist.epp || !checklist.bloqueo_energias) {
+      console.error('[registerSST] Error: checklist incompleto', { checklist })
       return res.status(400).json({
         success: false,
         error: 'Checklist de seguridad incompleto',
@@ -54,10 +66,12 @@ export const registerSST = async (req, res) => {
       })
     }
 
-    // Registrar SST con foto
+    console.log('[registerSST] Validaciones pasadas, registrando SST...')
+
+    // Registrar SST con foto (si se proporciona, de lo contrario es null)
     const execution = await TaskExecution.recordSST(
       parseInt(tarea_id),
-      foto_selfie
+      foto_selfie || null
     )
 
     // Actualizar estado de tarea a "En Ejecución"
@@ -86,45 +100,87 @@ export const registerSST = async (req, res) => {
 // Finalizar tarea (foto después + descuento de repuestos)
 export const finishTask = async (req, res) => {
   try {
+    console.log('\n========== [finishTask] INICIANDO FINALIZACIÓN DE TAREA ==========')
+    console.log('[finishTask] Body recibido:', JSON.stringify(req.body, null, 2))
+    
     const { tarea_id, foto_despues, repuestos_usados } = req.body
-    // repuestos_usados = [{ repuesto_id, cantidad_usada }, ...]
 
-    if (!tarea_id || !foto_despues) {
+    if (!tarea_id) {
+      console.error('[finishTask] ✗ Error: falta tarea_id')
       return res.status(400).json({ 
         success: false, 
-        error: 'Faltan tarea_id o foto_despues' 
+        error: 'Falta tarea_id' 
       })
     }
 
+    const taskIdInt = parseInt(tarea_id)
+    console.log(`[finishTask] ID convertido a integer: ${taskIdInt} (tipo: ${typeof taskIdInt})`)
+
     // Finalizar ejecución
+    console.log(`[finishTask] Llamando TaskExecution.finishTask(${taskIdInt})...`)
     const execution = await TaskExecution.finishTask(
-      parseInt(tarea_id),
-      foto_despues
+      taskIdInt,
+      foto_despues || null
     )
+    console.log(`[finishTask] ✓ Ejecución finalizada:`, execution)
 
     // Descontar repuestos si se especificaron
     let movimientos = []
     if (repuestos_usados && repuestos_usados.length > 0) {
+      console.log(`[finishTask] Descontando ${repuestos_usados.length} repuestos...`)
       movimientos = await Inventory.deductFromTask(
-        parseInt(tarea_id),
+        taskIdInt,
         repuestos_usados
       )
+      console.log(`[finishTask] ✓ Repuestos descontados:`, movimientos)
     }
 
-    // Actualizar estado de tarea a "Completada"
-    await supabase
+    // ACTUALIZAR estado de tarea a "Terminada"
+    console.log(`\n[finishTask] INICIANDO UPDATE: id_tarea = ${taskIdInt}, nuevo estado = 'Terminada'`)
+    const { data: updateData, error: updateError, count: updateCount } = await supabase
       .from('tareas')
-      .update({ estado_tarea: 'Completada' })
-      .eq('id_tarea', tarea_id)
+      .update({ estado_tarea: 'Terminada' })
+      .eq('id_tarea', taskIdInt)
+      .select()
+
+    if (updateError) {
+      console.error('[finishTask] ✗✗✗ ERROR AL ACTUALIZAR:', JSON.stringify(updateError, null, 2))
+      throw updateError
+    }
+
+    console.log(`[finishTask] ✓ UPDATE EXITOSO`)
+    console.log(`[finishTask] Filas actualizadas (count):`, updateCount)
+    console.log(`[finishTask] Datos retornados:`, updateData)
+
+    // VERIFICACIÓN: Leer la tarea actualizada
+    console.log(`\n[finishTask] VERIFICANDO: leyendo tarea ${taskIdInt} para confirmar...`)
+    const { data: verificacion, error: verificacionError } = await supabase
+      .from('tareas')
+      .select('id_tarea, estado_tarea, fecha_actualizacion')
+      .eq('id_tarea', taskIdInt)
+      .single()
+
+    if (verificacionError) {
+      console.error('[finishTask] ✗ Error en verificación:', verificacionError)
+    } else {
+      console.log(`[finishTask] ✓ VERIFICACIÓN: Tarea ${verificacion.id_tarea} tiene estado: "${verificacion.estado_tarea}"`)
+      if (verificacion.estado_tarea !== 'Terminada') {
+        console.error(`[finishTask] ⚠️⚠️⚠️ ALERTA: Estado NO cambió a Terminada. Sigue siendo: ${verificacion.estado_tarea}`)
+      }
+    }
+
+    console.log('========== [finishTask] FIN DE PROCESO ==========\n')
 
     res.json({
       success: true,
       message: 'Tarea completada correctamente',
       ejecucion: execution,
-      repuestos_descontados: movimientos.length
+      repuestos_descontados: movimientos.length,
+      estado_actualizado: 'Terminada',
+      verificacion: verificacion
     })
   } catch (err) {
-    console.error('[TaskExecution] Error:', err)
+    console.error('[finishTask] ✗✗✗ ERROR GENERAL:', err)
     res.status(500).json({ success: false, error: err.message })
   }
 }

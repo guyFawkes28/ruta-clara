@@ -52,6 +52,28 @@ const maintenanceService = {
         } catch (error) {
             throw error;
         }
+    },
+
+    // 6. Obtener inspecciones recientes
+    getRecentInspections: async (limit = 10) => {
+        try {
+            const response = await urlApi.get(`/maintenance/inspecciones/recientes?limit=${limit}`)
+            return response.data || { inspecciones: [] }
+        } catch (error) {
+            console.warn('[maintenanceService] Error cargando inspecciones:', error)
+            return { inspecciones: [] }
+        }
+    },
+
+    // 7. Obtener reportes recientes
+    getRecentReports: async (limit = 10) => {
+        try {
+            const response = await urlApi.get(`/maintenance/reportes/recientes?limit=${limit}`)
+            return response.data || { reportes: [] }
+        } catch (error) {
+            console.warn('[maintenanceService] Error cargando reportes:', error)
+            return { reportes: [] }
+        }
     }
 }
 

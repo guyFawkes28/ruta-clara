@@ -23,7 +23,11 @@ export const Inventory = {
       .eq('id_repuesto', id)
       .single()
     
-    if (error) throw error
+    if (error) {
+      // Si no existe, retorna null en lugar de lanzar error
+      if (error.code === 'PGRST116') return null
+      throw error
+    }
     return data
   },
 
@@ -41,14 +45,33 @@ export const Inventory = {
 
   // Verificar disponibilidad (stock >= cantidad)
   async checkAvailability(repuestoId, cantidadNeeded) {
-    const repuesto = await this.getById(repuestoId)
-    if (!repuesto) throw new Error('Repuesto no encontrado')
-    
-    return {
-      disponible: repuesto.stock_actual >= cantidadNeeded,
-      stock_actual: repuesto.stock_actual,
-      cantidad_necesaria: cantidadNeeded,
-      deficit: cantidadNeeded - repuesto.stock_actual
+    try {
+      const repuesto = await this.getById(repuestoId)
+      if (!repuesto) {
+        return {
+          disponible: false,
+          stock_actual: 0,
+          cantidad_necesaria: cantidadNeeded,
+          deficit: cantidadNeeded,
+          error: `Repuesto con ID ${repuestoId} no encontrado`
+        }
+      }
+      
+      return {
+        disponible: repuesto.stock_actual >= cantidadNeeded,
+        stock_actual: repuesto.stock_actual,
+        cantidad_necesaria: cantidadNeeded,
+        deficit: Math.max(0, cantidadNeeded - repuesto.stock_actual)
+      }
+    } catch (err) {
+      console.error(`[Inventory] Error en checkAvailability para repuesto ${repuestoId}:`, err)
+      return {
+        disponible: false,
+        stock_actual: 0,
+        cantidad_necesaria: cantidadNeeded,
+        deficit: cantidadNeeded,
+        error: err.message
+      }
     }
   },
 
