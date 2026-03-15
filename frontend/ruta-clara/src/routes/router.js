@@ -7,7 +7,6 @@ import { dashboardPage } from "../pages/DashboardPage.js"
 import { HomePage } from "../pages/HomePage.js"
 import { HomeCleanerPage } from "../pages/HomeCleaner.js"
 import { cleaningReportPage } from "../pages/cleanPage.js"
-
 // Factory pattern: no se ejecutan hasta que se llamen
 const routeFactories = {
     "#/": () => loginPage(),

@@ -19,12 +19,11 @@ export function headerView({ zona = 'Sala 3 — Piso 1', onScan = () => {} } = {
             </div>
             <div class="hdr-controls">
               <div class="hdr-profile" id="hdr-profile">
-                <button class="hdr-user-box" id="hdr-user-box" aria-label="Perfil">
+                <div class="hdr-user-box" id="hdr-user-box" aria-label="Perfil">
                   <span class="hdr-user-emoji" id="hdr-role">🔎</span>
                   <span class="hdr-name" id="hdr-name">Usuario</span>
-                </button>
+                </div>
               </div>
-              <button class="qr-btn" id="hdr-scan">📷</button>
               <button class="btn btn-danger btn-sm" id="hdr-logout" title="Cerrar sesión">
                 <span class="logout-icon">↩</span>
                 <span class="logout-text">Salir</span>
@@ -41,7 +40,6 @@ export function headerView({ zona = 'Sala 3 — Piso 1', onScan = () => {} } = {
     },
 
     loadRender() {
-      document.getElementById('hdr-scan').onclick = onScan;
       const hdrHome = document.getElementById('hdr-home-btn');
       if (hdrHome) hdrHome.onclick = () => { window.location.hash = '#/home'; };
       document.getElementById('hdr-logout').onclick = () => {
@@ -69,11 +67,7 @@ export function headerView({ zona = 'Sala 3 — Piso 1', onScan = () => {} } = {
             else if (r) emoji = '🔎';
             if (roleEl) roleEl.textContent = emoji;
           } catch (e) { /* ignore */ }
-          // make user box clickable to go to profile/home
-          if (userBox && !userBox.dataset.bound) {
-            userBox.onclick = () => { window.location.hash = '#/profile' }
-            userBox.dataset.bound = '1'
-          }
+          // user box is visual only now (no navigation)
         }
       } catch (e) { /* ignore */ }
     },

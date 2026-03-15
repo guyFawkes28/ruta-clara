@@ -74,12 +74,52 @@ const modalReporte = reportZone({
 
     const setupPuestoTooltip = (el, htmlContent) => {
         if (!el || !window.bootstrap?.Tooltip) return;
-        bootstrap.Tooltip.getOrCreateInstance(el, {
+        const instance = bootstrap.Tooltip.getOrCreateInstance(el, {
             trigger: 'hover focus',
             customClass: 'puesto-tooltip',
             html: true,
             title: htmlContent
         });
+
+        // Support long-press on touch devices to show tooltip.
+        let touchTimer = null;
+        const LONG_PRESS_MS = 500;
+
+        const onTouchStart = (ev) => {
+            // start timer to show tooltip after LONG_PRESS_MS
+            clearTimeout(touchTimer);
+            touchTimer = setTimeout(() => {
+                try { instance.show(); } catch (e) { /* ignore */ }
+                el.dataset.tooltipActive = '1';
+                // hide after a short timeout
+                setTimeout(() => {
+                    try { instance.hide(); } catch (e) {}
+                    delete el.dataset.tooltipActive;
+                }, 3000);
+            }, LONG_PRESS_MS);
+        };
+
+        const onTouchEnd = (ev) => {
+            clearTimeout(touchTimer);
+            // if tooltip was shown, suppress the next click that would open modal
+            if (el.dataset.tooltipActive === '1') {
+                el.dataset.tooltipSuppressClick = String(Date.now());
+                setTimeout(() => { delete el.dataset.tooltipSuppressClick; }, 800);
+            }
+        };
+
+        el.addEventListener('touchstart', onTouchStart, { passive: true });
+        el.addEventListener('touchend', onTouchEnd);
+        el.addEventListener('touchcancel', onTouchEnd);
+
+        // On devices that support hover (mouse), ensure tooltip appears on mouseenter
+        try {
+            const supportsHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
+            if (supportsHover) {
+                el.addEventListener('mouseenter', () => { try { instance.show(); } catch (e) {} });
+                el.addEventListener('mouseleave', () => { try { instance.hide(); } catch (e) {} });
+            }
+        } catch (e) { /* ignore matchMedia errors */ }
     };
 
     const crearPuesto = (etiqueta, label) => `
@@ -226,7 +266,15 @@ const modalReporte = reportZone({
 
             // Click handlers — data-id ya es numérico en este punto
             document.querySelectorAll('.p, .p-tl, .fan').forEach(el => {
-                el.addEventListener('click', () => {
+                el.addEventListener('click', (ev) => {
+                    // If a long-press showed the tooltip, suppress this click
+                    if (el.dataset.tooltipSuppressClick) {
+                        delete el.dataset.tooltipSuppressClick;
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        return;
+                    }
+
                     const id = Number(el.getAttribute('data-id'));
                     if (!isNaN(id) && id > 0) {
                         const activo = activos.find(a => a.id_activo === id);
@@ -238,7 +286,6 @@ const modalReporte = reportZone({
                 });
             });
 
-            // (CTA movido al header)
         }
     };
 };

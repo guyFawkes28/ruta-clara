@@ -9,6 +9,7 @@ export const reportZone = ({ onSave, onCancel }) => {
     let detailQueue = [];
     let currentDetailIndex = 0;
     let currentDamage = null;
+    let _clearedAncestors = [];
     const DAMAGE_LABELS = {
         'pantalla o torre': 'Pantalla/Torre',
         'cable': 'Cable',
@@ -166,6 +167,14 @@ export const reportZone = ({ onSave, onCancel }) => {
 
         loadRender: () => {
             const $ = id => document.getElementById(id);
+
+            // Asegurarse de que el modal se monte en el <body>, para que no quede
+            // recortado por contenedores con `overflow`/`transform` (por ejemplo el mapa de la zona).
+            const modal = document.getElementById('report-modal');
+            if (modal && modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+
             // soporta selección múltiple de componentes dañados
             // (usar las variables de estado definidas en el scope superior)
             const DAMAGE_LABELS = {
@@ -540,6 +549,30 @@ export const reportZone = ({ onSave, onCancel }) => {
             if (overlay) overlay.classList.add('on');
             document.body.style.overflow = 'hidden';
 
+            // Mobile defensive fix: temporalmente limpiar transforms/overflow en
+            // ancestros que puedan crear stacking contexts y recortar el sheet.
+            try {
+                _clearedAncestors = [];
+                const isMobile = window.innerWidth <= 420;
+                if (isMobile) {
+                    let anc = document.querySelector('.map-outer') || document.body;
+                    // start from the element itself's parent chain
+                    while (anc && anc !== document.body) {
+                        const cs = window.getComputedStyle(anc);
+                        const hasTransform = cs.transform && cs.transform !== 'none';
+                        const overflowX = cs.overflowX || cs.overflow;
+                        const overflowY = cs.overflowY || cs.overflow;
+                        const hasOverflow = (overflowX && overflowX !== 'visible') || (overflowY && overflowY !== 'visible');
+                        if (hasTransform || hasOverflow) {
+                            _clearedAncestors.push({ el: anc, transform: anc.style.transform || '', overflow: anc.style.overflow || '' });
+                            if (hasTransform) anc.style.transform = 'none';
+                            if (hasOverflow) anc.style.overflow = 'visible';
+                        }
+                        anc = anc.parentElement;
+                    }
+                }
+            } catch (err) { console.warn('Error applying mobile ancestor fixes', err); }
+
             document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('on'));
             // Asegurar visibilidad por defecto del botón de volver en paso 3
             const step3Back = document.getElementById('rc-step3-back'); if (step3Back) step3Back.style.display = '';
@@ -587,6 +620,17 @@ export const reportZone = ({ onSave, onCancel }) => {
             const overlay = document.getElementById('rc-sheet');
             if (overlay) overlay.classList.remove('on');
             document.body.style.overflow = '';
+
+            // Restaurar estilos originales en ancestros modificados
+            try {
+                if (_clearedAncestors && _clearedAncestors.length) {
+                    _clearedAncestors.forEach(item => {
+                        try { item.el.style.transform = item.transform || ''; } catch (e) {}
+                        try { item.el.style.overflow = item.overflow || ''; } catch (e) {}
+                    });
+                    _clearedAncestors = [];
+                }
+            } catch (err) { console.warn('Error restoring ancestor styles', err); }
             setTimeout(() => {
                 const modal = document.getElementById('report-modal');
                 if (modal) modal.classList.add('d-none');

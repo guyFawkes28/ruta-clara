@@ -11,6 +11,7 @@ export const sidebarView = ({ activePage = 'dashboard', onNavigate } = {}) => ({
             <li><a data-db-page="inspecciones" class="${activePage === 'inspecciones' ? 'active' : ''}"><span class="nav-emoji">📋</span><span class="nav-label">Inspecciones</span></a></li>
             <li><a data-db-page="reportes" class="${activePage === 'reportes' ? 'active' : ''}"><span class="nav-emoji">📈</span><span class="nav-label">Reportes</span></a></li>
             <li><a data-db-page="chat" class="${activePage === 'chat' ? 'active' : ''}"><span class="nav-emoji">💬</span><span class="nav-label">Chat</span></a></li>
+            <li><a data-db-page="home-cleaner" class="${activePage === 'home-cleaner' ? 'active' : ''}"><span class="nav-emoji">🧹</span><span class="nav-label">Registro Aseo</span></a></li>
         </nav>
       </div>
     </aside>
@@ -23,6 +24,8 @@ export const sidebarView = ({ activePage = 'dashboard', onNavigate } = {}) => ({
         onNavigate?.(a.dataset.dbPage);
       });
     });
+
+    // Sidebar: no mostrar resumen de aseo aquí (se muestra en Dashboard)
   }
 });
 

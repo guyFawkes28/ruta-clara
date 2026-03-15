@@ -76,6 +76,11 @@
   margin-bottom: 1.75rem; padding-bottom: 1.25rem;
   border-bottom: 2px solid var(--border);
 }
+/* Ensure on wide screens the title appears on the left and actions on the right
+   even if the DOM order has actions first. Mobile rules (absolute positioning)
+   will continue to place actions top-right. */
+.db-ph .db-ph-actions { order: 2; }
+.db-ph > div:last-child { order: 1; }
 .db-ph h1 { font-size: 2rem; font-weight: 700; color: var(--navy); }
 .db-ph h1 { display: flex; align-items: center; gap: .5rem; }
 .section-emoji { display: inline-block; font-size: 1.35rem; line-height: 1; margin-right: .35rem; }
@@ -272,19 +277,18 @@
   #db-sidebar { padding-top: 2.5rem; }
 }
 
-/* Mobile: place logout next to title and stack other actions on the right */
+/* Mobile: pin logout to top-right and place title below */
 @media (max-width: 768px) {
-  .db-ph { padding-right: 0; flex-direction: column; align-items: flex-start; gap: .5rem; }
+  .db-ph { padding-right: 0; padding-left: 0; flex-direction: column; align-items: flex-start; gap: .5rem; position: relative; }
   .db-ph > div { display: block; }
   .db-ph > div h1 { display: flex; align-items: center; gap: .5rem; }
 
-  /* On mobile place the action buttons under the title instead of floating */
+  /* Pin the actions (logout) to the top-right, push title down */
   .db-ph .db-ph-actions {
-    position: static; display: flex; flex-direction: row; gap: .5rem;
-    flex-wrap: wrap; align-items: center; margin-top: .5rem; width: 100%;
+    position: absolute; top: 8px; right: 14px; display: flex; gap: .5rem; z-index: 20;
   }
+  .db-ph > div:last-child { margin-top: 44px; padding-left: 14px; text-align: left; }
   .db-ph .db-ph-actions .db-btn { padding: .45rem .9rem; font-size: .88rem; }
-  .db-ph .db-ph-actions .db-btn.full-mobile { flex: 1 1 100%; }
 }
 
 /* Forzar colores claros en sidebar: texto base ligero, hover/activo blanco puro.
