@@ -18,7 +18,7 @@ export const HomeCleanerPage = () => {
             </div>
 
             <div class="rc-section" style="margin-top:24px;">
-              <div class="rc-section-title">Última limpieza</div>
+              <div class="rc-section-title">Tus limpiezas recientes</div>
               <div id="aseo-last-clean" style="color:#666;padding:6px 0;">Cargando...</div>
             </div>
           </div>
@@ -62,18 +62,24 @@ export const HomeCleanerPage = () => {
             return
           }
 
-          // El más reciente viene primero (el backend ordena por createdAt desc)
-          const ultimo = mios[0]
-          const hora = new Date(ultimo.createdAt).toLocaleTimeString("es-CO", { timeZone: "America/Bogota" })
-          const fecha = new Date(ultimo.createdAt).toLocaleDateString("es-CO", { timeZone: "America/Bogota" })
-
+          // Renderizar todas las limpiezas del usuario en una lista
           el.innerHTML = `
-            <div style="display:flex;flex-direction:column;gap:4px;">
-              <span><strong>Zona:</strong> ${ultimo.zone_id}</span>
-              <span><strong>Descripción:</strong> ${ultimo.descriptions}</span>
-              <span><strong>Fecha:</strong> ${fecha}</span>
-              <span><strong>Hora inicio:</strong> ${hora}</span>
-              <span><strong>Hora fin:</strong> ${ultimo.hora_fin || 'No registrada'}</span>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="font-size:13px;color:var(--tsoft);">Mostrando ${mios.length} registros</div>
+              ${mios.map(item => {
+                const fecha = new Date(item.createdAt).toLocaleDateString('es-CO', { timeZone: 'America/Bogota' });
+                const hora = new Date(item.createdAt).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota' });
+                return `
+                  <div class="aseo-clean-item" style="background:#fff;border:1px solid var(--border);padding:10px;border-radius:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                      <div style="font-weight:800">Zona: ${item.zone_id}</div>
+                      <div style="font-size:12px;color:var(--tsoft)">${fecha} · ${hora}</div>
+                    </div>
+                    <div style="margin-top:6px;color:#333"><strong>Descripción:</strong> ${item.descriptions || item.descriptions || ''}</div>
+                    <div style="margin-top:6px;font-size:13px;color:var(--tsoft)"><strong>Hora fin:</strong> ${item.hora_fin || 'No registrada'}</div>
+                  </div>
+                `
+              }).join('')}
             </div>
           `
         } catch (e) {

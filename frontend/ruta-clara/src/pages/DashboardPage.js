@@ -122,13 +122,12 @@ function subDashboard() {
   const { equipos, inspecciones, tecnicos, metricas, alertas_stock } = state
   return `
     <div class="db-ph">
+      <div class="db-ph-actions">
+        <button class="db-btn db-btn-secondary" id="db-logout">🔒 Cerrar sesión</button>
+      </div>
       <div>
         <h1>Dashboard</h1>
         <p>Bienvenido de vuelta, ${persistence.getUser()?.name || persistence.getUser()?.email || 'Usuario'}</p>
-      </div>
-      <div class="db-ph-actions">
-        <button class="db-btn db-btn-secondary" id="db-logout">🔒 Cerrar sesión</button>
-        <button class="db-btn db-btn-primary" id="db-new-report">+ Nuevo Reporte</button>
       </div>
     </div>
     
@@ -212,7 +211,14 @@ function subEquipos() {
       }).join('')
   
   return `
+<<<<<<< HEAD
+    <div class="db-ph">
+      <div class="db-ph-actions"><button id="db-filter-equipos" class="db-btn db-btn-secondary">🔍 Filtrar</button><button class="db-btn db-btn-primary">+ Registrar Equipo</button></div>
+      <div><h1>Gestión de Equipos</h1></div>
+    </div>
+=======
     <div class="db-ph"><h1>📦 Inventario de Repuestos</h1><div class="db-ph-actions"><button class="db-btn db-btn-secondary">🔍 Filtrar</button><button class="db-btn db-btn-primary">+ Agregar Repuesto</button></div></div>
+>>>>>>> e4b46ac93fe4a855271a72dd01e793facd66028e
     <div class="db-cards">
       <div class="db-card db-fade"><div class="db-card-title">Tipos de Repuestos</div><div class="db-card-value">${tipos.length}</div></div>
       <div class="db-card db-fade" style="animation-delay:.06s"><div class="db-card-title">Total en Stock</div><div class="db-card-value" style="color:#22c55e">${Object.values(repuestos_por_tipo).reduce((sum, t) => sum + (t.cantidad_total || 0), 0)}</div></div>
@@ -231,8 +237,11 @@ function ro(etiqueta, label) {
 function subMapa() {
   return `
     <div class="db-ph">
-      <h1>🗺️ Mapa de Sala</h1>
-      <span style="font-size:13px;color:var(--tsoft);font-weight:600">Solo lectura — Sala 3, Piso 1</span>
+      <div class="db-ph-actions"></div>
+      <div>
+        <h1>🗺️ Mapa de Sala</h1>
+        <span style="font-size:13px;color:var(--tsoft);font-weight:600">Solo lectura — Sala 3, Piso 1</span>
+      </div>
     </div>
 
     <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
@@ -293,7 +302,10 @@ function subReportes() {
   const { reportes } = state
   const rows = reportes.lista.map(r => `<tr><td><strong>${r.id}</strong></td><td>${r.tipo}</td><td>${r.fecha}</td><td>${r.autor}</td><td>${statusBadge(r.estado)}</td><td><button class="db-btn db-btn-secondary db-btn-sm">${r.estado==='disponible'?'📥 Descargar':'Ver'}</button></td></tr>`).join('')
   return `
-    <div class="db-ph"><h1>Reportes</h1><div class="db-ph-actions"><button class="db-btn db-btn-secondary">📥 Importar</button><button class="db-btn db-btn-primary">+ Generar Reporte</button></div></div>
+    <div class="db-ph">
+      <div class="db-ph-actions"><button class="db-btn db-btn-secondary">📥 Importar</button><button class="db-btn db-btn-primary">+ Generar Reporte</button></div>
+      <div><h1>Reportes</h1></div>
+    </div>
     <div class="db-cards">
       <div class="db-card db-fade"><div class="db-card-title">Reportes Generados</div><div class="db-card-value">${reportes.generados}</div></div>
       <div class="db-card db-fade" style="animation-delay:.06s"><div class="db-card-title">Pendientes de Revisión</div><div class="db-card-value" style="color:var(--orange)">${reportes.pendientes}</div></div>
@@ -303,11 +315,32 @@ function subReportes() {
     </div>`
 }
 
+function subAseo() {
+  return `
+    <div class="db-ph">
+      <div class="db-ph-actions"></div>
+      <div>
+        <h1>🧹 Registro de Aseo</h1>
+        <span style="font-size:13px;color:var(--tsoft);font-weight:600">Registros recientes de limpieza</span>
+      </div>
+    </div>
+
+    <div class="db-section">
+      <div class="db-section-head"><h2 class="db-section-title">Registros</h2></div>
+      <div id="db-aseo-list" class="db-table-wrap" style="max-height:420px;overflow:auto;padding:12px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;">
+        <div style="color:var(--tsoft);padding:16px;text-align:center">Cargando registros de aseo...</div>
+      </div>
+    </div>`
+}
+
 function subChat() {
   return `
     <div class="db-ph">
-      <h1>💬 Chat</h1>
-      <div class="rc-chat-status online" style="font-size:13px;font-weight:700">● En línea — Ing. Don Antonio</div>
+      <div class="db-ph-actions"></div>
+      <div>
+        <h1>💬 Chat</h1>
+        <div class="rc-chat-status online" style="font-size:13px;font-weight:700">● En línea — Ing. Don Antonio</div>
+      </div>
     </div>
     <div class="rc-chat-wrap db-chat-wrap" style="display:flex;flex-direction:column;background:var(--bg);border-radius:16px;border:1.5px solid var(--border);overflow:hidden;height:calc(100vh - 160px);">
       <div class="rc-chat-header" style="flex-shrink:0;padding:12px 16px;border-bottom:1px solid var(--border);">
@@ -332,7 +365,8 @@ const subRenders = {
   equipos:      subEquipos,
   inspecciones: subMapa,
   reportes:     subReportes,
-  chat:         subChat
+  chat:         subChat,
+  'home-cleaner': subAseo
 }
 
 export const dashboardPage = () => ({
@@ -520,18 +554,7 @@ export const dashboardPage = () => ({
       })
       document.getElementById('db-see-all')?.addEventListener('click', () => renderPage('inspecciones'))
 
-      document.getElementById('db-new-report')?.addEventListener('click', () => {
-        if (!document.getElementById('report-modal')) {
-          const container = document.createElement('div')
-          container.innerHTML = reportZone({ onSave: async (data) => { try { await maintenanceService.createReport(data); window.alert('Reporte guardado correctamente') } catch (err) { window.alert('Error al guardar el reporte') } }, onCancel: () => {} }).render()
-          document.body.insertAdjacentHTML('beforeend', container.innerHTML)
-          const rzInst = reportZone({ onSave: async (data) => { try { await maintenanceService.createReport(data); window.alert('Reporte guardado correctamente'); const modal = document.getElementById('report-modal'); if (modal) modal.classList.add('d-none'); document.body.style.overflow = '' } catch (err) { window.alert('Error al guardar el reporte') } } })
-          rzInst.loadRender && rzInst.loadRender()
-        }
-        const rzOpen = reportZone({ onSave: async () => {} })
-        rzOpen.loadRender && rzOpen.loadRender()
-        try { const modalEl = document.getElementById('report-modal'); if (modalEl && typeof rzOpen.open === 'function') rzOpen.open('') } catch (e) {}
-      })
+      // '+ Nuevo Reporte' removed: no-op (listener deleted)
 
       if (currentPage === 'equipos') {
         const filterBtn = document.getElementById('db-filter-equipos')
@@ -559,6 +582,8 @@ export const dashboardPage = () => ({
 
       // Mapa RO: cargar estados reales
       if (page === 'inspecciones') cargarEstadosMapa()
+      // Aseo: cargar registros cuando se muestra la vista de limpieza
+      if (page === 'home-cleaner') cargarRegistrosAseo()
 
       // Chat con Socket.io en tiempo real
       if (page === 'chat') {
@@ -676,6 +701,76 @@ export const dashboardPage = () => ({
     cargarMetricas()
     cargarAlertasStock()
 
+    // Función para cargar registros de aseo y renderizarlos en la vista 'Aseo'
+    const cargarRegistrosAseo = async () => {
+      try {
+        const resp = await fetch('http://localhost:4000/api/cleanings')
+        if (!resp.ok) throw new Error('fetch failed')
+        const registros = await resp.json()
+        const container = document.getElementById('db-aseo-list')
+        if (!container) return
+
+        const user = (typeof persistence !== 'undefined') ? persistence.getUser() : null
+        const isAdmin = user && (user.rol === 'ADMIN' || user.role === 'ADMIN' || user.isAdmin || user.admin)
+
+        let filtered = Array.isArray(registros) ? registros.slice() : []
+        if (!isAdmin && user) {
+          filtered = filtered.filter(r => {
+            return (r.user_email && user.email && r.user_email === user.email) || (r.user_name && user.name && r.user_name === user.name) || (r.user && user.email && r.user === user.email) || (r.user_id && user.id && String(r.user_id) === String(user.id))
+          })
+        }
+
+        if (!Array.isArray(filtered) || filtered.length === 0) {
+          const msg = isAdmin ? 'No hay registros de aseo.' : 'No hay registros de aseo para el usuario actual'
+          container.innerHTML = `<div style="color:var(--tsoft);padding:12px;text-align:center">${msg}</div>`
+          return
+        }
+        const rows = filtered.slice().sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt)).map(r => {
+          const who = r.user_name || r.user || r.user_email || '—'
+          const zone = r.zone_id || r.zone || r.zone_name || r.zona || r.zone_label || r.zoneId || '—'
+          const when = r.createdAt ? new Date(r.createdAt).toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) + ' · ' + new Date(r.createdAt).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota' }) : (r.created_at || '')
+          const desc = r.descriptions || r.description || r.desc || r.detalle || r.notes || r.observacion || ''
+          const hora_inicio = r.hora_inicio || r.start_time || ''
+          const hora_fin = r.hora_fin || r.end_time || ''
+          return `
+            <div style="padding:10px;border-bottom:1px solid var(--border);">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                <div style="font-weight:700">${escapeHtml(String(zone))}</div>
+                <div style="font-size:12px;color:var(--tsoft)">${escapeHtml(when)}</div>
+              </div>
+              <div style="margin-top:6px;font-size:13px">${escapeHtml(String(who))} — ${escapeHtml(String(desc))}</div>
+              <div style="margin-top:6px;font-size:12px;color:var(--tsoft)">Inicio: ${escapeHtml(hora_inicio) || '—'} — Fin: ${escapeHtml(hora_fin) || '—'}</div>
+            </div>`
+        }).join('')
+
+        // Mostrar contador y la lista
+        const headerHtml = `<div style="font-size:13px;color:var(--tsoft);margin-bottom:10px">Mostrando ${filtered.length} registros${isAdmin ? ' (todos)' : ''}</div>`
+        container.innerHTML = headerHtml + `<div>${rows}</div>`
+      } catch (err) {
+        console.error('[Dashboard Aseo] Error cargando registros:', err)
+        const container = document.getElementById('db-aseo-list')
+        if (container) container.innerHTML = '<div style="color:var(--tsoft);padding:12px;text-align:center">No se pudieron cargar los registros</div>'
+      }
+    }
+
+    // Escuchar eventos de nuevo registro de limpieza para actualizar la vista en tiempo real
+    window.addEventListener('cleaning:created', (e) => {
+      try {
+        cargarRegistrosAseo()
+      } catch (err) {
+        console.warn('[Dashboard] Error actualizando por evento cleaning:created', err)
+      }
+    })
+
+
+    // Actualizar métricas cada 30 segundos
+    setInterval(() => {
+      if (currentPage === 'dashboard') {
+        cargarMetricas()
+        cargarAlertasStock()
+      }
+    }, 30000)
+
     // Debounce para evitar actualizaciones excesivas por socket
     let lastMetricsUpdate = Date.now()
     const throttleMetrics = () => {
@@ -684,6 +779,7 @@ export const dashboardPage = () => ({
         lastMetricsUpdate = now
         if (currentPage === 'dashboard') {
           cargarMetricas()
+          cargarAlertasStock()
         }
       }
     }
@@ -692,5 +788,6 @@ export const dashboardPage = () => ({
     socketManager.onMessage((msg) => {
       throttleMetrics()
     })
+
   }
 })

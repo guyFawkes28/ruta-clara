@@ -188,6 +188,9 @@ export const cleaningReportPage = (zoneId) => {
 			if (timeInput) timeInput.value = time
 		}
 
+
+		// Capturar hora de inicio cuando se carga la página
+		const hora_inicio = new Date().toLocaleTimeString("es-CO", { timeZone: "America/Bogota" })
 		updateDateTime()
 		setInterval(updateDateTime, 1000)
 
@@ -225,7 +228,7 @@ export const cleaningReportPage = (zoneId) => {
 					const res = await fetch("http://localhost:4000/api/cleaning", {
 						method: "POST",
 						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ zone_id, user_name, descriptions, hora_fin })
+						body: JSON.stringify({ zone_id, user_name, descriptions, hora_inicio, hora_fin })
 					})
 
 					if (!res.ok) {
@@ -233,8 +236,15 @@ export const cleaningReportPage = (zoneId) => {
 						throw new Error(err.error || `Error HTTP ${res.status}`)
 					}
 
+					// Intentar leer el registro creado del backend
+					let created = null
+					try { created = await res.json() } catch (e) { /* ignore */ }
 					toast("✓ Limpieza registrada correctamente", "success")
 					document.getElementById("clean-description").value = ""
+					// Notificar al resto de la app que se creó un nuevo registro
+					if (created) {
+						window.dispatchEvent(new CustomEvent('cleaning:created', { detail: created }))
+					}
 
 				} catch (error) {
 					console.error("Error registrando limpieza:", error.message)
