@@ -4,7 +4,7 @@
  */
 
 export const Modal = ({ 
-  title = '⚠️ Información', 
+  title = ' Información', 
   message = '', 
   type = 'info', // 'info', 'success', 'error', 'warning'
   buttons = [{ text: 'OK', onClick: () => {}, style: 'primary' }],
@@ -13,8 +13,8 @@ export const Modal = ({
   const colors = {
     info: { bg: '#E3F2FD', border: '#2196F3', icon: '💡' },
     success: { bg: '#E8F5E9', border: '#4CAF50', icon: '✅' },
-    error: { bg: '#FFEBEE', border: '#F44336', icon: '❌' },
-    warning: { bg: '#FFF3E0', border: '#FF9800', icon: '⚠️' }
+    error: { bg: '#FFEBEE', border: '#F44336', icon: '' },
+    warning: { bg: '#FFF3E0', border: '#FF9800', icon: '' }
   }
 
   const config = colors[type] || colors.info

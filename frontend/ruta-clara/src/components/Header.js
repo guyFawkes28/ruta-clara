@@ -47,7 +47,7 @@ export function headerView({ zona = 'Sala 3 — Piso 1', onScan = () => {} } = {
         window.location.hash = '#/login';
       };
 
-      // Cargar nombre del usuario desde persistence y mostrarlo
+      // Mostrar nombre del usuario guardado en sesión
       try {
         const user = persistence.getUser();
         const nameEl = document.getElementById('hdr-name');
@@ -56,7 +56,7 @@ export function headerView({ zona = 'Sala 3 — Piso 1', onScan = () => {} } = {
         if (user && nameEl) {
           const display = user.name || user.fullName || user.username || user.usuario || user.email || 'Usuario';
           nameEl.textContent = display;
-          // role emoji
+          // Icono según rol
           try {
             const rawRole = user?.rol ?? user?.role ?? user?.data?.rol ?? user?.data?.role ?? '';
             const r = String(rawRole || '').toLowerCase();
@@ -67,12 +67,12 @@ export function headerView({ zona = 'Sala 3 — Piso 1', onScan = () => {} } = {
             else if (r) emoji = '🔎';
             if (roleEl) roleEl.textContent = emoji;
           } catch (e) { /* ignore */ }
-          // user box is visual only now (no navigation)
+          // La caja de usuario es solo visual
         }
       } catch (e) { /* ignore */ }
     },
 
-    // Actualizar el nombre de zona dinámicamente
+    // Actualizar zona
     setZona(nombre) {
       const el = document.getElementById('hdr-zona');
       if (el) el.textContent = nombre;

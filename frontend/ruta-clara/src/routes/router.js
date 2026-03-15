@@ -7,7 +7,7 @@ import { dashboardPage } from "../pages/DashboardPage.js"
 import { HomePage } from "../pages/HomePage.js"
 import { HomeCleanerPage } from "../pages/HomeCleaner.js"
 import { cleaningReportPage } from "../pages/cleanPage.js"
-// Factory pattern: no se ejecutan hasta que se llamen
+// Vistas bajo demanda
 const routeFactories = {
     "#/": () => loginPage(),
     "#/login": () => loginPage(),
@@ -26,10 +26,10 @@ export const routerManager = async () => {
     console.log('[Router] root elemento existe?', !!root)
     console.log('[Router] hash procesado:', hash)
 
-    // 1. VALIDACIÓN DE AUTENTICACIÓN (Lo primero siempre)
+    // Validar autenticación
     const isAuth = persistence.isAuthentication();
 
-    // obtener usuario y rol (si está autenticado)
+    // Obtener usuario y rol si hay sesión
     const user = isAuth ? persistence.getUser() : null
     const role = user?.rol ? String(user.rol).toLowerCase() : null
 
@@ -39,7 +39,7 @@ export const routerManager = async () => {
     }
 
     if (isAuth && (hash === "#/login" || hash === "#/" || hash === "")) {
-        // redirigir por rol: admins -> dashboard, aseo/cleaner -> home-cleaner, otros -> home
+        // Redirigir por rol
         if (role === 'admin') {
             window.location.hash = "#/dashboard";
         } else if (role === 'aseo' || role === 'cleaner') {
@@ -50,8 +50,7 @@ export const routerManager = async () => {
         return;
     }
 
-    // 2. DETECCIÓN DE RUTAS DINÁMICAS: limpieza y zona por ID
-    // Si el hash empieza por #/clean/ (ej: #/clean/1) -> página de reporte de limpieza
+    // Rutas dinámicas: limpieza y zona por ID
     if (hash.startsWith("#/clean/")) {
         if (role === 'admin') { window.location.hash = '#/dashboard'; return }
         const id = hash.split("/")[2];
@@ -61,37 +60,34 @@ export const routerManager = async () => {
         return;
     }
 
-    // Si el hash empieza por #/zone/ (ej: #/zone/1)
     if (hash.startsWith("#/zone/")) {
-        // Bloqueo para admins (no deben acceder a zona dinámica)
+        // Admin no entra a zona dinámica
         if (role === 'admin') {
             window.location.hash = '#/dashboard'
             return
         }
-        const id = hash.split("/")[2]; // Extraemos el '1'
-        const view = zonePage(id);     // Pasamos el ID a la página
+        const id = hash.split("/")[2];
+        const view = zonePage(id);
 
         root.innerHTML = view.render();
         await view.loadRender();
-        return; // Detenemos aquí la ejecución
+        return;
     }
 
-    // 3. DETECCIÓN DE RUTAS ESTÁTICAS - Crear la vista bajo demanda
+    // Rutas estáticas
     const factory = routeFactories[hash];
 
-    // 4. PROTECCIONES POR ROL (rutas estáticas)
-    // - Operators no pueden acceder a dashboard
-    // - Admins no pueden acceder a scanner ni a zona
+    // Protecciones por rol
     if (role === 'operator' && hash === '#/dashboard') {
         window.location.hash = '#/home'
         return
     }
-    // Admins no deben acceder a home, scanner ni a rutas de zona
+    // Admin no deben acceder a home, scanner ni a rutas de zona
     if (role === 'admin' && (hash === '#/scanner' || hash === '#/zona' || hash === '#/home' || hash.startsWith('#/zone/'))) {
         window.location.hash = '#/dashboard'
         return
     }
-    // Cleaners should not access admin dashboard
+    // Solo el admin puede acceder a dashboard, si no es admin redirigimos
     if ((role === 'aseo' || role === 'cleaner') && (hash === '#/dashboard' || hash === '#/home')) {
         window.location.hash = '#/home-cleaner'
         return
@@ -108,7 +104,7 @@ export const routerManager = async () => {
         return;
     }
 
-    // Crear la vista bajo demanda y renderizarla
+    // Crear y renderizar la vista
     console.log('[Router] Creando vista para ruta:', hash)
     const view = factory();
     console.log('[Router] Vista creada, renderizando...')

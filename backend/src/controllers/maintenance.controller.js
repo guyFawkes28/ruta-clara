@@ -260,7 +260,7 @@ export const create_maintenance_report = async (req, res) => {
             // Emitir evento al servidor Socket.io para que los dashboards conectados reciban el reporte
             try {
                 io.emit('report-created', payload)
-                console.log('[Maintenance] ✓ report-created emitted via socket:', payload)
+                console.log('[Maintenance]  report-created emitted via socket:', payload)
             } catch (emitErr) {
                 console.error('[Maintenance] Error emitting report-created:', emitErr)
             }

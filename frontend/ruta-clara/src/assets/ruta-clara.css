@@ -1,4 +1,4 @@
-/* --- Fix: asegurar que .rc-view permita crecer el chat y el scroll funcione --- */
+/* --- Ajuste: permitir que .rc-view crezca y el chat haga scroll --- */
 .rc-view {
   display: flex;
   flex-direction: column;
@@ -7,8 +7,8 @@
   height: 100%;
   overflow: hidden;
 }
-/* --- End fix .rc-view --- */
-/* --- Fix scroll chat HomePage: sticky input, flex layout, no corte --- */
+/* --- Fin del ajuste de .rc-view --- */
+/* --- Ajuste de scroll en chat HomePage: input fijo, layout flex, sin cortes --- */
 .rc-chat-wrap {
   display: flex;
   flex-direction: column;
@@ -37,7 +37,7 @@
   right: 0;
   z-index: 10;
 }
-/* --- End fix scroll chat HomePage --- */
+/* --- Fin del ajuste de scroll del chat HomePage --- */
 /* ============================================================
    ruta-clara.css
    Estilos de la app móvil Ruta Clara - Sistema de Mantenimiento
@@ -66,7 +66,7 @@
 }
 .rc-view.active { display: flex; }
 
-/* Main container must be flex so .rc-view children can grow */
+/* El contenedor principal debe ser flex para que crezcan las vistas hijas */
 #rc-main {
   display: flex;
   flex-direction: column;
@@ -110,7 +110,7 @@
   .hdr-home-btn { width: calc(100% - 24px); font-size: 15px; padding: 12px 14px; }
 }
 
-/* Header controls: boxed user name with role emoji */
+/* Controles del header: nombre en caja e icono de rol */
 .hdr-controls { display:flex; align-items:center; gap:10px; }
 .hdr-user-box {
   display:inline-flex; align-items:center; gap:8px;
@@ -136,7 +136,7 @@
 }
 
 /* ════════════════════
-   HOME — Welcome card
+  INICIO — Tarjeta de bienvenida
 ════════════════════ */
 .rc-welcome {
   background: linear-gradient(135deg, var(--navy) 0%, #1A3260 100%);
@@ -168,7 +168,7 @@
   50%      { opacity: .4; }
 }
 
-/* Stats grid */
+/* Cuadricula de estadisticas */
 .rc-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -186,7 +186,7 @@
 .rc-stat-num  { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
 .rc-stat-lbl  { font-size: 12px; color: var(--tsoft); line-height: 1.3; }
 
-/* Task list */
+/* Lista de tareas */
 .rc-tasks { display: flex; flex-direction: column; gap: 12px; }
 .rc-task {
   background: #fff;
@@ -213,14 +213,14 @@
 .rc-task-meta  { font-size: 12px; color: var(--tsoft); }
 .rc-task-arrow { font-size: 18px; color: var(--tsoft); font-weight: 600; }
 
-/* Info boxes */
+/* Cajas de informacion */
 .rc-info-boxes { display: flex; flex-direction: column; gap: 12px; }
 .rc-info-box {
   background: #fff; border: 1px solid var(--border);
   border-radius: 12px; padding: 14px;
 }
 
-/* Ensure cleaner home (aseo-home) uses same welcome styling */
+/* Asegurar que aseo-home use el mismo estilo de bienvenida */
 .aseo-home .rc-welcome {
   background: linear-gradient(135deg, var(--navy) 0%, #1A3260 100%);
   color: #fff;
@@ -236,7 +236,7 @@
 .rc-info-value { font-size: 16px; font-weight: 600; color: var(--navy); }
 
 /* ════════════════════
-   CHAT
+  CHAT
 ════════════════════ */
 .rc-chat-wrap {
   display: flex; flex-direction: column;
@@ -312,7 +312,7 @@
 }
 .rc-chat-send:active { transform: scale(var(--rc-press-scale)); }
 
-/* Dashboard-specific chat: make input sticky inside dashboard chat container (not fixed) */
+/* Chat del dashboard: input fijo dentro del contenedor (no fijo en pantalla) */
 .db-chat-wrap .rc-chat-input-area {
   position: sticky;
   bottom: 0;
@@ -328,7 +328,7 @@
 }
 
 /* ════════════════════
-   SETTINGS
+  AJUSTES
 ════════════════════ */
 .rc-profile {
   background: #fff; border: 1px solid var(--border);
@@ -380,7 +380,7 @@
 .rc-logout:active { transform: scale(var(--rc-press-scale)); }
 
 /* ════════════════════
-   BOTTOM NAV
+  NAVEGACION INFERIOR
 ════════════════════ */
 .rc-bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0;
@@ -410,7 +410,7 @@
 }
 .rc-nav-icon { font-size: 22px; line-height: 1; }
 
-/* Notification badge */
+/* Insignia de notificaciones */
 .rc-notif-badge {
   position: absolute;
   top: -4px;
@@ -433,7 +433,7 @@
   50% { transform: scale(1.15); }
 }
 
-/* Scrollbars */
+/* Barras de desplazamiento */
 .rc-view::-webkit-scrollbar,
 .rc-messages::-webkit-scrollbar { width: 5px; }
 .rc-view::-webkit-scrollbar-track,

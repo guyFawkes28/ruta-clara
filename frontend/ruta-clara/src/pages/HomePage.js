@@ -296,7 +296,7 @@ export const HomePage = () => {
             return
           }
 
-          console.log('[HomePage] ✓ Inventario validado, mostrando SST...')
+          console.log('[HomePage]  Inventario validado, mostrando SST...')
 
           // 2. Mostrar protocolo SST
           const sst = SSTProtocol({
@@ -318,7 +318,7 @@ export const HomePage = () => {
 
                 if (!sstResult.success) {
                   const modal = Modal({
-                    title: '⚠️ Error en SST',
+                    title: ' Error en SST',
                     message: 'No se pudo registrar el protocolo de seguridad: ' + sstResult.error,
                     type: 'error',
                     buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
@@ -328,7 +328,7 @@ export const HomePage = () => {
                   return
                 }
 
-                console.log('[HomePage] ✓ SST registrado, mostrando cronómetro...')
+                console.log('[HomePage]  SST registrado, mostrando cronómetro...')
 
                 // Disparar evento para actualizar el mapa cuando inicia la tarea
                 const etiqueta = tareaData?.activos?.etiqueta || tareaData?.activo?.etiqueta || 'UNKNOWN'
@@ -370,7 +370,7 @@ export const HomePage = () => {
                       if (timerModal) timerModal.remove()
 
                       if (finishResult.success) {
-                        console.log('[HomePage] ✓ Tarea finalizada, mostrando confirmación...')
+                        console.log('[HomePage]  Tarea finalizada, mostrando confirmación...')
                         // Disparar evento para actualizar el mapa en tiempo real
                         const etiqueta = tareaData?.activos?.etiqueta || tareaData?.activo?.etiqueta || 'UNKNOWN'
                         console.log('[HomePage] Etiqueta del activo para finalización:', etiqueta)
@@ -410,7 +410,7 @@ export const HomePage = () => {
                         modal.loadRender()
                       } else {
                         const modal = Modal({
-                          title: '❌ Error',
+                          title: ' Error',
                           message: 'Error al completar tarea: ' + finishResult.error,
                           type: 'error',
                           buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
@@ -426,7 +426,7 @@ export const HomePage = () => {
                       if (timerModal) timerModal.remove()
                       
                       const modal = Modal({
-                        title: '⚠️ Error',
+                        title: ' Error',
                         message: 'Error al finalizar la tarea: ' + err.message,
                         type: 'error',
                         buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
@@ -447,7 +447,7 @@ export const HomePage = () => {
               } catch (err) {
                 console.error('[HomePage] Error en SST complete:', err)
                 const modal = Modal({
-                  title: '⚠️ Error en SST',
+                  title: ' Error en SST',
                   message: 'Error en el protocolo de seguridad: ' + err.message,
                   type: 'error',
                   buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
@@ -459,7 +459,7 @@ export const HomePage = () => {
             onCancel: () => {
               console.log('[HomePage] SST cancelado por usuario')
               const modal = Modal({
-                title: 'ℹ️ Cancelado',
+                title: 'ℹ Cancelado',
                 message: 'Has cancelado la ejecución de la tarea.',
                 type: 'info',
                 buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
@@ -475,7 +475,7 @@ export const HomePage = () => {
         } catch (err) {
           console.error('[HomePage] Error iniciando tarea:', err)
           const modal = Modal({
-            title: '⚠️ Error',
+            title: ' Error',
             message: 'Error al iniciar la tarea: ' + err.message,
             type: 'error',
             buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
@@ -611,7 +611,7 @@ export const HomePage = () => {
               } catch (err) {
                 console.error('Error mejorando reporte:', err)
                 const modal = Modal({
-                  title: '❌ Error',
+                  title: ' Error',
                   message: 'No se pudo analizar la tarea con IA. Intenta más tarde.',
                   type: 'error',
                   buttons: [{ text: 'OK', onClick: () => {}, style: 'primary' }]
@@ -754,12 +754,12 @@ export const HomePage = () => {
 
           // Escuchar confirmación de envío exitoso
           socket_manager.on_message_sent((data) => {
-            console.log('[HomePage Chat] ✓ Mensaje confirmado en servidor', data.messageId)
+            console.log('[HomePage Chat]  Mensaje confirmado en servidor', data.messageId)
           })
 
           // Escuchar errores al enviar
           socket_manager.on_message_error((data) => {
-            console.error('[HomePage Chat] ✗ Error al enviar:', data.error)
+            console.error('[HomePage Chat]  Error al enviar:', data.error)
             alert('Error al enviar el mensaje: ' + data.error)
             input.focus()
           })

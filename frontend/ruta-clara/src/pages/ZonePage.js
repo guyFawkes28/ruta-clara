@@ -52,7 +52,7 @@ const modalReporte = reportZone({
                       console.log('[ZonePage] ✅ Evento de novedad emitido por socket:', eventoReporte)
                       return true
                     } catch (err) {
-                      console.warn(`[ZonePage] ⚠️ Error emitiendo socket (intento ${attempt}/${maxAttempts}):`, err)
+                      console.warn(`[ZonePage]  Error emitiendo socket (intento ${attempt}/${maxAttempts}):`, err)
                     }
                   } else {
                     console.warn(`[ZonePage] Socket no conectado (intento ${attempt}/${maxAttempts}), esperando ${delayMs}ms...`)
@@ -65,7 +65,7 @@ const modalReporte = reportZone({
                 }
                 
                 // Si llega aquí, falló después de todos los intentos
-                console.warn('[ZonePage] ⚠️ No se pudo emitir evento después de', maxAttempts, 'intentos')
+                console.warn('[ZonePage]  No se pudo emitir evento después de', maxAttempts, 'intentos')
                 
                 // Intentar conectar y emitir como último recurso
                 try {
@@ -106,7 +106,7 @@ const modalReporte = reportZone({
                             const damaged = fallos.some(f => f.toLowerCase().includes(c.toLowerCase()));
                             return `
                                 <li style="display:flex;align-items:center;gap:8px;">
-                                    <span style="font-size:12px;">${damaged ? '⚠️' : '✅'}</span>
+                                    <span style="font-size:12px;">${damaged ? '' : '✅'}</span>
                                     ${c}
                                 </li>`;
                         }).join('');
@@ -200,7 +200,7 @@ const modalReporte = reportZone({
                     <div class="leg"><div class="ldot g"></div>Sin novedad</div>
                     <div class="leg"><div class="ldot o"></div>Daño reportado</div>
                     <div class="leg"><div class="ldot b"></div>En reparación</div>
-                    <div class="leg"><div class="ldot v"></div>Reparado ✓</div>
+                    <div class="leg"><div class="ldot v"></div>Reparado </div>
                 </div>
 
                 <div class="map-outer zone-responsive">
@@ -309,7 +309,7 @@ const modalReporte = reportZone({
                             const damaged = fallos.some(f => f.toLowerCase().includes(c.toLowerCase()));
                             return `
                                 <li style="display:flex;align-items:center;gap:8px;">
-                                    <span style="font-size:12px;">${damaged ? '⚠️' : '✅'}</span>
+                                    <span style="font-size:12px;">${damaged ? '' : '✅'}</span>
                                     ${c}
                                 </li>`;
                         }).join('');

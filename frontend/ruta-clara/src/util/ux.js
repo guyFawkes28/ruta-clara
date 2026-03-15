@@ -1,6 +1,6 @@
-// Minimal UI helpers: toasts and simple dialogs
+// Utilidades de UX: Toasts, Prompts y Diálogos de Copiado
 (function(){
-    // inject basic styles once
+    // Inyecta estilos una sola vez
     if (!document.getElementById('rc-ux-styles')) {
         const s = document.createElement('style'); s.id = 'rc-ux-styles';
         s.textContent = `
@@ -78,13 +78,13 @@
         });
     }
 
-    // Expose globally via module-like exports
+    // Exponer en global
     window.RC_UX = window.RC_UX || {};
     window.RC_UX.toast = toast;
     window.RC_UX.inputPrompt = inputPrompt;
     window.RC_UX.copyDialog = copyDialog;
 
-    // Support ES module import via export-like object
+    // Compatibilidad con import estilo modulo
     if (typeof exports !== 'undefined') { exports.toast = toast; exports.inputPrompt = inputPrompt; exports.copyDialog = copyDialog; }
 })();
 

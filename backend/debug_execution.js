@@ -12,7 +12,7 @@ async function checkExecutionData() {
       .select('*', { count: 'exact' })
 
     if (allError) throw allError
-    console.log(`✓ Total registros en ejecucion_tarea: ${allExecutions?.length || 0}\n`)
+    console.log(` Total registros en ejecucion_tarea: ${allExecutions?.length || 0}\n`)
 
     // 2. Tareas completadas (con fecha_fin)
     const { data: completed, error: completedError } = await supabase
@@ -22,20 +22,20 @@ async function checkExecutionData() {
       .order('fecha_fin', { ascending: false })
 
     if (completedError) throw completedError
-    console.log(`✓ Tareas COMPLETADAS (fecha_fin != null): ${completed?.length || 0}`)
+    console.log(` Tareas COMPLETADAS (fecha_fin != null): ${completed?.length || 0}`)
     
     if (completed && completed.length > 0) {
-      console.log('\n📊 Últimas tareas completadas:')
+      console.log('\n Últimas tareas completadas:')
       completed.slice(0, 5).forEach((t, idx) => {
         console.log(`\n  [${idx + 1}] Tarea ID: ${t.tarea_id}`)
         console.log(`      Duración: ${t.duracion_minutos}m ${t.duracion_segundos}s`)
         console.log(`      Duración Total (segundos): ${t.duracion_total_segundos}`)
         console.log(`      Inicio: ${t.fecha_inicio}`)
         console.log(`      Fin: ${t.fecha_fin}`)
-        console.log(`      SST: ${t.check_sst ? '✓' : '✗'}`)
+        console.log(`      SST: ${t.check_sst ? '' : ''}`)
       })
     } else {
-      console.log('      ⚠️ NO HAY TAREAS COMPLETADAS')
+      console.log('       NO HAY TAREAS COMPLETADAS')
     }
 
     // 3. Tareas EN PROCESO
@@ -46,14 +46,14 @@ async function checkExecutionData() {
       .order('fecha_inicio', { ascending: false })
 
     if (inProcessError) throw inProcessError
-    console.log(`\n✓ Tareas EN PROCESO (fecha_fin = null): ${inProcess?.length || 0}`)
+    console.log(`\n Tareas EN PROCESO (fecha_fin = null): ${inProcess?.length || 0}`)
 
     if (inProcess && inProcess.length > 0) {
-      console.log('\n⏳ Últimas tareas en proceso:')
+      console.log('\n Últimas tareas en proceso:')
       inProcess.slice(0, 3).forEach((t, idx) => {
         console.log(`\n  [${idx + 1}] Tarea ID: ${t.tarea_id}`)
         console.log(`      Inicio: ${t.fecha_inicio}`)
-        console.log(`      SST: ${t.check_sst ? '✓' : '✗'}`)
+        console.log(`      SST: ${t.check_sst ? '' : ''}`)
       })
     }
 
@@ -66,18 +66,18 @@ async function checkExecutionData() {
         const avgMinutos = Math.floor(avgSeconds / 60)
         const avgSegundos = avgSeconds % 60
         
-        console.log(`\n📈 PROMEDIO CALCULADO:`)
+        console.log(`\n PROMEDIO CALCULADO:`)
         console.log(`   Tareas con duración válida: ${validDurations.length} / ${completed.length}`)
         console.log(`   Total segundos: ${totalSeconds}s`)
         console.log(`   Promedio: ${avgMinutos}m ${avgSegundos}s (${avgSeconds}s)`)
       } else {
-        console.log(`\n⚠️  Hay ${completed.length} tareas completadas pero NINGUNA tiene duracion_total_segundos > 0`)
+        console.log(`\n  Hay ${completed.length} tareas completadas pero NINGUNA tiene duracion_total_segundos > 0`)
       }
     }
 
     console.log('\n═══════════════════════════════════════════\n')
   } catch (err) {
-    console.error('❌ Error:', err.message)
+    console.error(' Error:', err.message)
   }
   
   process.exit(0)

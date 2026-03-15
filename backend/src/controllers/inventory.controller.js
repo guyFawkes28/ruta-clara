@@ -64,7 +64,7 @@ export const check_availability = async (req, res) => {
   }
 }
 
-// Hard-Lock: Verificar si tarea puede iniciarse (stock disponible)
+// Validar si la tarea puede iniciar por stock
 export const validate_task_start = async (req, res) => {
   try {
     const { tarea_id } = req.body
@@ -121,7 +121,7 @@ export const validate_task_start = async (req, res) => {
     const allAvailable = validations.every(v => v.disponible)
     const missingItems = validations.filter(v => !v.disponible)
 
-    console.log(`[Inventory] Resultado: ${allAvailable ? '✅ Todos disponibles' : '❌ Faltan algunos'}`)
+    console.log(`[Inventory] Resultado: ${allAvailable ? ' Todos disponibles' : ' Faltan algunos'}`)
 
     res.json({
       success: true,
@@ -323,7 +323,7 @@ export const get_spare_parts_grouped_by_type = async (req, res) => {
 
     console.log('[Inventory] Repuestos agrupados:', Object.keys(repuestos_por_tipo).length, 'categorías')
 
-    // Return both legacy key and frontend-expected key for compatibility
+    // Mantener ambas claves por compatibilidad
     res.json({
       success: true,
       repuestos_por_tipo,

@@ -106,7 +106,7 @@ io.on('connection', (socket) => {
         console.log(`[SOCKET] Cambio de estado de tarea recibido:`, data)
         // Re-emitir a todos los conectados (especialmente DASHBOARD)
         io.emit('task-status-changed', data)
-        console.log(`[SOCKET] ✓ Evento re-emitido a todos`)
+        console.log(`[SOCKET]  Evento re-emitido a todos`)
     })
 
     // Escuchar evento de tarea completada y re-emitir a todos
@@ -114,7 +114,7 @@ io.on('connection', (socket) => {
         console.log(`[SOCKET] Tarea completada recibida:`, data)
         // Re-emitir a todos los conectados con indicación de recargar mapa
         io.emit('task-completed', data)
-        console.log(`[SOCKET] ✓ Evento 'task-completed' re-emitido a todos`)
+        console.log(`[SOCKET]  Evento 'task-completed' re-emitido a todos`)
     })
 
     // Escuchar evento de novedad reportada y re-emitir a todos
@@ -122,7 +122,7 @@ io.on('connection', (socket) => {
         console.log(`[SOCKET] Novedad reportada recibida:`, data)
         // Re-emitir a todos los conectados (especialmente DASHBOARD)
         io.emit('report-created', data)
-        console.log(`[SOCKET] ✓ Evento 'report-created' re-emitido a todos para actualizar mapa`)
+        console.log(`[SOCKET]  Evento 'report-created' re-emitido a todos para actualizar mapa`)
     })
 
     // Usuario desconecta
@@ -136,11 +136,11 @@ const PORT = process.env.PORT || 4000
 // Conectar a MongoDB al iniciar
 connectMongo().then(() => {
     httpServer.listen(PORT, ()=>{
-        console.log(`✓ Servidor listo en http://localhost:${PORT}`)
-        console.log(`✓ WebSocket disponible`)
+        console.log(` Servidor listo en http://localhost:${PORT}`)
+        console.log(` WebSocket disponible`)
     })
 }).catch(err => {
-    console.error('✗ No se pudo iniciar el servidor:', err)
+    console.error(' No se pudo iniciar el servidor:', err)
     process.exit(1)
 })
 

@@ -17,8 +17,8 @@ const state = {
   stock_alerts: [],
   spare_parts_by_type: {},
   zone_not_found: false,
-  // Equipment mapping to task states for map
-  equipment_states: {} // { 'A-P1': 'no_issues' | 'damage_reported' | 'under_repair' | 'repaired' }
+  // Estado de equipos para el mapa
+  equipment_states: {} // Estado por puesto
 }
 
 const load_zone = async (qrCode = 'SALA3-P1') => {
@@ -47,17 +47,17 @@ const load_zone = async (qrCode = 'SALA3-P1') => {
 }
 
 const statusBadge = (status) => {
-  // Normalize status
+  // Normalizar estado
   const statusNormalized = String(status || '').toLowerCase().trim()
   
   const map = {
     activo: ['db-status-ok','● Activo'], inactivo: ['db-status-off','● Inactivo'],
-    mantenimiento: ['db-status-pending','⏳ Mantenimiento'], ok: ['db-status-ok','✓ OK'],
+    mantenimiento: ['db-status-pending','⏳ Mantenimiento'], ok: ['db-status-ok',' OK'],
     critico: ['db-status-error','⚠ Crítico'], pendiente: ['db-status-pending','⏳ Pendiente'],
-    completada: ['db-status-ok','✓ Completada'], terminada: ['db-status-ok','✓ Terminada'],
+    completada: ['db-status-ok',' Completada'], terminada: ['db-status-ok',' Terminada'],
     progreso: ['db-status-pending','⏳ En Progreso'], 'en proceso': ['db-status-pending','⏳ En Proceso'], 'en ejecución': ['db-status-pending','⏳ En Ejecución'], 
     'ejecución': ['db-status-pending','⏳ En Ejecución'], problema: ['db-status-error','⚠ Problema'], 
-    disponible: ['db-status-ok','✓ Disponible'], revision: ['db-status-pending','⏳ Revisión'], 
+    disponible: ['db-status-ok',' Disponible'], revision: ['db-status-pending','⏳ Revisión'], 
     'en_progreso': ['db-status-pending','⏳ En Progreso'],
   }
   const [cls, label] = map[statusNormalized] ?? ['db-status-off', status]
@@ -145,7 +145,7 @@ function subDashboard() {
         border-left:4px solid #f97316;
         margin-bottom:16px;
       ">
-        <div style="font-weight:700;color:#f97316;margin-bottom:8px;">⚠️ ${stock_alerts.length} Repuestos con Stock Bajo</div>
+        <div style="font-weight:700;color:#f97316;margin-bottom:8px;"> ${stock_alerts.length} Repuestos con Stock Bajo</div>
         <div style="font-size:12px;color:var(--tmid);">
           ${stock_alerts.slice(0, 3).map(r => `<div>• ${r.nombre}: ${r.stock_actual}/${r.stock_minimo}</div>`).join('')}
           ${stock_alerts.length > 3 ? `<div style="color:var(--tsoft);">+ ${stock_alerts.length - 3} más</div>` : ''}
@@ -207,7 +207,7 @@ function subEquipment() {
     </div>`
 }
 
-// ─── Read-only Map ───────────────────────────────────────
+// Mapa solo lectura
 function ro(tag, label) {
   return `<div class="p sg" data-map-id="${tag}" style="cursor:default;pointer-events:none;"><div class="plbl-in" style="pointer-events:none;">${label}</div></div>`
 }
@@ -237,7 +237,7 @@ function subMap() {
       </div>
       <div style="display:flex;align-items:center;gap:8px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:8px 14px;">
         <div style="width:18px;height:18px;border-radius:5px;background:#22C55E;flex-shrink:0;"></div>
-        <span style="font-size:13px;font-weight:700;color:var(--tmid)">Reparado ✓</span>
+        <span style="font-size:13px;font-weight:700;color:var(--tmid)">Reparado </span>
       </div>
     </div>
 
@@ -280,10 +280,10 @@ function subReports() {
   const { reports } = state
   const rows = reports.list.map(r => `<tr><td><strong>${r.id}</strong></td><td>${r.description}</td><td>${r.date}</td><td>Antonio</td><td>${statusBadge(r.status)}</td></tr>`).join('')
   
-  // Card de total reportes
+  // Tarjeta de total reportes
   const totalCard = `<div class="db-card db-fade"><div class="db-card-title">Total Reportes</div><div class="db-card-value">${reports.list?.length || 0}</div></div>`;
   
-  // Construir cards de resumen de estados
+  // Tarjetas por estado
   const statusCards = Object.entries(reports.status_summary || {}).map(([ status, count ], idx) => {
     const colors = {
       'Pendiente': 'var(--orange)',
@@ -373,7 +373,7 @@ export const dashboardPage = () => ({
 
   loadRender: () => {
     let currentPage = 'dashboard'
-    let isLoadingPage = false // Prevenir peticiones simultáneas
+    let isLoadingPage = false // Evita cargas en paralelo
     let lastPageLoad = 0
 
 const load_map_states = async () => {
@@ -383,13 +383,13 @@ const load_map_states = async () => {
         const assets = response.activos || []
         console.log('[Map] Assets received from backend:', assets)
         
-        // Listar todos los elementos disponibles en el mapa
+        // IDs disponibles en el DOM
         const elementosEnMapa = document.querySelectorAll('[data-map-id]')
         console.log('[Mapa] Elementos disponibles en DOM:', Array.from(elementosEnMapa).map(e => e.getAttribute('data-map-id')))
         
         const class_state = { 'Gris': 'sg', 'Naranja': 'so', 'Azul': 'sb', 'Verde': 'sv' }
         
-        // Load states saved in localStorage
+        // Cargar estados guardados
         let states_ls = {}
         try {
           states_ls = JSON.parse(localStorage.getItem('mapEstados') || '{}')
@@ -398,11 +398,10 @@ const load_map_states = async () => {
           console.warn('[Mapa] Error leyendo localStorage:', lsErr)
         }
         
-        // Initialize cache with localStorage or DB states
-        // Only initialize if it doesn't already have a cached state (to not overwrite recent changes)
+        // Inicializar cache sin pisar cambios recientes
         assets.forEach(asset => {
           if (!state.equipment_states[asset.etiqueta]) {
-            // Priority: localStorage > DB
+            // Prioridad: localStorage sobre BD
             state.equipment_states[asset.etiqueta] = states_ls[asset.etiqueta] || asset.estado
             console.log(`[Map] 💾 Initializing cache: ${asset.etiqueta} = ${state.equipment_states[asset.etiqueta]} (LS: ${states_ls[asset.etiqueta]}, DB: ${asset.estado})`)
           }
@@ -417,18 +416,18 @@ const load_map_states = async () => {
             estado: asset.estado
           })
           
-          // Use saved state (priority: LS > cache > DB)
+          // Estado final: localStorage > cache > BD
           const state_ls_item = states_ls[asset.etiqueta]
           const state_cache = state.equipment_states[asset.etiqueta]
           const state_final = state_ls_item || state_cache || asset.estado
           console.log(`[Mapa] Estado para ${asset.etiqueta}: LS="${state_ls_item}" | Cache="${state_cache}" | BD="${asset.estado}" → Usando="${state_final}"`)
           
-          // Intentar con etiqueta
+          // Buscar por etiqueta
           let selector = `[data-map-id="${asset.etiqueta}"]`
           let el = document.querySelector(selector)
           console.log(`[Mapa] Intentando con etiqueta "${asset.etiqueta}": ${!!el}`)
           
-          // Si no encuentra, intentar con codigo
+          // Si no aparece, buscar por codigo
           if (!el && asset.codigo) {
             selector = `[data-map-id="${asset.codigo}"]`
             el = document.querySelector(selector)
@@ -445,7 +444,7 @@ const load_map_states = async () => {
             const issues = asset.fallos_activos?.length ? asset.fallos_activos.join(', ') : 'Sin fallos'
             el.setAttribute('title', `${asset.etiqueta} — ${state_final} | ${issues}`)
           } else {
-            console.warn(`[Mapa] ⚠️ No encontrado: etiqueta=${asset.etiqueta}, codigo=${asset.codigo}`)
+            console.warn(`[Mapa]  No encontrado: etiqueta=${asset.etiqueta}, codigo=${asset.codigo}`)
           }
         })
         console.log('[Mapa] Carga completada - Cache:', state.equipment_states, 'localStorage:', states_ls)
@@ -454,11 +453,11 @@ const load_map_states = async () => {
       }
     }
 
-    // Cargar métricas de desempeño
+    // Cargar metricas
     const load_metrics = async () => {
       try {
         const metricas = await execution_service.get_performance_metrics()
-        // Map backend Spanish names to frontend English names
+        // Mapear nombres del backend al estado local
         state.metrics = {
           total_tasks: metricas.total_tareas || 0,
           completed: metricas.completadas || 0,
@@ -467,7 +466,7 @@ const load_map_states = async () => {
           sst_compliance_rate: metricas.tasa_cumplimiento_sst || 0
         }
         console.log('[Dashboard] Métricas mapeadas:', state.metrics)
-        // Re-render si estamos en dashboard
+        // Re-render en dashboard
         if (currentPage === 'dashboard') {
           const content = document.getElementById('db-content')
           if (content) content.innerHTML = subRenders.dashboard()
@@ -477,13 +476,13 @@ const load_map_states = async () => {
       }
     }
 
-    // Cargar alertas de stock bajo
+    // Cargar alertas de stock
     const load_stock_alerts = async () => {
       try {
         const alertas = await inventory_service.get_low_stock_alerts()
         state.alertas_stock = alertas
         console.log('[Dashboard] Alertas de stock:', alertas.length)
-        // Re-render si estamos en dashboard
+        // Re-render en dashboard
         if (currentPage === 'dashboard') {
           const content = document.getElementById('db-content')
           if (content) content.innerHTML = subRenders.dashboard()
@@ -493,7 +492,7 @@ const load_map_states = async () => {
       }
     }
 
-    // Load recent inspections
+    // Cargar inspecciones recientes
     const load_inspections = async () => {
       try {
         const data = await maintenance_service.get_recent_inspections(10)
@@ -504,13 +503,13 @@ const load_map_states = async () => {
       }
     }
 
-    // Load recent reports
+    // Cargar reportes recientes
     const load_reports = async () => {
       try {
         const data = await maintenance_service.get_recent_reports(15)
         console.log('[Dashboard] Raw data from backend:', JSON.stringify(data, null, 2))
         
-        // Map backend Spanish property names to frontend English names
+        // Normalizar campos del backend
         state.reports.list = (data.reportes || []).map(r => ({
           id: r.id,
           description: r.descripcion,
@@ -528,7 +527,7 @@ const load_map_states = async () => {
       }
     }
 
-    // Load spare parts grouped by type
+    // Cargar repuestos por tipo
     const load_spare_parts = async () => {
       try {
         const data = await inventory_service.get_spare_parts_grouped_by_type()
@@ -539,16 +538,16 @@ const load_map_states = async () => {
       }
     }
 
-    // Function to update a specific equipment on the map without reloading everything
+    // Actualiza un equipo sin recargar todo el mapa
     const update_equipment_on_map = (tag, new_status) => {
       try {
-        // Validate input
+        // Validar entrada
         if (!tag || !String(tag).trim()) {
           console.error('[Mapa] Error: etiqueta vacía o inválida')
           return
         }
         
-        // Color mapping: states come directly from socket/events
+        // Mapa de estado a clase de color
         const class_to_color = { 
           'Gris': 'sg', 
           'Naranja': 'so', 
@@ -561,7 +560,7 @@ const load_map_states = async () => {
         }
         const color_class = class_to_color[new_status] || 'sg'
         
-        // Save in local cache AND in localStorage for permanent persistence
+        // Guardar en cache y localStorage
         state.equipment_states[tag] = new_status
         try {
           const states_ls = JSON.parse(localStorage.getItem('mapEstados') || '{}')
@@ -572,25 +571,25 @@ const load_map_states = async () => {
           console.warn('[Mapa] No se pudo guardar en localStorage:', lsErr)
         }
         
-        // Find the element on the map
+        // Buscar elemento en el mapa
         let selector = `[data-map-id="${tag}"]`
         let el = document.querySelector(selector)
         console.log(`[Mapa] 🔍 Buscando elemento: selector="${selector}" → encontrado=${!!el}`)
         
         if (el) {
-          // Remove previous classes
+          // Quitar clases anteriores
           const previous_classes = el.className
           el.classList.remove('sg', 'so', 'sb', 'sv')
-          // Add new class
+          // Agregar clase nueva
           el.classList.add(color_class)
           console.log(`[Mapa] ✅ Equipo ${tag} actualizado a ${new_status} (${color_class}) | Antes: "${previous_classes}" → Después: "${el.className}"`)
           
-          // Trigger a visual update if needed
+          // Forzar repintado
           el.style.transition = 'all 0.3s ease'
-          el.offsetHeight // Force reflow
+          el.offsetHeight // Reflow
         } else {
-          console.warn(`[Mapa] ⚠️ Elemento ${tag} no encontrado en el DOM para selector "${selector}". Reintentando en 500ms...`)
-          // Retry after 500ms (the map might be re-rendering)
+          console.warn(`[Mapa]  Elemento ${tag} no encontrado en el DOM para selector "${selector}". Reintentando en 500ms...`)
+          // Reintento por si el mapa sigue renderizando
           setTimeout(() => {
             let elRetry = document.querySelector(selector)
             if (elRetry) {
@@ -598,8 +597,8 @@ const load_map_states = async () => {
               elRetry.classList.add(color_class)
               console.log(`[Mapa] ✅ Reintento exitoso: ${tag} → ${color_class}`)
             } else {
-              console.warn(`[Mapa] ⚠️ Elemento ${tag} aún no disponible después del reintento. Probablemente la pestaña "Inspecciones" no está visible actualmente.`)
-              // List all available elements
+              console.warn(`[Mapa]  Elemento ${tag} aún no disponible después del reintento. Probablemente la pestaña "Inspecciones" no está visible actualmente.`)
+              // Mostrar elementos disponibles
               const allMapElements = document.querySelectorAll('[data-map-id]')
               const availableIds = Array.from(allMapElements).map(e => e.dataset.mapId)
               console.log(`[Mapa] ℹ️ Elementos disponibles en el mapa (${availableIds.length}):`, availableIds)
@@ -611,27 +610,27 @@ const load_map_states = async () => {
       }
     }
 
-    // Función para limpiar estado de un equipo (cuando se reporte nueva novedad)
+    // Limpiar estado local de un equipo
     const clear_equipment_state = (etiqueta) => {
       try {
-        // Limpiar del cache local
+        // Limpiar cache local
         delete state.equipment_states[etiqueta]
         
-        // Limpiar de localStorage
+        // Limpiar localStorage
         const states_ls = JSON.parse(localStorage.getItem('mapEstados') || '{}')
         delete states_ls[etiqueta]
         localStorage.setItem('mapEstados', JSON.stringify(states_ls))
         
         console.log(`[Mapa] 🗑️ Estado limpiado para ${etiqueta} (volverá a leer desde BD)`)
         
-        // Recargar mapa para que agarre el estado de BD
+        // Recargar desde BD
         load_map_states()
       } catch (err) {
         console.error('[Mapa] Error limpiando estado:', err)
       }
     }
 
-    // Función para cargar registros de aseo - INDEPENDIENTE DEL THROTTLE
+    // Cargar registros de aseo (sin throttle)
     const load_cleaning_records = async () => {
       try {
         const resp = await fetch('http://localhost:4000/api/cleanings')
@@ -694,24 +693,24 @@ const load_map_states = async () => {
       }
     }
 
-    // Hacer globalmente accesible
+    // Exponer helper global
     window.load_cleaning_records_global = (forceUpdate = false) => {
       console.log('[Dashboard] Actualizando registros de aseo' + (forceUpdate ? ' (bypass throttle)' : ''))
       load_cleaning_records()
     }
 
-    // Función para actualizar el badge de chat en el sidebar
+    // Actualizar badge de chat
     const update_dashboard_chat_badge = () => {
       try {
         const count = parseInt(localStorage.getItem('dashboard_chat_notifications') || '0', 10) || 0
         const chatLink = document.querySelector('[data-db-page="chat"]')
         if (!chatLink) return
         
-        // Remover badge anterior si existe
+        // Quitar badge anterior
         const oldBadge = chatLink.querySelector('.db-notif-badge')
         if (oldBadge) oldBadge.remove()
         
-        // Agregar nuevo badge si hay notificaciones
+        // Crear badge si hay pendientes
         if (count > 0) {
           const badge = document.createElement('span')
           badge.className = 'db-notif-badge'
@@ -724,15 +723,14 @@ const load_map_states = async () => {
     }
 
     const render_page = async (page) => {
-      // Evitar múltiples cargas simultáneas
+      // Evita cargas simultaneas
       if (isLoadingPage) {
         console.log('[Dashboard] Ya hay una carga en progreso, ignorando', page)
         return
       }
 
       const now = Date.now()
-      // Solo aplicar throttle si es la misma página (evita recargas rápidas de la misma página)
-      // Pero permite navegar entre diferentes páginas libremente
+      // Aplica throttle solo si es la misma pagina
       if (page === currentPage && now - lastPageLoad < 500) {
         console.log('[Dashboard] Demasiadas peticiones rápido para la misma página, ignorando', page)
         return
@@ -746,7 +744,7 @@ const load_map_states = async () => {
         const content = document.getElementById('db-content')
         if (!content) return
 
-        // Load data according to page
+        // Cargar datos segun pagina
         if (page === 'dashboard') {
           await Promise.all([load_metrics(), load_stock_alerts(), load_inspections(), load_spare_parts()])
         } else if (page === 'equipment') {
@@ -757,7 +755,7 @@ const load_map_states = async () => {
 
         content.innerHTML = subRenders[page]?.() ?? subRenders.dashboard()
 
-        // Load map states if we're in inspections (where the map exists)
+        // Si estamos en inspecciones, cargar estados del mapa
         if (page === 'inspections') {
           setTimeout(() => {
             console.log('[Dashboard] Renderizado completado, cargando estados del mapa...')
@@ -845,12 +843,12 @@ const load_map_states = async () => {
           })
         }
 
-        // Cleaning: load records when the cleaning view is displayed
+        // En aseo, cargar registros
         if (page === 'home-cleaner') load_cleaning_records()
 
-        // Chat with Socket.io in real time
+        // Chat en tiempo real
         if (page === 'chat') {
-          // Clear notifications when entering chat
+          // Limpiar notificaciones al entrar al chat
           localStorage.setItem('dashboard_chat_notifications', '0')
           update_dashboard_chat_badge()
           
@@ -872,11 +870,11 @@ const load_map_states = async () => {
             
 
             
-            // Conectar al servidor de WebSocket
+            // Conectar socket
             socket_manager.connect('DASHBOARD').then(() => {
               console.log('[Dashboard Chat] WebSocket conectado')
               
-              // Monitorear cambios de conexión
+              // Estado de conexion
               socket_manager.on_connection_change((is_connected) => {
                 if (statusDiv) {
                   if (is_connected) {
@@ -887,10 +885,10 @@ const load_map_states = async () => {
                 }
               })
               
-              // Escuchar nuevos mensajes en tiempo real
+              // Mensajes en tiempo real
               socket_manager.on_message((msg) => {
                 console.log('[Dashboard Chat] Nuevo mensaje:', msg.senderName, '-', msg.message)
-                // Avoid duplicates
+                // Evitar duplicados
                 if (chat_messages.find(m => m._id === msg._id)) {
                   console.log('[Dashboard Chat] Mensaje duplicado, ignorando')
                   return
@@ -904,14 +902,14 @@ const load_map_states = async () => {
                 }
                 container.scrollTop = container.scrollHeight
                 
-                // Incrementar notificaciones solo si no estamos en la vista de chat
+                // Sumar notificaciones fuera de la vista chat
                 if (currentPage !== 'chat') {
                   try {
                     const currentCount = parseInt(localStorage.getItem('dashboard_chat_notifications') || '0', 10) || 0
                     const newCount = currentCount + 1
                     localStorage.setItem('dashboard_chat_notifications', String(newCount))
                     console.log('[Dashboard Chat] Notificación incrementada a:', newCount)
-                    // Actualizar badge en Sidebar
+                    // Refrescar badge
                     update_dashboard_chat_badge()
                   } catch (err) {
                     console.error('[Dashboard Chat] Error actualizando notificaciones:', err)
@@ -919,19 +917,18 @@ const load_map_states = async () => {
                 }
               })
               
-              // Escuchar confirmación de envío
+              // Confirmacion de envio
               socket_manager.on_message_sent((data) => {
-                console.log('[Dashboard Chat] ✓ Mensaje confirmado en servidor', data.messageId)
+                console.log('[Dashboard Chat]  Mensaje confirmado en servidor', data.messageId)
               })
               
-              // Escuchar errores al enviar
               socket_manager.on_message_error((data) => {
-                console.error('[Dashboard Chat] ✗ Error al enviar:', data.error)
+                console.error('[Dashboard Chat]  Error al enviar:', data.error)
                 alert('Error al enviar el mensaje: ' + data.error)
                 input.focus()
               })
               
-              // Cargar histórico inicial
+              // Cargar historial
               load_chat_history()
             }).catch(err => {
               console.error('[Dashboard Chat] Error conectando:', err)
@@ -942,7 +939,7 @@ const load_map_states = async () => {
               const texto = input.value.trim()
               if (!texto) return
               
-              // Validar conexión
+              // Validar conexion
               if (!socket_manager.is_connected()) {
                 alert('No estás conectado. Intenta recargar la página.')
                 return
@@ -976,21 +973,21 @@ const load_map_states = async () => {
       link.addEventListener('click', (e) => { e.preventDefault(); render_page(link.dataset.dbPage) })
     })
 
-    // Conectar a socket para escuchar cambios de estado de tareas en tiempo real
+    // Conectar socket para cambios de estado
     socket_manager.connect('DASHBOARD').then(() => {
-      console.log('[Dashboard] ✅ WebSocket conectado para sincronización en tiempo real')
+      console.log('[Dashboard]  WebSocket conectado para sincronización en tiempo real')
       
-      // Escuchar cambios de estado de tareas de otros usuarios - siempre activo
+      // Escuchar cambios de otros usuarios
       socket_manager.on_task_status_change((data) => {
         console.log('[Dashboard] 📡 Cambio de estado recibido por socket:', data)
-        // Disponer el evento localmente como si viniera del HOME para actualizar el mapa
+        // Reemitir evento local para actualizar mapa
         window.dispatchEvent(new CustomEvent('task:status:changed', { 
           detail: data
         }))
-        console.log('[Dashboard] ✓ Evento task:status:changed emitido localmente')
+        console.log('[Dashboard]  Evento task:status:changed emitido localmente')
       })
 
-      // Escuchar cuando se completa una tarea - RECARGAR TODO EL MAPA
+      // Al completar tarea, recargar mapa
       socket_manager.on_task_completed((data) => {
         console.log('[Dashboard] ✅ Tarea completada recibida - Recargando mapa completo:', data)
         if ((currentPage === 'dashboard' || currentPage === 'inspections') && data.reloadMap) {
@@ -998,50 +995,49 @@ const load_map_states = async () => {
         }
       })
       
-      // Escuchar cuando se reporta una novedad
+      // Al reportar novedad
       socket_manager.get_socket()?.on('report-created', (data) => {
         console.log('[Dashboard] 🚨 Novedad reportada recibida por socket:', data)
         if (data.etiqueta) {
           console.log(`[Dashboard] Validando etiqueta recibida: "${data.etiqueta}" (tipo: ${typeof data.etiqueta})`)
           
-          // NO limpiar localStorage - queremos GUARDAR el estado Naranja
-          // Solo limpiar el cache local para forzar re-lectura
+          // Mantener localStorage y limpiar solo cache local
           delete state.equipment_states[data.etiqueta]
           console.log(`[Dashboard] 🗑️ Cache local limpiado para ${data.etiqueta}`)
           
-          // Actualizar el mapa a Naranja inmediatamente
+          // Pasar a Naranja de inmediato
           console.log(`[Dashboard] Actualizando mapa: ${data.etiqueta} → Naranja (Novedad Reportada)`)
           update_equipment_on_map(data.etiqueta, 'Naranja')
           
-          // Recargar también el mapa después de 1s para asegurar BD actualizada
+          // Revalidar con BD en 1s
           setTimeout(() => {
             console.log('[Dashboard] Recargando mapa después de reportar novedad')
             load_map_states()
           }, 1000)
         } else {
-          console.warn('[Dashboard] ⚠️ Evento report-created sin etiqueta:', data)
+          console.warn('[Dashboard]  Evento report-created sin etiqueta:', data)
         }
       })
 
-      // Escuchar cuando se crea un nuevo registro de aseo
+      // Nuevo registro de aseo
       socket_manager.get_socket()?.on('cleaning-created', (data) => {
         console.log('[Dashboard] 🧹 Nuevo registro de aseo recibido por socket:', data)
         if (currentPage === 'home-cleaner') {
-          console.log('[Dashboard] ✓ Actualizando registros de aseo en tiempo real')
+          console.log('[Dashboard]  Actualizando registros de aseo en tiempo real')
           load_cleaning_records()
         }
       })
       
-      // Escuchar cuando se crea un nuevo reporte/mantenimiento
+      // Nuevo reporte de mantenimiento
       socket_manager.get_socket()?.on('report-created', (data) => {
         console.log('[Dashboard] 🚨 Nuevo reporte recibido por socket:', data)
         if (data?.etiqueta) {
           try {
             console.log(`[Dashboard] Validando etiqueta recibida: "${data.etiqueta}"`)
-            // Actualizar mapa a Naranja (novedad reportada)
+            // Actualizar a Naranja
             update_equipment_on_map(data.etiqueta, 'Naranja')
 
-            // Recargar reporte y mapa para que la vista muestre el nuevo reporte inmediatamente
+            // Recargar reportes y vista
             load_reports().then(() => {
               const content = document.getElementById('db-content')
               if (content && (currentPage === 'reports' || currentPage === 'dashboard')) {
@@ -1049,7 +1045,7 @@ const load_map_states = async () => {
               }
             }).catch(err => console.error('[Dashboard] Error recargando reportes tras evento socket:', err))
 
-            // También recargar el mapa después de 1s para asegurar consistencia con BD
+            // Revalidar mapa en 1s
             setTimeout(() => {
               console.log('[Dashboard] Recargando mapa después de nuevo reporte')
               load_map_states()
@@ -1062,12 +1058,12 @@ const load_map_states = async () => {
         }
       })
 
-      console.log('[Dashboard] ✓ Listeners de socket establecidos')
-      // Global handler: increment dashboard chat badge when a new message arrives
+      console.log('[Dashboard]  Listeners de socket establecidos')
+      // Handler global de mensajes para badge
       socket_manager.on_message((msg) => {
         try {
           console.log('[Dashboard] Global new-message received:', msg)
-          // Only increment if message is destined to dashboard (or no explicit recipient)
+          // Sumar solo si el mensaje es para dashboard
           if (msg && (msg.recipient === 'DASHBOARD' || !msg.recipient)) {
             if (currentPage !== 'chat') {
               const currentCount = parseInt(localStorage.getItem('dashboard_chat_notifications') || '0', 10) || 0
@@ -1082,31 +1078,30 @@ const load_map_states = async () => {
         }
       })
     }).catch(err => {
-      console.warn('[Dashboard] ⚠️ No se pudo conectar a socket:', err)
+      console.warn('[Dashboard]  No se pudo conectar a socket:', err)
     })
 
-    // Inicializar con dashboard
+    // Inicio
     render_page('dashboard')
     update_dashboard_chat_badge()
     load_zone().catch(err => console.warn('[Dashboard] Error en load_zone:', err))
 
-    // Load metrics and initialize real-time updates
+    // Carga inicial de metricas
     load_metrics()
     load_stock_alerts()
 
-    // Listen to completed task events to update map in real time
+    // Evento de tarea completada
     window.addEventListener('task:completed', (e) => {
       try {
         console.log('[Dashboard] 🟢 Evento task:completed recibido:', e.detail)
         const { etiqueta, nuevoEstado } = e.detail
-        // Update only the specific equipment if we have the tag
+        // Si hay etiqueta, actualizar solo ese equipo
         if (etiqueta && nuevoEstado) {
           update_equipment_on_map(etiqueta, nuevoEstado)
         } else {
-          // If no tag, reload everything
           load_map_states()
         }
-        // IMPORTANT: Reload metrics when a task is completed
+        // Recargar metricas
         console.log('[Dashboard] Recargando métricas por task:completed')
         load_metrics()
       } catch (err) {
@@ -1114,16 +1109,16 @@ const load_map_states = async () => {
       }
     })
 
-    // Escuchar eventos de tareas iniciadas para actualizar mapa en tiempo real
+    // Evento de tarea iniciada
     window.addEventListener('task:started', (e) => {
       try {
         console.log('[Dashboard] 🔵 Evento task:started recibido:', e.detail)
         const { etiqueta, nuevoEstado } = e.detail
-        // Update only the specific equipment if we have the tag
+        // Si hay etiqueta, actualizar solo ese equipo
         if (etiqueta && nuevoEstado) {
           update_equipment_on_map(etiqueta, nuevoEstado)
         } else {
-          // If no tag, reload everything
+          // Si no hay etiqueta, recargar todo
           load_map_states()
         }
       } catch (err) {
@@ -1131,7 +1126,7 @@ const load_map_states = async () => {
       }
     })
 
-    // Listen to task status changes coming from socket (other users)
+    // Cambio de estado recibido por socket
     window.addEventListener('task:status:changed', (e) => {
       try {
         console.log('[Dashboard] 📡 Evento task:status:changed desde socket:', e.detail)
@@ -1141,7 +1136,7 @@ const load_map_states = async () => {
           console.log(`[Dashboard] Actualizando mapa: ${etiqueta} → ${nuevoEstado} (Tarea: ${tareaId})`)
           update_equipment_on_map(etiqueta, nuevoEstado)
           
-          // If we're on dashboard/inspections, reload metrics
+          // En dashboard/inspecciones, refrescar metricas
           if ((currentPage === 'dashboard' || currentPage === 'inspections') && estado === 'Terminada') {
             setTimeout(() => {
               console.log('[Dashboard] Recargando métricas después de completar tarea...')
@@ -1156,7 +1151,7 @@ const load_map_states = async () => {
       }
     })
 
-    // Update metrics every 10 seconds
+    // Refresco periodico de metricas
     setInterval(() => {
       if (currentPage === 'dashboard') {
         console.log('[Dashboard] Refrescando métricas (intervalo automático 10s)')
@@ -1165,11 +1160,11 @@ const load_map_states = async () => {
       }
     }, 10000)
 
-    // Debounce para evitar actualizaciones excesivas por socket
+    // Throttle para evitar exceso de refrescos
     let lastMetricsUpdate = Date.now()
     const throttleMetrics = () => {
       const now = Date.now()
-      if (now - lastMetricsUpdate > 10000) { // Max 1 petición cada 10 segundos
+      if (now - lastMetricsUpdate > 10000) { // Maximo 1 cada 10s
         lastMetricsUpdate = now
         if (currentPage === 'dashboard') {
           load_metrics()
@@ -1178,7 +1173,7 @@ const load_map_states = async () => {
       }
     }
 
-    // Listeners de socket para actualizaciones en tiempo real
+    // Listener para refresco por eventos
     socket_manager.on_message((msg) => {
       throttleMetrics()
     })

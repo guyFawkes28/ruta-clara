@@ -4,7 +4,7 @@ import { get_zone_by_qr, get_incident_types, create_maintenance_report, get_pend
 
 const router = Router();
 
-// Static routes first to prevent dynamic route '/:qr_code' from capturing requests
+// Rutas fijas primero para evitar choques con '/:qr_code'
 router.get('/incident-types', verifyToken, get_incident_types)
 router.get('/pending-tasks', verifyToken, get_pending_tasks)
 router.get('/inspections/recent', verifyToken, get_recent_inspections)

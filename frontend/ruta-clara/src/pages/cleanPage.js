@@ -125,7 +125,7 @@ export const cleaningReportPage = (zoneId) => {
 				</button>
 
 				<button class="btn btn-primary" id="submit-clean">
-					Registrar limpieza ✓
+					Registrar limpieza 
 				</button>
 
 			</div>
@@ -239,7 +239,7 @@ export const cleaningReportPage = (zoneId) => {
 				// Leer el registro completo creado del backend
 				const created = await res.json()
 				console.log("[cleanPage] Registro creado:", created)
-				toast("✓ Limpieza registrada correctamente", "success")
+				toast(" Limpieza registrada correctamente", "success")
 				document.getElementById("clean-description").value = ""
 				
 				// Notificar al Dashboard en tiempo real
@@ -257,7 +257,7 @@ export const cleaningReportPage = (zoneId) => {
 				toast("Error al registrar: " + error.message, "error")
 			} finally {
 				submitBtn.disabled = false
-				submitBtn.textContent = "Registrar limpieza ✓"
+				submitBtn.textContent = "Registrar limpieza "
 			}
 
 			})

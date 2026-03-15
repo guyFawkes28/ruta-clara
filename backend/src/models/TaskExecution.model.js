@@ -76,11 +76,11 @@ export const TaskExecution = {
       .single()
     
     if (error) {
-      console.error(`[TaskExecution.finishTask] ✗ Error guardando fecha_fin:`, error)
+      console.error(`[TaskExecution.finishTask]  Error guardando fecha_fin:`, error)
       throw error
     }
     
-    console.log(`[TaskExecution.finishTask] ✓ Datos guardados exitosamente`)
+    console.log(`[TaskExecution.finishTask]  Datos guardados exitosamente`)
     console.log(`[TaskExecution.finishTask] Registro actualizado:`, {
       tarea_id: data.tarea_id,
       duracion_minutos: data.duracion_minutos,
@@ -123,11 +123,11 @@ export const TaskExecution = {
       .order('fecha_inicio', { ascending: false })
     
     if (error) {
-      console.error('[TaskExecution.getAllExecutions] ✗ Error en query:', error)
+      console.error('[TaskExecution.getAllExecutions]  Error en query:', error)
       throw error
     }
     
-    console.log(`[TaskExecution.getAllExecutions] ✓ Traídas ${data.length} ejecuciones`)
+    console.log(`[TaskExecution.getAllExecutions]  Traídas ${data.length} ejecuciones`)
     if (data.length > 0) {
       console.log('[TaskExecution.getAllExecutions] Primeras 3 con sus fechas:')
       data.slice(0, 3).forEach((e, i) => {

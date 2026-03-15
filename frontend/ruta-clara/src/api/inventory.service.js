@@ -1,14 +1,14 @@
 import axios from './axiosConfig.js'
 
 export const inventory_service = {
-  // Get spare parts
+  // Obtener repuestos
   async get_spare_parts(category = null) {
     const params = category ? { categoria: category } : {}
     const response = await axios.get('/inventory/spare-parts', { params })
     return response.data.spare_parts || []
   },
 
-  // Check availability
+  // Validar disponibilidad
   async check_availability(spare_part_id, quantity) {
     const response = await axios.post('/inventory/check-availability', {
       repuesto_id: spare_part_id,
@@ -17,7 +17,7 @@ export const inventory_service = {
     return response.data
   },
 
-  // Validate task start (Hard-Lock)
+  // Validar inicio de tarea
   async validate_task_start(task_id, required_spare_parts) {
     const response = await axios.post('/inventory/validate-task-start', {
       tarea_id: task_id,
@@ -26,7 +26,7 @@ export const inventory_service = {
     return response.data
   },
 
-  // Deduct spare parts
+  // Descontar repuestos
   async deduct_spare_parts(task_id, spare_parts_used) {
     const response = await axios.post('/inventory/deduct', {
       tarea_id: task_id,
@@ -35,13 +35,13 @@ export const inventory_service = {
     return response.data
   },
 
-  // Low stock alerts
+  // Alertas de stock bajo
   async get_low_stock_alerts() {
     const response = await axios.get('/inventory/alerts/low-stock')
     return response.data.low_stock || []
   },
 
-  // Add stock
+  // Agregar stock
   async add_stock(spare_part_id, quantity, reason) {
     const response = await axios.post('/inventory/add-stock', {
       repuesto_id: spare_part_id,
@@ -51,7 +51,7 @@ export const inventory_service = {
     return response.data
   },
 
-  // Get spare part types
+  // Obtener tipos de repuesto
   async get_spare_part_types() {
     try {
       const response = await axios.get('/inventory/spare-part-types')
@@ -62,7 +62,7 @@ export const inventory_service = {
     }
   },
 
-  // Get spare parts grouped by type with quantity
+  // Obtener repuestos agrupados por tipo
   async get_spare_parts_grouped_by_type() {
     try {
       const response = await axios.get('/inventory/spare-parts/grouped')

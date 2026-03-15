@@ -32,9 +32,9 @@ export const BottomNav = (opts = {}) => {
     `
     },
     loadRender: () => {
-      // Attach handlers for navigation buttons (only those present in DOM)
+      // Asignar eventos a los botones presentes
       document.querySelectorAll('[data-rc-view]').forEach(btn => {
-        // avoid double-binding
+        // Evitar doble enlace
         if (btn.dataset.bound) return
         btn.dataset.bound = '1'
         btn.onclick = () => {
@@ -44,7 +44,7 @@ export const BottomNav = (opts = {}) => {
           document.querySelectorAll('[data-rc-view]').forEach(b => b.classList.toggle('active', b === btn))
           document.querySelectorAll('[data-rc-view]').forEach(b => b.setAttribute('aria-pressed', b.classList.contains('active') ? 'true' : 'false'))
           
-          // Limpiar notificaciones si entra a chat
+          // Limpiar notificaciones al entrar al chat
           if (view === 'chat') {
             localStorage.setItem('chat_notifications', '0')
             const badge = btn.querySelector('.rc-notif-badge')

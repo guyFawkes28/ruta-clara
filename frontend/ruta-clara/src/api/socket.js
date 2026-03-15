@@ -3,13 +3,13 @@ import { persistence } from '../util/persistence.js'
 
 let socket = null
 let connect_promise = null
-// Internal list of message handlers to allow multiple listeners
+// Lista interna de handlers de mensajes
 let messageHandlers = []
 
 export const socket_manager = {
   /**
-   * Connect to WebSocket server
-   * @param {string} view - 'HOME' or 'DASHBOARD'
+  * Conectar al servidor WebSocket
+   * @param {string} view - 'HOME' o 'DASHBOARD'
    * @returns {Promise}
    */
   connect: async (view) => {
@@ -17,7 +17,7 @@ export const socket_manager = {
       try {
         const user = persistence.getUser()
         
-        // If a connection is already in progress, return that promise
+        // Si ya hay conexión en proceso, reutilizar promesa
         if (connect_promise) {
           console.log('[Socket] Connection in progress, reusing...')
           connect_promise.then(() => {
@@ -33,7 +33,7 @@ export const socket_manager = {
           return
         }
         
-        // If a connection already exists, reuse it
+        // Si ya hay conexión activa, reutilizarla
         if (socket?.connected) {
           console.log('[Socket] Already connected, reusing connection')
           socket.emit('join', { 
@@ -44,7 +44,7 @@ export const socket_manager = {
           return resolve(socket)
         }
 
-        // Create new connection
+        // Crear nueva conexión
         connect_promise = new Promise((resolve_connect, reject_connect) => {
           socket = io('http://localhost:4000', {
             reconnection: true,
@@ -61,7 +61,7 @@ export const socket_manager = {
               user_email: user?.email || 'unknown@mail.com'
             })
 
-            // Forward incoming 'new-message' events to all registered handlers
+            // Reenviar 'new-message' a todos los handlers
             socket.on('new-message', (msg) => {
               try {
                 messageHandlers.forEach(cb => {
@@ -93,7 +93,7 @@ export const socket_manager = {
   },
 
   /**
-   * Send a message
+    * Enviar un mensaje
    * @param {Object} msg - { message, sender, senderName, senderEmail, role, recipient }
    */
   send_message: (msg) => {
@@ -106,22 +106,21 @@ export const socket_manager = {
   },
 
   /**
-   * Listen to new messages
-   * @param {Function} callback - Function that receives the message
+   * Escuchar nuevos mensajes
+   * @param {Function} callback - Función que recibe el mensaje completo como objeto { _id, sender, senderName, senderEmail, message, role, recipient, isRead, createdAt }
    */
   on_message: (callback) => {
-    // Register a message handler in the internal list.
-    // Handlers will be invoked when the socket receives 'new-message'.
+    // Registrar handler de mensajes
     if (!callback || typeof callback !== 'function') return
     messageHandlers.push(callback)
-    // Return unsubscribe function
+    // Devolver función para desuscribirse
     return () => {
       messageHandlers = messageHandlers.filter(cb => cb !== callback)
     }
   },
 
   /**
-   * Listen to send confirmation
+   * Escuchar confirmación de envío
    * @param {Function} callback
    */
   on_message_sent: (callback) => {
@@ -131,7 +130,7 @@ export const socket_manager = {
   },
 
   /**
-   * Listen to message errors
+   * Escuchar errores de envío
    * @param {Function} callback
    */
   on_message_error: (callback) => {
@@ -141,7 +140,7 @@ export const socket_manager = {
   },
 
   /**
-   * Listen when someone joins
+   * Escuchar cuando alguien se une
    * @param {Function} callback
    */
   on_user_joined: (callback) => {
@@ -150,7 +149,7 @@ export const socket_manager = {
   },
 
   /**
-   * Emit task status change
+   * Emitir cambio de estado de tarea
    * @param {Object} data - { task_id, tag, status, new_status }
    */
   emit_task_status_change: (data) => {
@@ -164,8 +163,8 @@ export const socket_manager = {
   },
 
   /**
-   * Listen to task status changes from other users
-   * @param {Function} callback - Receives { task_id, tag, status, new_status }
+   * Escuchar cambios de estado de tarea de otros usuarios
+   * @param {Function} callback - Recibe { task_id, tag, status, new_status }
    */
   on_task_status_change: (callback) => {
     if (!socket) return
@@ -174,7 +173,7 @@ export const socket_manager = {
   },
 
   /**
-   * Listen to task completed event (to reload entire map)
+   * Escuchar evento de tarea completada (para recargar el mapa completo)
    * @param {Function} callback
    */
   on_task_completed: (callback) => {
@@ -184,7 +183,7 @@ export const socket_manager = {
   },
 
   /**
-   * Disconnect
+   *  Desconectar del servidor WebSocket
    */
   disconnect: () => {
     if (socket) {
@@ -195,17 +194,17 @@ export const socket_manager = {
   },
 
   /**
-   * Get connection status
+    * Obtener estado de conexión
    */
   is_connected: () => socket?.connected || false,
 
   /**
-   * Get the socket (if you need direct access)
+    * Obtener el socket (si necesitas acceso directo)
    */
   get_socket: () => socket,
 
   /**
-   * Listen to connection changes
+    * Escuchar cambios de conexión
    * @param {Function} callback
    */
   on_connection_change: (callback) => {

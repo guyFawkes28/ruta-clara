@@ -110,7 +110,7 @@ export const register_sst = async (req, res) => {
         estado: 'En Proceso',
         nuevoEstado: 'Azul'
       })
-      console.log('[registerSST] ✓ Evento socket emitido: task-status-changed con etiqueta', activoData?.etiqueta)
+      console.log('[registerSST]  Evento socket emitido: task-status-changed con etiqueta', activoData?.etiqueta)
     }
 
     res.json({
@@ -139,7 +139,7 @@ export const finish_task = async (req, res) => {
     const { tarea_id, foto_despues, repuestos_usados, duracion_minutos, duracion_segundos } = req.body
 
     if (!tarea_id) {
-      console.error('[finishTask] ✗ Error: falta tarea_id')
+      console.error('[finishTask]  Error: falta tarea_id')
       return res.status(400).json({ 
         success: false, 
         error: 'Falta tarea_id' 
@@ -158,7 +158,7 @@ export const finish_task = async (req, res) => {
       duracion_minutos || 0,
       duracion_segundos || 0
     )
-    console.log(`[finishTask] ✓ Ejecución finalizada:`, execution)
+    console.log(`[finishTask]  Ejecución finalizada:`, execution)
 
     // Descontar repuestos si se especificaron
     let movimientos = []
@@ -168,10 +168,10 @@ export const finish_task = async (req, res) => {
         taskIdInt,
         repuestos_usados
       )
-      console.log(`[finishTask] ✓ Repuestos descontados:`, movimientos)
+      console.log(`[finishTask]  Repuestos descontados:`, movimientos)
     }
 
-    // ACTUALIZAR estado de tarea a "Terminada"
+    // Actualizar estado de tarea a "Terminada"
     console.log(`\n[finishTask] INICIANDO UPDATE: id_tarea = ${taskIdInt}, nuevo estado = 'Terminada'`)
     const { data: updateData, error: updateError, count: updateCount } = await supabase
       .from('tareas')
@@ -180,11 +180,11 @@ export const finish_task = async (req, res) => {
       .select()
 
     if (updateError) {
-      console.error('[finishTask] ✗✗✗ ERROR AL ACTUALIZAR:', JSON.stringify(updateError, null, 2))
+      console.error('[finishTask]  ERROR AL ACTUALIZAR:', JSON.stringify(updateError, null, 2))
       throw updateError
     }
 
-    console.log(`[finishTask] ✓ UPDATE EXITOSO`)
+    console.log(`[finishTask]  UPDATE EXITOSO`)
     console.log(`[finishTask] Filas actualizadas (count):`, updateCount)
     console.log(`[finishTask] Datos retornados:`, updateData)
 
@@ -218,10 +218,10 @@ export const finish_task = async (req, res) => {
         nuevoEstado: 'Verde',
         reloadMap: true
       })
-      console.log(`[finishTask] ✓ Evento socket emitido con etiqueta: ${activoData?.etiqueta}`)
+      console.log(`[finishTask]  Evento socket emitido con etiqueta: ${activoData?.etiqueta}`)
     }
 
-    // VERIFICACIÓN: Leer la tarea actualizada
+    // Verificar la tarea actualizada
     console.log(`\n[finishTask] VERIFICANDO: leyendo tarea ${taskIdInt} para confirmar...`)
     const { data: verificacion, error: verificacionError } = await supabase
       .from('tareas')
@@ -230,11 +230,11 @@ export const finish_task = async (req, res) => {
       .single()
 
     if (verificacionError) {
-      console.error('[finishTask] ✗ Error en verificación:', verificacionError)
+      console.error('[finishTask]  Error en verificación:', verificacionError)
     } else {
-      console.log(`[finishTask] ✓ VERIFICACIÓN: Tarea ${verificacion.id_tarea} tiene estado: "${verificacion.estado_tarea}"`)
+      console.log(`[finishTask]  VERIFICACIÓN: Tarea ${verificacion.id_tarea} tiene estado: "${verificacion.estado_tarea}"`)
       if (verificacion.estado_tarea !== 'Terminada') {
-        console.error(`[finishTask] ⚠️⚠️⚠️ ALERTA: Estado NO cambió a Terminada. Sigue siendo: ${verificacion.estado_tarea}`)
+        console.error(`[finishTask]  ALERTA: Estado NO cambió a Terminada. Sigue siendo: ${verificacion.estado_tarea}`)
       }
     }
 
@@ -249,7 +249,7 @@ export const finish_task = async (req, res) => {
       verificacion: verificacion
     })
   } catch (err) {
-    console.error('[finishTask] ✗✗✗ ERROR GENERAL:', err)
+    console.error('[finishTask]  ERROR GENERAL:', err)
     res.status(500).json({ success: false, error: err.message })
   }
 }
@@ -402,12 +402,12 @@ export const get_performance_metrics = async (req, res) => {
       ? `${avgMinutos}m ${avgSegundos}s`
       : `${avgSegundos}s`
 
-    console.log(`[getPerformanceMetrics] ✓ PROMEDIO CALCULADO: ${formatoPromedio} (${totalTimeSeconds}s total / ${tasksWithValidDuration} tareas = ${avgTimeSeconds}s promedio)`)
+    console.log(`[getPerformanceMetrics]  PROMEDIO CALCULADO: ${formatoPromedio} (${totalTimeSeconds}s total / ${tasksWithValidDuration} tareas = ${avgTimeSeconds}s promedio)`)
 
     const metrics = {
       total_tareas: executions.length,
-      completadas: actuallyCompleted.length,              // ✅ Usa TODAS las completadas
-      en_proceso: actuallyInProcess.length,              // ✅ Usa TODAS las en proceso
+      completadas: actuallyCompleted.length,              //  Usa TODAS las completadas
+      en_proceso: actuallyInProcess.length,              //  Usa TODAS las en proceso
       promedio_duracion_minutos: completedForAverage.length > 0 
         ? Math.round(avgTimeSeconds / 60)
         : 0,

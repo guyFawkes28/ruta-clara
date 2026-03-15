@@ -1,7 +1,7 @@
 import axios from './axiosConfig.js'
 
 export const execution_service = {
-  // Initialize task execution
+  // Iniciar ejecución de tarea
   async initialize_execution(task_id) {
     const response = await axios.post('/execution/init', {
       tarea_id: task_id
@@ -9,7 +9,7 @@ export const execution_service = {
     return response.data
   },
 
-  // Register SST protocol
+  // Registrar protocolo SST
   async register_sst(task_id, selfie_photo, checklist) {
     const body = {
       tarea_id: task_id,
@@ -29,7 +29,7 @@ export const execution_service = {
     }
   },
 
-  // Finish task
+  // Finalizar tarea
   async finish_task(task_id, after_photo, spare_parts_used, duration = {}) {
     const body = {
       tarea_id: task_id,
@@ -51,7 +51,7 @@ export const execution_service = {
     }
   },
 
-  // Get estimated duration
+  // Obtener duración estimada
   async get_estimated_duration(damage_type) {
     const response = await axios.get('/execution/estimate/duration', {
       params: { tipo_dano: damage_type }
@@ -59,7 +59,7 @@ export const execution_service = {
     return response.data.estimated || {}
   },
 
-  // Get performance metrics
+  // Obtener métricas de desempeño
   async get_performance_metrics() {
     const response = await axios.get('/execution/metrics/performance')
     return response.data.metrics || {}

@@ -24,9 +24,9 @@ const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/ruta-clara'
 export const connectMongo = async () => {
     try {
         await mongoose.connect(mongoUri);
-        console.log('✓ MongoDB conectado');
+        console.log(' MongoDB conectado');
     } catch (err) {
-        console.error('✗ Error conectando a MongoDB:', err.message);
+        console.error(' Error conectando a MongoDB:', err.message);
         throw err;
     }
 };

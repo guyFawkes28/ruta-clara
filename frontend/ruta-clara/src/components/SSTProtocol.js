@@ -109,7 +109,7 @@ export const SSTProtocol = ({ tareaId, tareaData, onSSTComplete, onCancel }) => 
               color: #b45309;
               margin: 0 0 8px 0;
             ">
-              ⚠️ Recomendaciones para este equipo:
+               Recomendaciones para este equipo:
             </p>
             <ul style="
               margin: 0;
@@ -231,7 +231,7 @@ export const SSTProtocol = ({ tareaId, tareaData, onSSTComplete, onCancel }) => 
         const errorDiv = document.getElementById('sst-error')
 
         if (!epp || !bloqueo) {
-          state.error = '⚠️ Debes confirmar TODOS los puntos de seguridad'
+          state.error = ' Debes confirmar TODOS los puntos de seguridad'
           errorDiv.textContent = state.error
           errorDiv.style.display = 'block'
           return

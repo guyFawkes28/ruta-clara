@@ -9,7 +9,7 @@ window.addEventListener('cleaning:created', (e) => {
     console.log('[Global] Evento cleaning:created recibido:', e.detail)
     // Si el Dashboard tiene la función disponible, actualizar registros
     if (typeof window.cargarRegistrosAseoGlobal === 'function') {
-      window.cargarRegistrosAseoGlobal(true) // true = bypass throttle
+      window.cargarRegistrosAseoGlobal(true) // Si es true, fuerza recarga sin throttle
       console.log('[Global] Registros de aseo actualizados en tiempo real (bypass throttle)')
     } else {
       console.log('[Global] Dashboard no disponible aún, registro se cargará al navegar')

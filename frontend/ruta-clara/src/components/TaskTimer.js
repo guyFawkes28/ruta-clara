@@ -125,7 +125,7 @@ export const TaskTimer = ({ tareaId, onFinish, duracionEstimada = 0 }) => {
             font-weight: 600;
             font-size: 12px;
             transition: background 0.2s;
-          ">✓ Finalizar</button>
+          "> Finalizar</button>
         </div>
       </div>
     `,

@@ -3,11 +3,11 @@ import axios from 'axios'
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
 if (!OPENAI_API_KEY) {
-  console.error('[AIService] ❌ OPENAI_API_KEY no configurada en .env. La funcionalidad de IA no funcionará.')
+  console.error('[AIService]  OPENAI_API_KEY no configurada en .env. La funcionalidad de IA no funcionará.')
 } else if (!OPENAI_API_KEY.startsWith('sk-')) {
-  console.error('[AIService] ❌ OPENAI_API_KEY tiene formato inválido. Debe comenzar con "sk-"')
+  console.error('[AIService]  OPENAI_API_KEY tiene formato inválido. Debe comenzar con "sk-"')
 } else {
-  console.log('[AIService] ✅ OPENAI_API_KEY configurada correctamente')
+  console.log('[AIService]  OPENAI_API_KEY configurada correctamente')
 }
 
 const openaiClient = axios.create({

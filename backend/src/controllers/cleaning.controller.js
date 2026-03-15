@@ -37,7 +37,7 @@ export const create_cleaning = async (req, res) => {
       hora_fin: hora_fin || null,
       createdAt: createdCleaning.createdAt
     });
-    console.log('[Cleaning] ✓ Evento socket emitido: cleaning-created');
+    console.log('[Cleaning]  Evento socket emitido: cleaning-created');
 
     res.status(201).json({
       message: "Cleaning registered successfully",
@@ -88,7 +88,7 @@ export const get_cleanings = async (req, res) => {
 
 export const get_current_cleaning_info = async (req, res) => {
   try {
-    // FIX 1: Se leen ambos parámetros requeridos desde query
+    // Leer ambos parámetros desde query
     const { codigo_qr, user_id } = req.query;
 
     if (!codigo_qr) {
@@ -110,7 +110,7 @@ export const get_current_cleaning_info = async (req, res) => {
       return res.status(404).json({ error: "Zona no encontrada" });
     }
 
-    // FIX 2: Buscar el nombre del usuario real en la tabla usuarios
+    // Buscar el nombre real del usuario
     const { data: usuario, error: usuarioError } = await supabase
       .from("usuarios")
       .select("nombre")

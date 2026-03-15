@@ -3,7 +3,7 @@ import { ai_service } from '../api/ai.service.js';
 
 export const reportZone = ({ onSave, onCancel }) => {
     let reportData = { puestoId: '', categoria: '', comentario: '', isFan: false };
-    // Estado compartido entre loadRender / open / close
+    // Estado del modal
     let selectedDamages = [];
     let detailMap = {};
     let detailQueue = [];
@@ -39,7 +39,7 @@ export const reportZone = ({ onSave, onCancel }) => {
                     <div class="ssub"   id="rc-sub">Sala 3</div>
                     </div>
 
-                    <!-- PASO 1 -->
+
                     <div class="step-panel on" id="rc-step1">
                     <div class="step-lbl">¿Qué tiene daño?</div>
                     <div class="row g-2 mb-3">
@@ -54,7 +54,7 @@ export const reportZone = ({ onSave, onCancel }) => {
                     <div id="rc-step1-err" style="color:#dc2626;font-weight:800;margin-top:8px;display:none;font-size:13px">&nbsp;</div>
                     </div>
 
-                    <!-- PASO 2a — Cable -->
+
                     <div class="step-panel" id="rc-step2-cable">
                     <div class="step-lbl">¿Cuál cable?</div>
                     <div class="row g-2 mb-3">
@@ -67,7 +67,7 @@ export const reportZone = ({ onSave, onCancel }) => {
                     <button class="btn-back" id="rc-cable-back">← Volver</button>
                     </div>
 
-                    <!-- PASO 2b — Enchufe -->
+
                     <div class="step-panel" id="rc-step2-enchufe">
                     <div class="step-lbl">¿Cuál enchufe?</div>
                     <div class="d-flex gap-3 justify-content-center mb-3">
@@ -84,7 +84,7 @@ export const reportZone = ({ onSave, onCancel }) => {
                     <button class="btn-back" id="rc-enc-back">← Volver</button>
                     </div>
 
-                    <!-- PASO 2c — Simple -->
+
                     <div class="step-panel" id="rc-step2-simple">
                     <div class="step-lbl">Confirmar componente</div>
                     <div class="d-flex align-items-center gap-3 rounded-3 p-3 mb-3" style="background:var(--orab);border:2px solid var(--orabd)">
@@ -98,7 +98,7 @@ export const reportZone = ({ onSave, onCancel }) => {
                     <button class="btn-back" id="rc-simple-back">← Volver</button>
                     </div>
 
-                    <!-- PASO 2d — Silla -->
+
                     <div class="step-panel" id="rc-step2-silla">
                     <div class="step-lbl">¿Qué pasa con la silla?</div>
                     <div class="row g-3 mb-3">
@@ -113,7 +113,7 @@ export const reportZone = ({ onSave, onCancel }) => {
                     <button class="btn-back" id="rc-silla-back">← Volver</button>
                     </div>
 
-                    <!-- PASO 3 — Descripción -->
+
                     <div class="step-panel" id="rc-step3">
                     <div class="step-lbl">Describe el daño con tus palabras</div>
                     <div class="mb-1" style="font-size:13px;font-weight:800;color:var(--tmid)">🔧 ¿Qué observas?</div>
@@ -146,7 +146,7 @@ export const reportZone = ({ onSave, onCancel }) => {
                 <button class="btn-back" id="rc-step3-back">← Cambiar selección</button>
                 </div>
 
-                <!-- ── PASO 4 — Resumen y guardar ── -->
+
                 <div class="step-panel" id="rc-step4">
                 <div class="step-lbl">Resumen y estado</div>
                 <div class="d-flex flex-wrap gap-2 mb-3" id="rc-summary"></div>
@@ -159,7 +159,7 @@ export const reportZone = ({ onSave, onCancel }) => {
                     <button class="sbtn sg" data-st="sg"><span class="si">⬜</span>Sin novedad</button>
                     <button class="sbtn so on" data-st="so"><span class="si">🟠</span>Daño reportado</button>
                     <button class="sbtn sb" data-st="sb"><span class="si">🔵</span>En reparación</button>
-                    <button class="sbtn sv" data-st="sv"><span class="si">🟢</span>Reparado ✓</button>
+                    <button class="sbtn sv" data-st="sv"><span class="si">🟢</span>Reparado </button>
                 </div>
                 <button class="btn-navy" id="rc-guardar">💾 Guardar Reporte</button>
                 </div>
@@ -168,15 +168,12 @@ export const reportZone = ({ onSave, onCancel }) => {
         loadRender: () => {
             const $ = id => document.getElementById(id);
 
-            // Asegurarse de que el modal se monte en el <body>, para que no quede
-            // recortado por contenedores con `overflow`/`transform` (por ejemplo el mapa de la zona).
+            // Montar en body evita recortes por overflow/transform.
             const modal = document.getElementById('report-modal');
             if (modal && modal.parentElement !== document.body) {
                 document.body.appendChild(modal);
             }
 
-            // soporta selección múltiple de componentes dañados
-            // (usar las variables de estado definidas en el scope superior)
             const DAMAGE_LABELS = {
                 'pantalla o torre': 'Pantalla/Torre',
                 'cable': 'Cable',
@@ -198,7 +195,6 @@ export const reportZone = ({ onSave, onCancel }) => {
                 $(id).classList.add('on');
             }
 
-            // Cerrar al tocar fondo
             const overlayEl = $('rc-sheet');
             if (overlayEl) {
                 overlayEl.onclick = (e) => {
@@ -213,7 +209,6 @@ export const reportZone = ({ onSave, onCancel }) => {
                 };
             }
 
-            // PASO 1 — selección múltiple de daños
             document.querySelectorAll('.dmg-btn').forEach(btn => {
                 btn.onclick = () => {
                     const raw = (btn.dataset.dmg || '').toLowerCase().trim();
@@ -225,9 +220,6 @@ export const reportZone = ({ onSave, onCancel }) => {
                         selectedDamages.push(raw);
                         btn.classList.add('on');
                     }
-                    // Nota: el botón 'Siguiente' siempre está habilitado para mostrar
-                    // mensaje inline cuando el usuario intenta avanzar sin selección.
-                    // ocultar mensaje de error si ahora hay selección
                     const errEl = document.getElementById('rc-step1-err');
                     if (errEl && selectedDamages.length > 0) { errEl.style.display = 'none'; errEl.textContent = '' }
                 };
@@ -240,22 +232,18 @@ export const reportZone = ({ onSave, onCancel }) => {
                     return;
                 }
                 if (errEl) { errEl.style.display = 'none'; errEl.textContent = '' }
-                // preparar cola de pasos detalle según selección
                 detailQueue = selectedDamages.filter(d => STEP2[d]);
                 currentDetailIndex = 0;
                 if (detailQueue.length > 0) {
                     currentDamage = detailQueue[currentDetailIndex];
                     goStep(STEP2[currentDamage]);
                 } else {
-                    // sin detalles necesarios -> ir directo a la descripción
-                    // desactivar "Continuar" hasta que el usuario escriba texto
                     const step3next = $('rc-step3-next'); if (step3next) step3next.disabled = true;
                     goStep('rc-step3');
                 }
             };
 
-            // PASO 2 — cable (detalle por daño 'cable')
-                document.querySelectorAll('.cable-btn').forEach(btn => btn.onclick = () => {
+            document.querySelectorAll('.cable-btn').forEach(btn => btn.onclick = () => {
                 document.querySelectorAll('.cable-btn').forEach(b => b.classList.remove('on'));
                 btn.classList.add('on');
                 detailMap['cable'] = btn.dataset.cable;
@@ -267,45 +255,40 @@ export const reportZone = ({ onSave, onCancel }) => {
                     currentDamage = detailQueue[currentDetailIndex];
                     goStep(STEP2[currentDamage]);
                 } else {
-                        // desactivar "Continuar" hasta que el usuario escriba texto
                         const step3next = $('rc-step3-next'); if (step3next) step3next.disabled = true;
                     goStep('rc-step3');
                 }
             };
             $('rc-cable-back').onclick = () => goStep('rc-step1');
 
-            // PASO 2 — enchufe
-            // PASO 2 — enchufe
-                ['rc-op-left','rc-op-right'].forEach(id => {
-                    $(id).onclick = () => {
-                        const isSelected = $(id).classList.contains('on');
-                        if (isSelected) {
-                            $('rc-op-left').classList.remove('on');
-                            $('rc-op-right').classList.remove('on');
-                            delete detailMap['enchufe'];
-                            $('rc-enc-next').disabled = true;
-                        } else {
-                            $('rc-op-left').classList.toggle('on', id === 'rc-op-left');
-                            $('rc-op-right').classList.toggle('on', id === 'rc-op-right');
-                            detailMap['enchufe'] = $(id).dataset.outlet;
-                            $('rc-enc-next').disabled = false;
-                        }
-                    };
-                });
-                $('rc-enc-next').onclick = () => {
-                    currentDetailIndex++;
-                    if (currentDetailIndex < detailQueue.length) {
-                        currentDamage = detailQueue[currentDetailIndex];
-                        goStep(STEP2[currentDamage]);
+            ['rc-op-left','rc-op-right'].forEach(id => {
+                $(id).onclick = () => {
+                    const isSelected = $(id).classList.contains('on');
+                    if (isSelected) {
+                        $('rc-op-left').classList.remove('on');
+                        $('rc-op-right').classList.remove('on');
+                        delete detailMap['enchufe'];
+                        $('rc-enc-next').disabled = true;
                     } else {
-                        // desactivar "Continuar" hasta que el usuario escriba texto
-                        const step3next = $('rc-step3-next'); if (step3next) step3next.disabled = true;
-                        goStep('rc-step3');
+                        $('rc-op-left').classList.toggle('on', id === 'rc-op-left');
+                        $('rc-op-right').classList.toggle('on', id === 'rc-op-right');
+                        detailMap['enchufe'] = $(id).dataset.outlet;
+                        $('rc-enc-next').disabled = false;
                     }
                 };
+            });
+            $('rc-enc-next').onclick = () => {
+                currentDetailIndex++;
+                if (currentDetailIndex < detailQueue.length) {
+                    currentDamage = detailQueue[currentDetailIndex];
+                    goStep(STEP2[currentDamage]);
+                } else {
+                    const step3next = $('rc-step3-next'); if (step3next) step3next.disabled = true;
+                    goStep('rc-step3');
+                }
+            };
             $('rc-enc-back').onclick = () => goStep('rc-step1');
 
-            // PASO 2 — Silla
             ['rc-silla-arreglar', 'rc-silla-bodega'].forEach(id => $(id).onclick = () => {
                 const fix = id === 'rc-silla-arreglar';
                 detailMap['silla'] = fix ? 'reparar aquí mismo' : 'enviar a bodega';
@@ -321,18 +304,15 @@ export const reportZone = ({ onSave, onCancel }) => {
                     currentDamage = detailQueue[currentDetailIndex];
                     goStep(STEP2[currentDamage]);
                 } else {
-                    // desactivar "Continuar" hasta que el usuario escriba texto
                     const step3next = $('rc-step3-next'); if (step3next) step3next.disabled = true;
                     goStep('rc-step3');
                 }
             };
             $('rc-silla-back').onclick = () => goStep('rc-step1');
 
-            // PASO 2 — Simple
             $('rc-simple-next').onclick = () => goStep('rc-step3');
             $('rc-simple-back').onclick = () => goStep('rc-step1');
 
-            // PASO 3 — textarea: activar botón IA si hay texto (sin mínimos)
             const notaEl = $('rc-nota');
             if (notaEl) {
                 notaEl.oninput = () => {
@@ -343,7 +323,6 @@ export const reportZone = ({ onSave, onCancel }) => {
                     const step3nextBtn = document.getElementById('rc-step3-next');
                     const step3Err = document.getElementById('rc-step3-err');
                     if (aiBtn) aiBtn.disabled = len === 0;
-                    // ocultar mensaje general cuando el usuario escribe algo
                     if (step3Err && len > 0) { step3Err.textContent = ''; step3Err.style.display = 'none'; }
                     if (step3nextBtn) step3nextBtn.disabled = len === 0;
                 };
@@ -357,7 +336,6 @@ export const reportZone = ({ onSave, onCancel }) => {
                 };
             }
 
-            // PASO 3 — Botón Mejorar con IA: corregir ortografía y mejorar redacción
             const aiBtn = $('rc-ai-btn');
             if (aiBtn) {
                 aiBtn.onclick = async () => {
@@ -367,21 +345,18 @@ export const reportZone = ({ onSave, onCancel }) => {
                         return;
                     }
 
-                    // Mostrar estado de carga
                     const loadingEl = $('rc-ai-loading');
                     const resultEl = $('rc-ai-result');
                     if (loadingEl) loadingEl.style.display = 'flex';
                     if (resultEl) resultEl.style.display = 'none';
 
                     try {
-                        // Recopilar contexto
                         const contexto = {
                             tipo_dano: selectedDamages.join(', ') || '',
                             activo: reportData.puestoId || '',
                             zona: 'Sala 3 — Piso 1'
                         };
 
-                        // Llamar al servicio de IA
                         const response = await ai_service.improve_description(notaVal.trim(), contexto);
 
                         if (!response.success) {
@@ -390,7 +365,6 @@ export const reportZone = ({ onSave, onCancel }) => {
                             return;
                         }
 
-                        // Mostrar resultado mejorado
                         const txtEl = $('rc-ai-txt');
                         if (txtEl && response.mejorado) {
                             txtEl.textContent = response.mejorado.texto_mejorado || response.mejorado;
@@ -399,10 +373,8 @@ export const reportZone = ({ onSave, onCancel }) => {
                         if (loadingEl) loadingEl.style.display = 'none';
                         if (resultEl) resultEl.style.display = 'block';
 
-                        // Guardar el texto mejorado en memoria
                         reportData.textMejorado = response.mejorado.texto_mejorado || response.mejorado;
 
-                        // Botón para usar el texto mejorado
                         const useBtn = document.createElement('button');
                         useBtn.className = 'btn-navy w-100 mt-2';
                         useBtn.style.cssText = 'border-radius:12px;padding:10px;';
@@ -413,14 +385,12 @@ export const reportZone = ({ onSave, onCancel }) => {
                                 const chars = $('rc-chars');
                                 if (chars) chars.textContent = String(reportData.textMejorado.length);
                                 if (resultEl) resultEl.style.display = 'none';
-                                // Re-habilitar el botón Continuar
                                 const step3nextBtn = document.getElementById('rc-step3-next');
                                 if (step3nextBtn) step3nextBtn.disabled = false;
                                 toast('Descripción actualizada', 'success');
                             }
                         };
 
-                        // Agregar botón si no existe
                         if (resultEl && !resultEl.querySelector('#use-mejorado-btn')) {
                             useBtn.id = 'use-mejorado-btn';
                             resultEl.appendChild(useBtn);
@@ -434,21 +404,14 @@ export const reportZone = ({ onSave, onCancel }) => {
                 };
             }
 
-            // PASO 3 — Cambiar selección
                 if ($('rc-step3-back')) {
-                    // Volver a la selección múltiple (paso 1)
                     $('rc-step3-back').onclick = () => {
-                        // Ocultar mensajes de error de paso 3
                         const step3Err = document.getElementById('rc-step3-err'); if (step3Err) { step3Err.style.display = 'none'; step3Err.textContent = ''; }
-                        // Mostrar paso 1 (selección de componentes dañados)
                         goStep('rc-step1');
-                        // Asegurarse de que el botón Siguiente esté visible y listo
                         const step1Next = document.getElementById('rc-step1-next'); if (step1Next) step1Next.disabled = false;
-                        // Opcional: devolver foco al primer botón de selección si existe
                         const firstDmg = document.querySelector('.dmg-btn'); if (firstDmg) { try { firstDmg.focus(); } catch (e) {} }
                     };
 
-                    // Paso 4: seleccionar estado (sbtn) y guardar
                     document.querySelectorAll('#rc-sheet .sbtn').forEach(btn => {
                         btn.onclick = () => {
                             document.querySelectorAll('#rc-sheet .sbtn').forEach(b => b.classList.remove('on'));
@@ -456,15 +419,12 @@ export const reportZone = ({ onSave, onCancel }) => {
                         };
                     });
 
-                    // Continuar desde descripción -> resumen
                     const step3nextBtn = document.getElementById('rc-step3-next');
                     if (step3nextBtn) {
                         step3nextBtn.onclick = () => {
-                            // Validación adicional: si es ventilador, exigir >=10 caracteres
                             const step3Err = document.getElementById('rc-step3-err');
                             const notaVal = (document.getElementById('rc-nota') || {}).value || '';
                             const len = notaVal.trim().length;
-                            // bloquear si la descripción está vacía (aplicable a todos los reportes)
                             if (len === 0) {
                                         if (step3Err) {
                                             step3Err.textContent = 'Debes escribir texto';
@@ -473,10 +433,9 @@ export const reportZone = ({ onSave, onCancel }) => {
                                 try { const notaFocus = document.getElementById('rc-nota'); if (notaFocus) notaFocus.focus(); } catch (e) {}
                                 return;
                             }
-                                // No exigir mínimos largos: basta con que el usuario haya escrito texto
                                 const step3BackEl = document.getElementById('rc-step3-back');
                                 const isFanNow = !!reportData.isFan || (step3BackEl && step3BackEl.style.display === 'none');
-                            // construir resumen visual
+                            // Resumen rapido para confirmar antes de guardar.
                             const summaryEl = $('rc-summary');
                             if (summaryEl) summaryEl.innerHTML = '';
                             selectedDamages.forEach(d => {
@@ -495,14 +454,12 @@ export const reportZone = ({ onSave, onCancel }) => {
                         };
                     }
 
-                    // Guardar reporte
                     const guardarBtn = document.getElementById('rc-guardar');
                     if (guardarBtn) {
                         guardarBtn.onclick = () => {
-                            // Validación: si no hay daños seleccionados, mostrar alerta (salvo ventiladores)
+                            // Evita guardar vacio salvo caso ventilador.
                             const isFanId = reportData.puestoId && reportData.puestoId.toString().toUpperCase().startsWith('V');
                             if ((!selectedDamages || selectedDamages.length === 0) && !isFanId) {
-                                // mostrar mensaje al usuario
                                 try { window.alert('Debes seleccionar una opción antes de guardar.'); }
                                 catch (e) { /* no-op */ }
                                 return;
@@ -523,7 +480,7 @@ export const reportZone = ({ onSave, onCancel }) => {
         },
 
         open: (idPuesto, esFan = false) => {
-            // Aceptamos tanto un id (string) como el elemento DOM con dataset.id
+            // Acepta id o elemento.
             const isElement = (idPuesto && typeof idPuesto === 'object' && idPuesto.dataset && idPuesto.dataset.id);
             const isFanElement = (idPuesto && typeof idPuesto === 'object' && idPuesto.classList && idPuesto.classList.contains('fan'));
             const id = isElement ? idPuesto.dataset.id : idPuesto;
@@ -537,7 +494,6 @@ export const reportZone = ({ onSave, onCancel }) => {
             currentDetailIndex = 0;
             currentDamage = null;
 
-            // Poner el título con el número del puesto o marcar como Ventilador
             const titulo = document.getElementById('rc-titulo');
             const isFan = Boolean(esFan) || isFanElement || (typeof id === 'string' && id && id.toString().toUpperCase().startsWith('V'));
             reportData.isFan = !!isFan;
@@ -549,14 +505,12 @@ export const reportZone = ({ onSave, onCancel }) => {
             if (overlay) overlay.classList.add('on');
             document.body.style.overflow = 'hidden';
 
-            // Mobile defensive fix: temporalmente limpiar transforms/overflow en
-            // ancestros que puedan crear stacking contexts y recortar el sheet.
+            // En mobile, limpia estilos que pueden cortar el sheet.
             try {
                 _clearedAncestors = [];
                 const isMobile = window.innerWidth <= 420;
                 if (isMobile) {
                     let anc = document.querySelector('.map-outer') || document.body;
-                    // start from the element itself's parent chain
                     while (anc && anc !== document.body) {
                         const cs = window.getComputedStyle(anc);
                         const hasTransform = cs.transform && cs.transform !== 'none';
@@ -574,11 +528,9 @@ export const reportZone = ({ onSave, onCancel }) => {
             } catch (err) { console.warn('Error applying mobile ancestor fixes', err); }
 
             document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('on'));
-            // Asegurar visibilidad por defecto del botón de volver en paso 3
             const step3Back = document.getElementById('rc-step3-back'); if (step3Back) step3Back.style.display = '';
-            // Asegurar visibilidad por defecto del botón 'Reportar otro' en paso 4
             const step4Otro = document.getElementById('rc-otro'); if (step4Otro) step4Otro.style.display = '';
-            // Si es un ventilador, saltamos a la descripción (PASO 3) y prellenamos una nota breve
+
             document.querySelectorAll('.dmg-btn,.cable-btn,.op-card,.yn-btn').forEach(b => b.classList.remove('on'));
 
             const nota = document.getElementById('rc-nota'); if (nota) nota.value = '';
@@ -586,7 +538,6 @@ export const reportZone = ({ onSave, onCancel }) => {
             ['rc-cable-next','rc-enc-next','rc-silla-next','rc-ai-btn','rc-step3-next'].forEach(idk => {
                 const el = document.getElementById(idk); if (el) el.disabled = true;
             });
-            // Ocultar posible mensaje de error de paso 1
             const errElOpen = document.getElementById('rc-step1-err'); if (errElOpen) { errElOpen.style.display = 'none'; errElOpen.textContent = '' }
             const sillaDetail = document.getElementById('rc-silla-detail'); if (sillaDetail) sillaDetail.style.display = 'none';
             const summaryEl = document.getElementById('rc-summary'); if (summaryEl) summaryEl.innerHTML = '';
@@ -594,22 +545,15 @@ export const reportZone = ({ onSave, onCancel }) => {
             document.querySelectorAll('#rc-sheet .sbtn').forEach(b => b.classList.toggle('on', b.dataset.st === 'so'));
 
             if (isFan) {
-                // Saltar al paso 3 y requerir que el usuario escriba la descripción
                 if (nota) {
-                    // no prellenar: forzar entrada manual
                     nota.value = '';
                     if (chars) chars.textContent = '0';
-                    // enfocar para facilitar la entrada
                     setTimeout(() => { try { nota.focus(); } catch (e) {} }, 120);
                 }
-                // Habilitar botones relevantes sólo si hay texto
                 const aiBtn = document.getElementById('rc-ai-btn'); if (aiBtn) aiBtn.disabled = (nota.value.trim().length === 0);
                 const step3next = document.getElementById('rc-step3-next'); if (step3next) step3next.disabled = (nota.value.trim().length === 0);
-                // Mostrar paso 3
                 const step3 = document.getElementById('rc-step3'); if (step3) step3.classList.add('on');
-                // Ocultar el botón de volver en paso 3 para ventiladores
                 if (step3Back) step3Back.style.display = 'none';
-                // Ocultar el botón 'Reportar otro daño' en paso 4 para ventiladores
                 if (step4Otro) step4Otro.style.display = 'none';
             } else {
                 const first = document.getElementById('rc-step1'); if (first) first.classList.add('on');
@@ -621,7 +565,6 @@ export const reportZone = ({ onSave, onCancel }) => {
             if (overlay) overlay.classList.remove('on');
             document.body.style.overflow = '';
 
-            // Restaurar estilos originales en ancestros modificados
             try {
                 if (_clearedAncestors && _clearedAncestors.length) {
                     _clearedAncestors.forEach(item => {

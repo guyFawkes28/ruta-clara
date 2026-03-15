@@ -1,7 +1,7 @@
 import axios from './axiosConfig.js'
 
 export const transfer_service = {
-  // Register transfer
+  // Registrar transferencia
   async create_transfer(asset_id, origin_zone_id, destination_zone_id, reason) {
     const response = await axios.post('/transfer/create', {
       activo_id: asset_id,
@@ -12,13 +12,13 @@ export const transfer_service = {
     return response.data
   },
 
-  // Asset history
+  // Historial del activo
   async get_transfer_history(asset_id) {
     const response = await axios.get(`/transfer/history/${asset_id}`)
     return response.data.history || []
   },
 
-  // Transfers by zone
+  // Transferencias por zona
   async get_transfers_by_zone(zone_id) {
     const response = await axios.get('/transfer/by-zone', {
       params: { zona_id: zone_id }
@@ -26,7 +26,7 @@ export const transfer_service = {
     return response.data.transfers || []
   },
 
-  // Available mobile assets
+  // Activos móviles disponibles
   async get_mobile_assets_by_zone(zone_id) {
     const response = await axios.get('/transfer/mobile-assets', {
       params: { zona_id: zone_id }

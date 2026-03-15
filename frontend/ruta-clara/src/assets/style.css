@@ -32,7 +32,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 /* Tipografía usada */
 .bc { font-family: 'Barlow Condensed', sans-serif; }
 
-/* Estilos usados: pantalla de login */
+/* Login */
 #login-screen {
   position: fixed; inset: 0;
   background: var(--navy);
@@ -111,7 +111,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .prow{display:flex;flex-wrap:nowrap;gap:3px;justify-content:center;width:100%;min-width:0;}
 
 @media (max-width: 600px) {
-  /* En móviles dejamos los puestos en una sola fila y dejamos scroll horizontal si es necesario */
+  /* En movil: fila unica con scroll */
   .prow { flex-wrap: nowrap; }
   .p {
     width: clamp(28px, 7vw, 42px);
@@ -129,28 +129,28 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   border-radius: 6px;
   border: 2px solid;
   display: flex; 
-  flex-direction: column; /* Alinea los elementos en columna */
+  flex-direction: column;
   align-items: center; 
   justify-content: center;
   cursor: pointer;
-  gap: 2px; /* Espacio entre el emoji y el texto */
+  gap: 2px;
   transition: transform .13s;
   user-select: none;
   overflow: hidden;
-  position: relative; /* Importante para el flujo */
+  position: relative;
 }
 
-/* AGREGA ESTO: El emoji para cada puesto */
+/* Icono del puesto */
 .p::before {
   content: '💻';
-  font-size: 16px; /* Ajusta el tamaño según prefieras */
+  font-size: 16px;
   line-height: 1;
   display: block;
 }
 
 .p:active { transform: scale(var(--rc-press-scale)); }
 
-/* Ajustamos la etiqueta de texto para que no se pegue */
+/* Etiqueta */
 .plbl-in {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: clamp(10px, 1.2vw, 16px);
@@ -167,14 +167,14 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .p.sb{background:var(--blub);border-color:var(--blue);}
 .p.sv{background:var(--grnb);border-color:var(--green);}
 
-/* Icono para Ventiladores */
+/* Icono ventilador */
 .fan::before {
   content: '🌀';
   font-size: 20px;
   display: block;
 }
 
-/* Icono para Puesto TL (Profesor/Líder) */
+/* Icono puesto TL */
 .p-tl::before {
   content: '👨‍🏫';
   font-size: 20px;
@@ -204,7 +204,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .ldot.b{background:var(--blue);}
 .ldot.v{background:var(--green);}
 
-/* ── Bottom Sheet ── */
+/* ── Panel inferior ── */
 .overlay{
   position: fixed;
   inset: 0;
@@ -230,7 +230,6 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   overflow-x: hidden;
   transform: translateY(100%) !important;
   transition: transform .32s cubic-bezier(.34,1.56,.64,1);
-  /* espacio lateral dentro del sheet (escritorio y móvil) */
   padding: 12px 16px calc(20px + env(safe-area-inset-bottom,0px));
   box-sizing: border-box;
   box-shadow: 0 -8px 40px rgba(0,0,0,.2);
@@ -305,14 +304,14 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:#fff;border:2.5px solid var(--green);border-radius:14px;padding:11px 22px;font-weight:800;font-size:14px;color:var(--green);box-shadow:0 8px 28px rgba(22,163,74,.25);opacity:0;transition:opacity .3s,transform .3s;z-index:9999;white-space:nowrap;pointer-events:none;}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* ── Wrapper del módulo ── */
+/* ── Contenedor del modulo ── */
 .sala1-wrap{width:100%;max-width:390px;margin:0 auto;padding:12px 16px 80px;}
 
-/* ── Section header ── */
+/* ── Encabezado de seccion ── */
 .sh{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--slate);display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .sh::after{content:'';flex:1;height:2px;background:var(--border);border-radius:2px;}
 
-/* HEADER — componente global */
+/* Header */
 
 .hdr {
   background: var(--navy);
@@ -329,10 +328,10 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 12px;
-  max-width: 980px; /* permitir más espacio en pantallas de PC */
+  max-width: 980px;
   margin: 0 auto;
 }
-/* aseguramos que la pill esté centrada en su columna */
+/* Centrar la pill */
 .pill { justify-self: center; }
 .hdr-controls { display:flex; align-items:center; gap:8px; justify-self: end; }
 
@@ -350,12 +349,12 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   font-style: normal;
 }
 
-/* Ensure logo items are vertically centered with header controls */
+/* Alinear logo con controles */
 .logo { display: flex; align-items: center; gap: 6px; }
 .logo-lg, .logo-sm { line-height: 1; display: inline-block; vertical-align: middle; }
 .logo-sm { margin: 0; padding: 0; }
 
-/* Logo responsive: solo 'RC' en mobile (≤600px), 'RutaClara' en desktop */
+/* Logo responsive */
 .logo-sm { display: none !important; }
 .logo-lg { display: inline-block !important; }
 
@@ -409,21 +408,21 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .qr-btn:active {
   background: rgba(255,255,255,.18);
 }
-/* Esto obliga al modal a estar arriba de todo y centrado */
+/* Modal sobre el contenido */
 .rc-modal-overlay {
-    position: fixed !important; /* Lo saca del flujo normal y lo pone sobre el mapa */
+  position: fixed !important;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
     background: rgba(0, 0, 0, 0.75);
-    display: none; /* JS lo cambia a flex */
+    display: none;
     justify-content: center;
     align-items: center;
-    z-index: 99999 !important; /* Valor altísimo para que nada lo tape */
+    z-index: 99999 !important;
 }
 
-/* La tarjeta blanca */
+/* Contenido del modal */
 .rc-modal-content {
     background: white !important;
     padding: 2rem;
@@ -436,7 +435,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
     gap: 15px;
 }
 
-/* Estilo para los botones de falla (los que clickeas) */
+/* Botones de falla */
 .rc-grid-botones {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -458,7 +457,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
     border-color: #0056b3;
 }
 
-/* Los botones de abajo */
+/* Footer del modal */
 .rc-modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -466,9 +465,9 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
     margin-top: 20px;
 }
 
-/* Logout button styling */
+/* Estilo del boton de cerrar sesion */
 #hdr-logout{
-  background: #ef4444; /* red-500 */
+  background: #ef4444;
   color: #fff;
   border: none;
   padding: 8px 12px;
@@ -480,13 +479,13 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 #hdr-logout .logout-text{font-size:14px}
 
 @media (max-width: 420px) {
-  /* make logout button compact on mobile: small circular red icon */
+  /* Hacer compacto el boton en movil: icono rojo pequeno y circular */
   #hdr-logout{padding:8px;border-radius:10px;min-width:40px;min-height:40px;justify-content:center}
   #hdr-logout .logout-text{display:none}
   #hdr-logout .logout-icon{font-size:18px}
 }
 
-/* Header profile */
+/* Perfil en header */
 .hdr-profile{display:flex;align-items:center;gap:8px;color:#fff;margin-left:10px}
 .hdr-profile .avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
 .hdr-profile .hdr-name{font-weight:800;font-size:14px}
@@ -517,7 +516,6 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   width: 230px; 
   height: 230px;
   margin-bottom: 28px;
-  /* Crucial: permite que las esquinas amarillas sobresalgan */
   overflow: visible !important; 
 }
 
@@ -528,7 +526,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   border-radius: 24px;
   position: relative;
   background: transparent;
-  overflow: hidden; /* Esto mantiene el video redondeado por dentro */
+  overflow: hidden;
   z-index: 10;
 }
 
@@ -539,15 +537,15 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   object-fit: cover;
 }
 
-/* Esquinas amber */
+/* Esquinas */
 .sc {
   position: absolute;
   width: 32px; 
   height: 32px;
-  border-color: var(--amber) !important; /* Asegura el color amarillo */
+  border-color: var(--amber) !important;
   border-style: solid;
-  z-index: 100; /* Un valor alto para estar por encima del video */
-  pointer-events: none; /* Para que no bloquee clics en el scanner */
+  z-index: 100;
+  pointer-events: none;
 }
 
 /* Línea de escaneo animada */
@@ -557,7 +555,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   right: 15px;
   height: 3px;
   background: var(--amber);
-  box-shadow: 0 0 12px var(--amber); /* Le da ese efecto neon de la imagen */
+  box-shadow: 0 0 12px var(--amber);
   animation: scanmove 2s ease-in-out infinite;
   z-index: 50;
 }
@@ -567,7 +565,6 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   100% { top: calc(100% - 14px);  opacity: .4; }
 }
 
-/* Ring pulsante */
 .scan-ring {
   position: absolute;
   inset: -16px;
@@ -619,14 +616,9 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   cursor: not-allowed;
 }
 
-/* REPORT ZONE */
+/* Zona de reporte */
 
-/* ════════════════════════════════════════
-   reporteModal.css — depende de los vars
-   de global.css (:root con --navy, etc.)
-   ════════════════════════════════════════ */
 
-/* ── Botones de daño ── */
 .dmg-btn, .cable-btn {
   width: 100%;
   min-height: 88px;
@@ -661,7 +653,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   color:var(--orange);
 }
 
-/* ── Cards enchufe ── */
+/* ── Tarjetas enchufe ── */
 .op-card{
   flex:1;max-width:160px;
   min-height:110px;
@@ -767,17 +759,16 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   --orabd:#FDBA74;
 }
 
-/* Mobile responsive tweaks */
-/* Medium mobile/tablet tweaks: mantener logo, zona y controles alineados */
+/* Responsive: movil y tablet */
 @media (max-width: 600px) {
   .hdr { padding: 10px 12px; }
-  /* Usar flex para mantener todo en una sola línea sin saltos */
+  /* Mantener todo en una linea */
   .hdr-inner { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; max-width: 100%; flex-wrap: nowrap; }
   .logo { flex: 0 0 auto; margin-right: 6px; }
   .pill { flex: 1 1 auto; display: flex; justify-content: center; }
   .pill-inner { padding: 6px 10px; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
   .hdr-controls { flex: 0 0 auto; display: flex; gap: 6px; align-items: center; }
-  /* Mostrar nombre del usuario en pantallas <=600px (pero ocultarlo en pantallas muy pequeñas <=420px) */
+  /* Mostrar nombre de usuario */
   .hdr-profile .hdr-name { display: inline-block; font-size: 12px; }
 }
 
@@ -785,10 +776,10 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   .sheet {
     max-width: 100%;
     border-radius: 16px 16px 0 0;
-    /* mismo espacio lateral que en escritorio */
+    /* Mismo espacio lateral */
     padding: 12px 16px calc(20px + env(safe-area-inset-bottom,0px));
     box-shadow: 0 -6px 28px rgba(0,0,0,.18);
-    /* limitar el alto al viewport y permitir scroll interno en móvil */
+    /* Limitar alto y permitir scroll */
     max-height: calc(100vh - 40px);
     height: auto;
     overflow-x: hidden;
@@ -801,7 +792,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   .sheet-body { padding: 0 12px }
   .sala1-wrap { padding: 10px 12px 80px }
 
-  /* Header: hacer responsive el nombre de la sala y respetar espacio lateral */
+  /* Header responsive */
   .hdr { padding: 10px 12px; }
   .hdr-inner { grid-template-columns: auto 1fr; padding: 0 8px; max-width: 100%; }
   .pill { grid-column: 1 / -1; justify-self: center; }
@@ -810,7 +801,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   .hdr-profile .hdr-name { display:none }
 }
 
-/* Compact header tweaks for mobile/tablet to align RC, pill and controls */
+/* Header compacto en movil/tablet */
 @media (max-width: 600px) {
   .hdr { padding: 8px 10px; }
   .hdr-inner { grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; }
@@ -826,7 +817,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 }
 
 @media (max-width: 420px) {
-  /* Very small screens: hide username, tighten spacing */
+  /* Pantallas muy pequenas: ocultar usuario y reducir espacios */
   .logo-sm { font-size: 18px !important; }
   .pill-inner { font-size: 11px; max-width: 140px; padding: 4px 8px; }
   .hdr-profile .avatar { width: 30px; height: 30px; }
@@ -842,12 +833,11 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   .p{font-size:12px}
 }
 
-/* Strong overrides to ensure the report sheet is always full-viewport
-   and appears as a bottom-sheet regardless of other page styles. */
+/* Forzar panel de reporte a pantalla completa */
 #report-modal {
   position: fixed;
   inset: 0;
-  z-index: 2147483647; /* very high to avoid stacking issues */
+  z-index: 2147483647;
   pointer-events: none;
 }
 
@@ -855,7 +845,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   position: fixed !important;
   inset: 0 !important;
   display: flex !important;
-  align-items: flex-end !important; /* bottom-sheet */
+  align-items: flex-end !important;
   justify-content: center !important;
   background: rgba(15,32,68,.55) !important;
   opacity: 0;
@@ -881,7 +871,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   transform: translateY(0) !important;
 }
 
-/* Ensure sheet height fits mobile viewport and allows internal scroll */
+/* Altura y scroll del panel en movil */
 #report-modal .sheet {
   max-height: calc(100vh - 40px) !important;
   overflow-y: auto !important;
@@ -900,7 +890,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   text-align: left;
 }
 
-/* Tooltip personalizado para puestos - versión clara y ancha */
+/* Tooltip de puestos */
 .puesto-tooltip.bs-tooltip-auto[data-popper-placement^=top],
 .puesto-tooltip.bs-tooltip-top {
   box-shadow: 0 10px 30px rgba(0,0,0,0.18);
@@ -929,7 +919,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   margin: 0.08rem 0;
 }
 
-/* Mejoras para HomePage */
+/* Home */
 .rc-section {
   margin: 20px 0;
   padding: 15px;
@@ -1000,7 +990,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 body {
   overflow-x: hidden;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* Suavidad en scroll para iOS */
+  -webkit-overflow-scrolling: touch;
 }
 
 .rc-app {
@@ -1015,14 +1005,14 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Forzar scroll en vistas móviles */
+/* Forzar scroll en movil */
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* Suavidad en scroll para iOS */
+  -webkit-overflow-scrolling: touch;
 }
 
 #root {
@@ -1031,7 +1021,7 @@ html, body {
   flex-direction: column;
 }
 
-/* === OVERRIDE: Responsive map & seats (tablet / laptop / desktop) === */
+/* === AJUSTE: mapa y puestos responsive (tablet / laptop / escritorio) === */
 @media (min-width: 600px) {
   .sala1-wrap { max-width: 720px; }
   .zone-responsive { max-width: 700px; }
