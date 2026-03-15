@@ -182,6 +182,16 @@ export const improveDescription = async (req, res) => {
       })
     }
 
+    // Validar que OpenAI API KEY esté configurada
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('[Controller] OPENAI_API_KEY no está configurada')
+      return res.status(503).json({
+        success: false,
+        error: 'Servicio de IA no disponible. Configura OPENAI_API_KEY en .env',
+        detail: 'OPENAI_API_KEY no configurada'
+      })
+    }
+
     // Enviar a IA para mejora de descripción
     const mejora = await AIService.improveReportDescription(
       descripcion.trim(),
