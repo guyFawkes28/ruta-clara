@@ -538,22 +538,6 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   object-fit: cover;
 }
 
-/* ── AI result: evitar que el texto se salga del cuadro y permitir scroll interno ── */
-.ai-result, .ai-result .ai-result-txt, #rc-ai-txt, #rc-recap {
-  white-space: pre-wrap; /* respetar saltos de línea y ajustar */
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  max-width: 100%;
-}
-
-.ai-result .ai-result-txt, #rc-ai-txt, #rc-recap {
-  max-height: 180px; /* ajustar según diseño */
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  padding-right: 6px; /* evita que el scroll tape texto */
-}
-
 /* Esquinas amber */
 .sc {
   position: absolute;

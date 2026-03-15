@@ -205,7 +205,15 @@ FORMATO DE RESPUESTA - SOLO el texto mejorado en JSON:
       const content = response.data.choices[0].message.content
       console.log('[AIService] Respuesta de OpenAI recibida:', content.substring(0, 100) + '...')
       
-      const improvement = JSON.parse(content)
+      // Limpiar markdown code blocks si existen
+      let jsonContent = content.trim()
+      if (jsonContent.startsWith('```json')) {
+        jsonContent = jsonContent.replace(/^```json\n?/, '').replace(/\n?```$/, '')
+      } else if (jsonContent.startsWith('```')) {
+        jsonContent = jsonContent.replace(/^```\n?/, '').replace(/\n?```$/, '')
+      }
+      
+      const improvement = JSON.parse(jsonContent)
 
       return {
         success: true,
@@ -219,7 +227,7 @@ FORMATO DE RESPUESTA - SOLO el texto mejorado en JSON:
         statusText: err.response?.statusText,
         data: err.response?.data
       }
-      console.error('[AIService]  Error en improveReportDescription:', errorDetails)
+      console.error('[AIService] Error en improveReportDescription:', errorDetails)
       console.error('[AIService] Stack:', err.stack)
       
       // Retornar error más detallado

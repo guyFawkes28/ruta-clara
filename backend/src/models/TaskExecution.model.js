@@ -18,7 +18,8 @@ export const TaskExecution = {
 
   // Registrar SST (checklist) con foto
   async recordSST(tareaId, fotoSelfie) {
-    const { data, error } = await supabase
+    // Primero intentar actualizar si existe
+    const { data: updateData, error: updateError } = await supabase
       .from('ejecucion_tarea')
       .update({
         check_sst: true,
@@ -29,8 +30,26 @@ export const TaskExecution = {
       .select()
       .single()
     
-    if (error) throw error
-    return data
+    // Si no existe, crear el registro
+    if (updateError && updateError.code === 'PGRST116') {
+      console.log('[TaskExecution] recordSST: creando nuevo registro para tarea', tareaId)
+      const { data: createData, error: createError } = await supabase
+        .from('ejecucion_tarea')
+        .insert({
+          tarea_id: tareaId,
+          check_sst: true,
+          foto_evidencia_sst: fotoSelfie,
+          fecha_inicio: new Date().toISOString()
+        })
+        .select()
+        .single()
+      
+      if (createError) throw createError
+      return createData
+    }
+    
+    if (updateError) throw updateError
+    return updateData
   },
 
   // Finalizar tarea con foto

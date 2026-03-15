@@ -15,6 +15,7 @@ const state = {
   reportes: { generados: 0, pendientes: 0, lista: [] },
   metricas: { total_tareas: 0, completadas: 0, en_proceso: 0, promedio_duracion_minutos: 0, tasa_cumplimiento_sst: 0 },
   alertas_stock: [],
+  repuestos_por_tipo: {},
   zoneNotFound: false
 }
 
@@ -44,15 +45,19 @@ const loadZone = async (qrCode = 'SALA3-P1') => {
 }
 
 const statusBadge = (estado) => {
+  // Normalizar estado
+  const estadoNorm = String(estado || '').toLowerCase().trim()
+  
   const map = {
     activo: ['db-status-ok','● Activo'], inactivo: ['db-status-off','● Inactivo'],
     mantenimiento: ['db-status-pending','⏳ Mantenimiento'], ok: ['db-status-ok','✓ OK'],
     critico: ['db-status-error','⚠ Crítico'], pendiente: ['db-status-pending','⏳ Pendiente'],
     completada: ['db-status-ok','✓ Completada'], progreso: ['db-status-pending','⏳ En Progreso'],
+    'en ejecución': ['db-status-pending','⏳ En Ejecución'], 'ejecución': ['db-status-pending','⏳ En Ejecución'],
     problema: ['db-status-error','⚠ Problema'], disponible: ['db-status-ok','✓ Disponible'],
-    revision: ['db-status-pending','⏳ Revisión'],
+    revision: ['db-status-pending','⏳ Revisión'], 'en_progreso': ['db-status-pending','⏳ En Progreso'],
   }
-  const [cls, label] = map[estado] ?? ['db-status-off', estado]
+  const [cls, label] = map[estadoNorm] ?? ['db-status-off', estado]
   return `<span class="db-status ${cls}">${label}</span>`
 }
 
@@ -186,20 +191,41 @@ function subDashboard() {
 }
 
 function subEquipos() {
-  const { equipos } = state
-  const rows = equipos.lista.map(e => `<tr><td><strong>${e.id}</strong></td><td>${e.nombre}</td><td>${e.ubicacion}</td><td>${e.tipo}</td><td>${statusBadge(e.estado)}</td><td><button class="db-btn db-btn-secondary db-btn-sm">Editar</button></td></tr>`).join('')
+  const { repuestos_por_tipo } = state
+  const tipos = Object.keys(repuestos_por_tipo)
+  
+  const tablaHtml = tipos.length === 0 
+    ? '<tr><td colspan="5" style="text-align:center;color:var(--tsoft);padding:10px;">No hay repuestos registrados</td></tr>'
+    : tipos.map(tipo => {
+        const datos = repuestos_por_tipo[tipo]
+        const repuestos = datos.repuestos || []
+        return repuestos.map((rep, idx) => `
+          <tr style="font-size:12px;">
+            <td style="padding:6px 8px;"><strong>${idx === 0 ? tipo : ''}</strong></td>
+            <td style="padding:6px 8px;">${rep.nombre || ''}</td>
+            <td style="padding:6px 8px;text-align:center;"><span style="background:${rep.stock <= rep.stock_minimo ? '#fecaca' : '#dcfce7'};padding:4px 8px;border-radius:4px;font-weight:700;">${rep.stock || 0}</span></td>
+            <td style="padding:6px 8px;text-align:center;">${rep.stock_minimo || 0}</td>
+            <td style="padding:6px 8px;text-align:center;">${rep.stock_maximo || 0}</td>
+          </tr>
+        `).join('')
+      }).join('')
+  
   return `
+<<<<<<< HEAD
     <div class="db-ph">
       <div class="db-ph-actions"><button id="db-filter-equipos" class="db-btn db-btn-secondary">🔍 Filtrar</button><button class="db-btn db-btn-primary">+ Registrar Equipo</button></div>
       <div><h1>Gestión de Equipos</h1></div>
     </div>
+=======
+    <div class="db-ph"><h1>📦 Inventario de Repuestos</h1><div class="db-ph-actions"><button class="db-btn db-btn-secondary">🔍 Filtrar</button><button class="db-btn db-btn-primary">+ Agregar Repuesto</button></div></div>
+>>>>>>> e4b46ac93fe4a855271a72dd01e793facd66028e
     <div class="db-cards">
-      <div class="db-card db-fade"><div class="db-card-title">Total de Equipos</div><div class="db-card-value">${equipos.total}</div></div>
-      <div class="db-card db-fade" style="animation-delay:.06s"><div class="db-card-title">En Mantenimiento</div><div class="db-card-value" style="color:var(--orange)">${equipos.enMantenimiento}</div></div>
-      <div class="db-card db-fade" style="animation-delay:.12s"><div class="db-card-title">Inactivos</div><div class="db-card-value" style="color:#DC2626">${equipos.inactivos}</div></div>
+      <div class="db-card db-fade"><div class="db-card-title">Tipos de Repuestos</div><div class="db-card-value">${tipos.length}</div></div>
+      <div class="db-card db-fade" style="animation-delay:.06s"><div class="db-card-title">Total en Stock</div><div class="db-card-value" style="color:#22c55e">${Object.values(repuestos_por_tipo).reduce((sum, t) => sum + (t.cantidad_total || 0), 0)}</div></div>
+      <div class="db-card db-fade" style="animation-delay:.12s"><div class="db-card-title">Stock Bajo</div><div class="db-card-value" style="color:#f97316">${Object.values(repuestos_por_tipo).reduce((sum, t) => sum + (t.repuestos || []).filter(r => r.stock <= r.stock_minimo).length, 0)}</div></div>
     </div>
-    <div class="db-section"><div class="db-section-head"><h2 class="db-section-title">Listado de Equipos</h2></div>
-      <div class="db-table-wrap"><table class="db-table"><thead><tr><th>ID</th><th>Nombre</th><th>Ubicación</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="db-section"><div class="db-section-head"><h2 class="db-section-title">Repuestos por Categoría</h2></div>
+      <div class="db-table-wrap"><table class="db-table"><thead><tr><th>Categoría</th><th>Nombre</th><th>Stock Actual</th><th>Stock Mínimo</th><th>Stock Máximo</th></tr></thead><tbody>${tablaHtml}</tbody></table></div>
     </div>`
 }
 
@@ -356,6 +382,8 @@ export const dashboardPage = () => ({
 
   loadRender: () => {
     let currentPage = 'dashboard'
+    let isLoadingPage = false // Prevenir peticiones simultáneas
+    let lastPageLoad = 0
 
     const cargarEstadosMapa = async () => {
       try {
@@ -406,11 +434,70 @@ export const dashboardPage = () => ({
       }
     }
 
-    const renderPage = (page) => {
-      currentPage = page
-      const content = document.getElementById('db-content')
-      if (!content) return
-      content.innerHTML = subRenders[page]?.() ?? subRenders.dashboard()
+    // Cargar inspecciones recientes
+    const cargarInspecciones = async () => {
+      try {
+        const data = await maintenanceService.getRecentInspections(10)
+        state.inspecciones.lista = data.inspecciones || []
+        console.log('[Dashboard] Inspecciones cargadas:', state.inspecciones.lista.length)
+      } catch (err) {
+        console.warn('[Dashboard] Error cargando inspecciones:', err)
+      }
+    }
+
+    // Cargar reportes recientes
+    const cargarReportes = async () => {
+      try {
+        const data = await maintenanceService.getRecentReports(10)
+        state.reportes.lista = data.reportes || []
+        console.log('[Dashboard] Reportes cargados:', state.reportes.lista.length)
+      } catch (err) {
+        console.warn('[Dashboard] Error cargando reportes:', err)
+      }
+    }
+
+    // Cargar repuestos agrupados
+    const cargarRepuestos = async () => {
+      try {
+        const data = await inventoryService.getRepuestosGroupedByType()
+        state.repuestos_por_tipo = data
+        console.log('[Dashboard] Repuestos agrupados cargados')
+      } catch (err) {
+        console.warn('[Dashboard] Error cargando repuestos agrupados:', err)
+      }
+    }
+
+    const renderPage = async (page) => {
+      // Evitar múltiples cargas simultáneas
+      if (isLoadingPage) {
+        console.log('[Dashboard] Ya hay una carga en progreso, ignorando', page)
+        return
+      }
+
+      const now = Date.now()
+      if (now - lastPageLoad < 500) { // Debounce de 500ms
+        console.log('[Dashboard] Demasiadas peticiones rápido, ignorando', page)
+        return
+      }
+
+      isLoadingPage = true
+      lastPageLoad = now
+
+      try {
+        currentPage = page
+        const content = document.getElementById('db-content')
+        if (!content) return
+
+        // Cargar datos según la página
+        if (page === 'dashboard') {
+          await Promise.all([cargarMetricas(), cargarAlertasStock(), cargarInspecciones()])
+        } else if (page === 'equipos') {
+          await cargarRepuestos()
+        } else if (page === 'reportes') {
+          await cargarReportes()
+        }
+
+        content.innerHTML = subRenders[page]?.() ?? subRenders.dashboard()
 
       try { sidebarView({ activePage: page, onNavigate: renderPage }).loadRender() } catch (e) {}
 
@@ -595,14 +682,20 @@ export const dashboardPage = () => ({
           input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); enviar() } }
         }
       }
+    } catch (err) {
+      console.error('[Dashboard renderPage] Error:', err)
+    } finally {
+      isLoadingPage = false
+    }
     }
 
     document.querySelectorAll('[data-db-page]').forEach(link => {
       link.addEventListener('click', (e) => { e.preventDefault(); renderPage(link.dataset.dbPage) })
     })
 
+    // Inicializar con dashboard
     renderPage('dashboard')
-    loadZone().then(() => renderPage(currentPage))
+    loadZone().catch(err => console.warn('[Dashboard] Error en loadZone:', err))
 
     // Cargar métricas e inicializar actualizaciones en tiempo real
     cargarMetricas()
@@ -678,12 +771,23 @@ export const dashboardPage = () => ({
       }
     }, 30000)
 
+    // Debounce para evitar actualizaciones excesivas por socket
+    let lastMetricsUpdate = Date.now()
+    const throttleMetrics = () => {
+      const now = Date.now()
+      if (now - lastMetricsUpdate > 10000) { // Max 1 petición cada 10 segundos
+        lastMetricsUpdate = now
+        if (currentPage === 'dashboard') {
+          cargarMetricas()
+          cargarAlertasStock()
+        }
+      }
+    }
+
     // Listeners de socket para actualizaciones en tiempo real
     socketManager.onMessage((msg) => {
-      // Cuando hay nuevo mensaje, actualizar si estamos disponibles
-      if (currentPage === 'dashboard') {
-        cargarMetricas()
-      }
+      throttleMetrics()
     })
+
   }
 })

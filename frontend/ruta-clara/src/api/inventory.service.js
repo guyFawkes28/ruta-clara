@@ -49,6 +49,28 @@ export const inventoryService = {
       motivo
     })
     return response.data
+  },
+
+  // Obtener tipos de repuestos
+  async getRepuestoTypes() {
+    try {
+      const response = await axios.get('/inventory/tipos-repuestos')
+      return response.data.tipos || []
+    } catch (error) {
+      console.warn('[inventoryService] Error cargando tipos:', error)
+      return []
+    }
+  },
+
+  // Obtener repuestos agrupados por tipo con cantidad
+  async getRepuestosGroupedByType() {
+    try {
+      const response = await axios.get('/inventory/repuestos/agrupados')
+      return response.data.repuestos_por_tipo || {}
+    } catch (error) {
+      console.warn('[inventoryService] Error cargando repuestos agrupados:', error)
+      return {}
+    }
   }
 }
 
