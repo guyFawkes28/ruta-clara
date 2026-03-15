@@ -3,17 +3,17 @@ import axios from 'axios'
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
 if (!OPENAI_API_KEY) {
-  throw new Error('[AIService] ❌ OPENAI_API_KEY no configurada. Agrega tu clave en el archivo .env')
-}
-
-if (!OPENAI_API_KEY.startsWith('sk-')) {
-  throw new Error('[AIService] ❌ OPENAI_API_KEY inválida. Verifica el formato en el archivo .env')
+  console.error('[AIService] ❌ OPENAI_API_KEY no configurada en .env. La funcionalidad de IA no funcionará.')
+} else if (!OPENAI_API_KEY.startsWith('sk-')) {
+  console.error('[AIService] ❌ OPENAI_API_KEY tiene formato inválido. Debe comenzar con "sk-"')
+} else {
+  console.log('[AIService] ✅ OPENAI_API_KEY configurada correctamente')
 }
 
 const openaiClient = axios.create({
   baseURL: 'https://api.openai.com/v1',
   headers: {
-    'Authorization': `Bearer ${OPENAI_API_KEY}`,
+    'Authorization': `Bearer ${OPENAI_API_KEY || ''}`,
     'Content-Type': 'application/json'
   }
 })
@@ -219,7 +219,7 @@ FORMATO DE RESPUESTA - SOLO el texto mejorado en JSON:
         statusText: err.response?.statusText,
         data: err.response?.data
       }
-      console.error('[AIService] ❌ Error en improveReportDescription:', errorDetails)
+      console.error('[AIService]  Error en improveReportDescription:', errorDetails)
       console.error('[AIService] Stack:', err.stack)
       
       // Retornar error más detallado
