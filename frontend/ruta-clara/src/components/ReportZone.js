@@ -1,4 +1,5 @@
 import { toast } from '../util/ux.js';
+import aiService from '../api/ai.service.js';
 
 export const reportZone = ({ onSave, onCancel }) => {
     let reportData = { puestoId: '', categoria: '', comentario: '', isFan: false };
@@ -346,6 +347,84 @@ export const reportZone = ({ onSave, onCancel }) => {
                     }
                 };
             }
+
+            // PASO 3 — Botón Mejorar con IA: corregir ortografía y mejorar redacción
+            const aiBtn = $('rc-ai-btn');
+            if (aiBtn) {
+                aiBtn.onclick = async () => {
+                    const notaVal = ($('rc-nota') || {}).value || '';
+                    if (!notaVal || notaVal.trim().length === 0) {
+                        toast('Escribe algo primero', 'warning');
+                        return;
+                    }
+
+                    // Mostrar estado de carga
+                    const loadingEl = $('rc-ai-loading');
+                    const resultEl = $('rc-ai-result');
+                    if (loadingEl) loadingEl.style.display = 'flex';
+                    if (resultEl) resultEl.style.display = 'none';
+
+                    try {
+                        // Recopilar contexto
+                        const contexto = {
+                            tipo_dano: selectedDamages.join(', ') || '',
+                            activo: reportData.puestoId || '',
+                            zona: 'Sala 3 — Piso 1'
+                        };
+
+                        // Llamar al servicio de IA
+                        const response = await aiService.improveDescription(notaVal.trim(), contexto);
+
+                        if (!response.success) {
+                            toast('Error al mejorar el reporte con IA', 'error');
+                            if (loadingEl) loadingEl.style.display = 'none';
+                            return;
+                        }
+
+                        // Mostrar resultado mejorado
+                        const txtEl = $('rc-ai-txt');
+                        if (txtEl && response.mejorado) {
+                            txtEl.textContent = response.mejorado.texto_mejorado || response.mejorado;
+                        }
+
+                        if (loadingEl) loadingEl.style.display = 'none';
+                        if (resultEl) resultEl.style.display = 'block';
+
+                        // Guardar el texto mejorado en memoria
+                        reportData.textMejorado = response.mejorado.texto_mejorado || response.mejorado;
+
+                        // Botón para usar el texto mejorado
+                        const useBtn = document.createElement('button');
+                        useBtn.className = 'btn-navy w-100 mt-2';
+                        useBtn.style.cssText = 'border-radius:12px;padding:10px;';
+                        useBtn.textContent = '✅ Usar esta descripción mejorada';
+                        useBtn.onclick = () => {
+                            if ($('rc-nota')) {
+                                $('rc-nota').value = reportData.textMejorado;
+                                const chars = $('rc-chars');
+                                if (chars) chars.textContent = String(reportData.textMejorado.length);
+                                if (resultEl) resultEl.style.display = 'none';
+                                // Re-habilitar el botón Continuar
+                                const step3nextBtn = document.getElementById('rc-step3-next');
+                                if (step3nextBtn) step3nextBtn.disabled = false;
+                                toast('Descripción actualizada', 'success');
+                            }
+                        };
+
+                        // Agregar botón si no existe
+                        if (resultEl && !resultEl.querySelector('#use-mejorado-btn')) {
+                            useBtn.id = 'use-mejorado-btn';
+                            resultEl.appendChild(useBtn);
+                        }
+
+                    } catch (err) {
+                        console.error('Error en mejoraDescripción:', err);
+                        toast('Error al procesar la solicitud', 'error');
+                        if (loadingEl) loadingEl.style.display = 'none';
+                    }
+                };
+            }
+
             // PASO 3 — Cambiar selección
                 if ($('rc-step3-back')) {
                     // Volver a la selección múltiple (paso 1)

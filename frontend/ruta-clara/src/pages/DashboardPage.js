@@ -1,6 +1,10 @@
 import { persistence } from "../util/persistence.js";
 import maintenanceService from "../api/maintenance.service.js";
 import chatService from "../api/chat.service.js";
+import socketManager from "../api/socket.js";
+import executionService from "../api/execution.service.js";
+import inventoryService from "../api/inventory.service.js";
+import aiService from "../api/ai.service.js";
 import sidebarView from "../components/Sidebar.js";
 import { reportZone } from "../components/ReportZone.js";
 
@@ -8,8 +12,10 @@ const state = {
   equipos: { total: 0, activos: 0, inactivos: 0, enMantenimiento: 0, lista: [] },
   inspecciones: { total: 0, completadas: 0, pendientes: 0, conProblemas: 0, lista: [] },
   tecnicos: { total: 0, activos: 0, disponibles: 0, lista: [] },
-  reportes: { generados: 0, pendientes: 0, lista: [] }
-  , zoneNotFound: false
+  reportes: { generados: 0, pendientes: 0, lista: [] },
+  metricas: { total_tareas: 0, completadas: 0, en_proceso: 0, promedio_duracion_minutos: 0, tasa_cumplimiento_sst: 0 },
+  alertas_stock: [],
+  zoneNotFound: false
 }
 
 const loadZone = async (qrCode = 'SALA3-P1') => {
@@ -108,7 +114,7 @@ const renderMensaje = (msg) => {
 }
 
 function subDashboard() {
-  const { equipos, inspecciones, tecnicos } = state
+  const { equipos, inspecciones, tecnicos, metricas, alertas_stock } = state
   return `
     <div class="db-ph">
       <div>
@@ -120,13 +126,58 @@ function subDashboard() {
         <button class="db-btn db-btn-primary" id="db-new-report">+ Nuevo Reporte</button>
       </div>
     </div>
+    
     ${state.zoneNotFound ? '<div style="padding:10px 12px;border-radius:8px;background:rgba(220,38,38,0.06);color:var(--danger);margin-bottom:12px;font-weight:700;">Zona no encontrada</div>' : ''}
+    
+    <!-- Alertas de Stock Bajo -->
+    ${alertas_stock.length > 0 ? `
+      <div style="
+        padding:12px;
+        border-radius:8px;
+        background:rgba(251,146,60,0.06);
+        border-left:4px solid #f97316;
+        margin-bottom:16px;
+      ">
+        <div style="font-weight:700;color:#f97316;margin-bottom:8px;">⚠️ ${alertas_stock.length} Repuestos con Stock Bajo</div>
+        <div style="font-size:12px;color:var(--tmid);">
+          ${alertas_stock.slice(0, 3).map(r => `<div>• ${r.nombre}: ${r.stock_actual}/${r.stock_minimo}</div>`).join('')}
+          ${alertas_stock.length > 3 ? `<div style="color:var(--tsoft);">+ ${alertas_stock.length - 3} más</div>` : ''}
+        </div>
+      </div>
+    ` : ''}
+    
+    <!-- Métricas de Tareas -->
+    <div class="db-cards">
+      <div class="db-card db-fade">
+        <div class="db-card-head"><span class="db-card-title">Tareas Completadas</span></div>
+        <div class="db-card-value">${metricas.completadas ?? 0}</div>
+        <div class="db-card-stat">De ${metricas.total_tareas ?? 0} totales</div>
+      </div>
+      <div class="db-card db-fade" style="animation-delay:.06s">
+        <div class="db-card-head"><span class="db-card-title">En Proceso</span></div>
+        <div class="db-card-value" style="color:#f97316">${metricas.en_proceso ?? 0}</div>
+        <div class="db-card-stat">Tareas activas</div>
+      </div>
+      <div class="db-card db-fade" style="animation-delay:.12s">
+        <div class="db-card-head"><span class="db-card-title">Cumplimiento SST</span></div>
+        <div class="db-card-value" style="color:#22c55e">${metricas.tasa_cumplimiento_sst ?? 0}%</div>
+        <div class="db-card-stat">Protocolo de seguridad</div>
+      </div>
+      <div class="db-card db-fade" style="animation-delay:.18s">
+        <div class="db-card-head"><span class="db-card-title">Duración Promedio</span></div>
+        <div class="db-card-value">${metricas.promedio_duracion_minutos ?? 0}</div>
+        <div class="db-card-stat">Minutos por tarea</div>
+      </div>
+    </div>
+    
+    <!-- Información Operativa Anterior -->
     <div class="db-cards">
       <div class="db-card db-fade"><div class="db-card-head"><span class="db-card-title">Equipos Activos</span></div><div class="db-card-value">${equipos.activos}</div><div class="db-card-stat">De ${equipos.total} totales</div></div>
       <div class="db-card db-fade" style="animation-delay:.06s"><div class="db-card-head"><span class="db-card-title">Inspecciones</span><span class="db-badge db-badge-info">${inspecciones.pendientes} pend.</span></div><div class="db-card-value">${inspecciones.completadas}</div><div class="db-card-stat">Completadas este mes</div></div>
       <div class="db-card db-fade" style="animation-delay:.12s"><div class="db-card-head"><span class="db-card-title">Problemas</span><span class="db-badge db-badge-warn">${inspecciones.conProblemas}</span></div><div class="db-card-value">${inspecciones.conProblemas}</div><div class="db-card-stat">Requieren atención</div></div>
       <div class="db-card db-fade" style="animation-delay:.18s"><div class="db-card-head"><span class="db-card-title">Técnicos Disponibles</span><span class="db-badge db-badge-ok">${tecnicos.disponibles}</span></div><div class="db-card-value">${tecnicos.disponibles}/${tecnicos.activos}</div><div class="db-card-stat">En horario laboral</div></div>
     </div>
+    
     <div class="db-section">
       <div class="db-section-head"><h2 class="db-section-title">Últimas Inspecciones</h2><button class="db-btn db-btn-secondary db-btn-sm" id="db-see-all">Ver todas →</button></div>
       <div class="db-table-wrap" style="max-height:250px;overflow-y:auto;"><table class="db-table" style="font-size:13px;"><thead><tr><th style="padding:6px 8px;">ID Equipo</th><th style="padding:6px 8px;">Ubicación</th><th style="padding:6px 8px;">Técnico</th><th style="padding:6px 8px;">Fecha</th><th style="padding:6px 8px;">Estado</th><th style="padding:6px 8px;">Acción</th></tr></thead>
@@ -293,6 +344,38 @@ export const dashboardPage = () => ({
       } catch (err) { console.warn('[Mapa RO] No se cargaron estados:', err) }
     }
 
+    // Cargar métricas de desempeño
+    const cargarMetricas = async () => {
+      try {
+        const metricas = await executionService.getPerformanceMetrics()
+        state.metricas = metricas
+        console.log('[Dashboard] Métricas cargadas:', metricas)
+        // Re-render si estamos en dashboard
+        if (currentPage === 'dashboard') {
+          const content = document.getElementById('db-content')
+          if (content) content.innerHTML = subRenders.dashboard()
+        }
+      } catch (err) { 
+        console.warn('[Dashboard] Error cargando métricas:', err)
+      }
+    }
+
+    // Cargar alertas de stock bajo
+    const cargarAlertasStock = async () => {
+      try {
+        const alertas = await inventoryService.getLowStockAlerts()
+        state.alertas_stock = alertas
+        console.log('[Dashboard] Alertas de stock:', alertas.length)
+        // Re-render si estamos en dashboard
+        if (currentPage === 'dashboard') {
+          const content = document.getElementById('db-content')
+          if (content) content.innerHTML = subRenders.dashboard()
+        }
+      } catch (err) { 
+        console.warn('[Dashboard] Error cargando alertas:', err)
+      }
+    }
+
     const renderPage = (page) => {
       currentPage = page
       const content = document.getElementById('db-content')
@@ -394,34 +477,101 @@ export const dashboardPage = () => ({
       // Mapa RO: cargar estados reales
       if (page === 'inspecciones') cargarEstadosMapa()
 
-      // Chat
+      // Chat con Socket.io en tiempo real
       if (page === 'chat') {
         if (window.__dashboardChat_interval) clearInterval(window.__dashboardChat_interval)
         const input = document.getElementById('db-chat-input')
         const sendBtn = document.getElementById('db-chat-send')
         const container = document.getElementById('db-chat-messages')
+        const statusDiv = document.querySelector('.rc-chat-status')
+        
         if (input && sendBtn && container) {
-          const cargarMensajes = async () => {
+          const cargarMensajesHistoricos = async () => {
             try {
-              const mensajes = await chatService.getMessages('DASHBOARD')
+              const mensajes = await chatService.getMessages('DASHBOARD', 50, 0)
               chatMensajes = mensajes
               container.innerHTML = mensajes.length === 0 ? '<div style="text-align:center;padding:20px;color:var(--tsoft);">Sin mensajes</div>' : mensajes.map(renderMensaje).join('')
               container.scrollTop = container.scrollHeight
-            } catch (err) { console.error('[Dashboard Chat] Error cargando:', err) }
+            } catch (err) { console.error('[Dashboard Chat] Error cargando histórico:', err) }
           }
-          const enviar = async () => {
+          
+          // Conectar al servidor de WebSocket
+          socketManager.connect('DASHBOARD').then(() => {
+            console.log('[Dashboard Chat] WebSocket conectado')
+            
+            // Monitorear cambios de conexión
+            socketManager.onConnectionChange((isConnected) => {
+              if (statusDiv) {
+                if (isConnected) {
+                  statusDiv.textContent = '● En línea — Antonio'
+                } else {
+                  statusDiv.textContent = '● Desconectado'
+                }
+              }
+            })
+            
+            // Escuchar nuevos mensajes en tiempo real
+            socketManager.onMessage((msg) => {
+              console.log('[Dashboard Chat] Nuevo mensaje:', msg.senderName, '-', msg.message)
+              // Evitar duplicados
+              if (chatMensajes.find(m => m._id === msg._id)) {
+                console.log('[Dashboard Chat] Mensaje duplicado, ignorando')
+                return
+              }
+              chatMensajes.push(msg)
+              const html = renderMensaje(msg)
+              if (container.textContent.includes('Sin mensajes')) {
+                container.innerHTML = html
+              } else {
+                container.insertAdjacentHTML('beforeend', html)
+              }
+              container.scrollTop = container.scrollHeight
+            })
+            
+            // Escuchar confirmación de envío
+            socketManager.onMessageSent((data) => {
+              console.log('[Dashboard Chat] ✓ Mensaje confirmado en servidor', data.messageId)
+            })
+            
+            // Escuchar errores al enviar
+            socketManager.onMessageError((data) => {
+              console.error('[Dashboard Chat] ✗ Error al enviar:', data.error)
+              alert('Error al enviar el mensaje: ' + data.error)
+              input.focus()
+            })
+            
+            // Cargar histórico inicial
+            cargarMensajesHistoricos()
+          }).catch(err => {
+            console.error('[Dashboard Chat] Error conectando:', err)
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#f00;">Error conectando al chat</div>'
+          })
+          
+          const enviar = () => {
             const texto = input.value.trim()
             if (!texto) return
+            
+            // Validar conexión
+            if (!socketManager.isConnected()) {
+              alert('No estás conectado. Intenta recargar la página.')
+              return
+            }
+            
             const currentUser = persistence.getUser()
-            try {
-              await chatService.sendMessage({ message: texto, sender: 'DASHBOARD', senderName: currentUser?.name || 'Admin', senderEmail: currentUser?.email || 'admin@mail.com', role: currentUser?.rol || 'ADMIN', recipient: 'HOME' })
-              input.value = ''
-              await cargarMensajes()
-            } catch (err) { console.error('[Dashboard Chat] Error enviando:', err); alert('Error al enviar el mensaje') }
+            socketManager.sendMessage({
+              message: texto,
+              sender: 'DASHBOARD',
+              senderName: currentUser?.name || 'Admin',
+              senderEmail: currentUser?.email || 'admin@mail.com',
+              role: currentUser?.rol || 'ADMIN',
+              recipient: 'HOME'
+            })
+            input.value = ''
+            input.focus()
           }
+          
           sendBtn.onclick = enviar
           input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); enviar() } }
-          cargarMensajes()
         }
       }
     }
@@ -432,5 +582,25 @@ export const dashboardPage = () => ({
 
     renderPage('dashboard')
     loadZone().then(() => renderPage(currentPage))
+
+    // Cargar métricas e inicializar actualizaciones en tiempo real
+    cargarMetricas()
+    cargarAlertasStock()
+
+    // Actualizar métricas cada 30 segundos
+    setInterval(() => {
+      if (currentPage === 'dashboard') {
+        cargarMetricas()
+        cargarAlertasStock()
+      }
+    }, 30000)
+
+    // Listeners de socket para actualizaciones en tiempo real
+    socketManager.onMessage((msg) => {
+      // Cuando hay nuevo mensaje, actualizar si estamos disponibles
+      if (currentPage === 'dashboard') {
+        cargarMetricas()
+      }
+    })
   }
 })

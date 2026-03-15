@@ -150,7 +150,18 @@ export const socketManager = {
   /**
    * Obtener el socket (si necesitas acceso directo)
    */
-  getSocket: () => socket
+  getSocket: () => socket,
+
+  /**
+   * Escuchar cambios de conexión
+   * @param {Function} callback
+   */
+  onConnectionChange: (callback) => {
+    if (!socket) return
+    socket.on('connect', () => callback(true))
+    socket.on('disconnect', () => callback(false))
+    socket.on('connect_error', () => callback(false))
+  }
 }
 
 export default socketManager

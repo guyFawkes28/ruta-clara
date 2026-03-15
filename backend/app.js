@@ -7,6 +7,10 @@ import { Server } from 'socket.io'
 import {authRoutes} from './src/routes/auth.routes.js'
 import { maintenanceRoutes } from './src/routes/maintenance.routes.js'
 import { chatRoutes } from './src/routes/chat.routes.js'
+import { inventoryRoutes } from './src/routes/inventory.routes.js'
+import { executionRoutes } from './src/routes/execution.routes.js'
+import { aiRoutes } from './src/routes/ai.routes.js'
+import { transferRoutes } from './src/routes/transfer.routes.js'
 import cookieParser from 'cookie-parser'
 import { verifyToken } from './src/middlewares/auth.middleware.js'
 import { connectMongo } from './src/config/db.js'
@@ -36,6 +40,10 @@ app.use(cookieParser())
 
 app.use('/api/auth',authRoutes)
 app.use('/api/maintenance',verifyToken,maintenanceRoutes)
+app.use('/api/inventory', inventoryRoutes)
+app.use('/api/execution', executionRoutes)
+app.use('/api/ai', aiRoutes)
+app.use('/api/transfer', transferRoutes)
 
 app.use("/api", cleaningRoutes);
 app.use('/api/chat', chatRoutes)
@@ -68,8 +76,8 @@ io.on('connection', (socket) => {
             })
             await chatMsg.save()
             
-            // Emitir a la sala destino en tiempo real
-            io.to(recipient).emit('new-message', {
+            // Construir objeto del mensaje confirmado
+            const confirmedMessage = {
                 _id: chatMsg._id,
                 sender,
                 senderName,
@@ -79,9 +87,14 @@ io.on('connection', (socket) => {
                 recipient,
                 isRead: false,
                 createdAt: chatMsg.createdAt
-            })
+            }
             
-            socket.emit('message-sent', { success: true })
+            // Emitir a la sala destino en tiempo real
+            io.to(recipient).emit('new-message', confirmedMessage)
+            
+            // Emitir confirmación al remitente (PARA QUE VEA SU PROPIO MENSAJE)
+            socket.emit('new-message', confirmedMessage)
+            socket.emit('message-sent', { success: true, messageId: chatMsg._id })
         } catch (err) {
             console.error('[SOCKET] Error guardando mensaje:', err)
             socket.emit('message-error', { error: err.message })
