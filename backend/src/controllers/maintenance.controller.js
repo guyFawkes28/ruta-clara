@@ -49,7 +49,7 @@ export const getZonasByQr = async (req, res) => {
         const activosConFallos = activos.map(activo => {
             // Extraemos solo los nombres de las incidencias de tareas que no estén finalizadas
             const fallosActuales = activo.tareas
-                ?.filter(t => t.estado_tarea !== 'Finalizada')
+                ?.filter(t => t.estado_tarea !== 'Completado')
                 .flatMap(t => t.tarea_detalles_incidencia.map(det => det.tipos_incidencia.nombre)) || [];
 
             return {
@@ -110,23 +110,28 @@ export const getPendingTasks = async (req, res) => {
                     zonas(nombre, piso)
                 ),
                 tarea_detalles_incidencia(
-                    id_detalle,
-                    incidencia_id,
-                    tipos_incidencia(nombre)
+                    *,
+                    tipos_incidencia(id_incidencia, nombre)
                 )
             `)
             .eq('estado_tarea', 'Pendiente')
             .order('prioridad_ia', { ascending: false })
             .order('fecha_creacion', { ascending: true });
 
-        if (tareasErr) throw tareasErr;
+        if (tareasErr) {
+            console.error('getPendingTasks query error:', JSON.stringify(tareasErr, null, 2));
+            throw tareasErr;
+        }
 
         console.log('getPendingTasks result:', tareas?.length || 0, 'tareas pendientes');
-        console.log('Sample tarea:', JSON.stringify(tareas?.[0], null, 2));
+        
+        // Filtrar solo tareas con estado 'Pendiente' (validación adicional)
+        const pendienteTasks = (tareas || []).filter(t => t.estado_tarea === 'Pendiente');
+        console.log('getPendingTasks filtered:', pendienteTasks.length, 'tareas después de validar estado');
 
         res.json({
-            tareas: tareas || [],
-            total: tareas?.length || 0
+            tareas: pendienteTasks,
+            total: pendienteTasks.length
         });
 
     } catch (err) {
@@ -153,21 +158,113 @@ export const crearReporteMantenimiento = async (req, res) => {
     try {
         console.log('crearReporteMantenimiento params:', { p_activo_id: activoIdNum, p_operador_id, incidencias, p_comentario_general, p_nuevo_estado });
 
-        const { data, error } = await supabase.rpc('registrar_reporte_completo', {
-            p_activo_id: activoIdNum,
-            p_operador_id,
-            p_incidencias_ids: incidencias,
-            p_comentario_general,
-            p_nuevo_estado: p_nuevo_estado || 'Naranja'
-        });
+        // 1. Crear la tarea
+        const { data: tareaData, error: tareaError } = await supabase
+            .from('tareas')
+            .insert({
+                activo_id: activoIdNum,
+                operador_id: p_operador_id,
+                tipo_dano: p_comentario_general || '',
+                prioridad_ia: 5,
+                estado_tarea: 'Pendiente'
+            })
+            .select('id_tarea')
+            .single();
 
-        if (error) throw error;
+        if (tareaError) throw tareaError;
 
-        res.status(201).json({ success: true, tarea_id: data });
+        const tareaId = tareaData.id_tarea;
+        console.log('Tarea creada:', tareaId);
+
+        // 2. Insertar las incidencias relacionadas
+        if (incidencias.length > 0) {
+            const incidenciasData = incidencias.map(incidencia_id => ({
+                tarea_id: tareaId,
+                incidencia_id: incidencia_id
+            }));
+
+            const { error: incidenciasError } = await supabase
+                .from('tarea_detalles_incidencia')
+                .insert(incidenciasData);
+
+            if (incidenciasError) {
+                console.error('Error insertando incidencias:', incidenciasError);
+                throw incidenciasError;
+            }
+            console.log('Incidencias insertadas:', incidencias.length);
+        }
+
+        // 3. Actualizar estado del activo si se proporciona
+        if (p_nuevo_estado) {
+            const { error: activoError } = await supabase
+                .from('activos')
+                .update({ estado: p_nuevo_estado })
+                .eq('id_activo', activoIdNum);
+
+            if (activoError) {
+                console.error('Error actualizando activo:', activoError);
+            }
+        }
+
+        res.status(201).json({ success: true, tarea_id: tareaId });
     } catch (err) {
         console.error('crearReporteMantenimiento error:', err);
         const msg = err?.message || err?.error || err?.statusText || 'Error al crear reporte';
         res.status(err?.status || 400).json({ error: msg });
+    }
+};
+
+// Obtener inspecciones recientes
+export const getRecentInspections = async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 10;
+        console.log('[getRecentInspections] Iniciando con limit:', limit);
+        
+        // Devolver lista vacía para ahora - evitar errores de relaciones
+        console.log('[getRecentInspections] Retornando lista vacía por ahora');
+        res.json({ inspecciones: [] });
+    } catch (err) {
+        console.error('[getRecentInspections] Error:', err);
+        res.status(500).json({ error: 'Error al obtener inspecciones', inspecciones: [] });
+    }
+};
+
+// Obtener reportes recientes
+export const getRecentReports = async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 10;
+        
+        // Traer tareas creadas recientemente
+        const { data: reportes, error: repErr } = await supabase
+            .from('tareas')
+            .select(`
+                id_tarea,
+                tipo_dano,
+                estado_tarea,
+                fecha_creacion,
+                operador_id,
+                usuarios(
+                    id_usuario,
+                    name
+                )
+            `)
+            .order('fecha_creacion', { ascending: false })
+            .limit(limit);
+
+        if (repErr) throw repErr;
+
+        const reportesList = reportes.map(r => ({
+            id: r.id_tarea,
+            tipo: r.tipo_dano || 'Reporte',
+            fecha: new Date(r.fecha_creacion).toLocaleDateString('es-CO'),
+            autor: r.usuarios?.name || 'Sistema',
+            estado: r.estado_tarea?.toLowerCase() === 'pendiente' ? 'pendiente' : 'en_progreso'
+        })) || [];
+
+        res.json({ reportes: reportesList });
+    } catch (err) {
+        console.error('[getRecentReports] Error:', err);
+        res.status(500).json({ error: 'Error al obtener reportes', reportes: [] });
     }
 };
 
