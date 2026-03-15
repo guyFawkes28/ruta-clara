@@ -1,6 +1,7 @@
 import { headerView } from '../components/Header.js';
 import { reportZone } from '../components/ReportZone.js';
-import maintenanceService from '../api/maintenance.service.js';
+import maintenance_service from '../api/maintenance.service.js';
+import socket_manager from '../api/socket.js';
 import { toast } from '../util/ux.js';
 
 export const zonePage = () => {
@@ -23,12 +24,74 @@ const modalReporte = reportZone({
 
             console.log('Enviando reporte:', reportData); // debug temporal
 
-            await maintenanceService.createReport(reportData);
+            await maintenance_service.create_maintenance_report(reportData);
+            
+            // Emitir evento socket para que todos vean la novedad en tiempo real
+            // Necesitamos mapear el puestoId al etiqueta correcto de la zona
+            const qrZone = window.location.hash.split('/').pop() || 'SALA3-P1';
+            const zoneForMap = await maintenance_service.get_zone_by_qr(encodeURIComponent(qrZone));
+            const activoForMap = (zoneForMap.activos || []).find(a => 
+              String(a.id_activo) === String(datos.puestoId) || a.etiqueta === datos.puestoId
+            );
+            const etiqueta = activoForMap?.etiqueta || datos.puestoId || 'UNKNOWN'
+            
+            const eventoReporte = {
+              activo_id: datos.puestoId,
+              etiqueta: etiqueta,
+              estado: 'Naranja',
+              nuevoEstado: 'Naranja',
+              tipo: 'novedad_reportada'
+            }
+            try {
+              // Intentar emitir con reintentos si socket no está conectado
+              const emitWithRetry = async (maxAttempts = 3, delayMs = 500) => {
+                for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                  if (socket_manager.is_connected()) {
+                    try {
+                      socket_manager.get_socket().emit('report-created', eventoReporte)
+                      console.log('[ZonePage] ✅ Evento de novedad emitido por socket:', eventoReporte)
+                      return true
+                    } catch (err) {
+                      console.warn(`[ZonePage] ⚠️ Error emitiendo socket (intento ${attempt}/${maxAttempts}):`, err)
+                    }
+                  } else {
+                    console.warn(`[ZonePage] Socket no conectado (intento ${attempt}/${maxAttempts}), esperando ${delayMs}ms...`)
+                  }
+                  
+                  // Esperar antes del reintento
+                  if (attempt < maxAttempts) {
+                    await new Promise(r => setTimeout(r, delayMs))
+                  }
+                }
+                
+                // Si llega aquí, falló después de todos los intentos
+                console.warn('[ZonePage] ⚠️ No se pudo emitir evento después de', maxAttempts, 'intentos')
+                
+                // Intentar conectar y emitir como último recurso
+                try {
+                  console.log('[ZonePage] 🔌 Intentando conectar socket...')
+                  await socket_manager.connect('ZONE')
+                  if (socket_manager.is_connected()) {
+                    socket_manager.get_socket().emit('report-created', eventoReporte)
+                    console.log('[ZonePage] ✅ Evento emitido después de reconectar')
+                    return true
+                  }
+                } catch (connectErr) {
+                  console.warn('[ZonePage] No se pudo reconectar:', connectErr)
+                }
+                
+                return false
+              }
+              
+              await emitWithRetry()
+            } catch (socketErr) {
+              console.warn('[ZonePage] No se pudo emitir evento socket:', socketErr)
+            }
 
             // Refrescar estados visuales
             try {
                 const qr = window.location.hash.split('/').pop() || 'SALA3-P1';
-                const zone = await maintenanceService.getZoneByQR(encodeURIComponent(qr));
+                const zone = await maintenance_service.get_zone_by_qr(encodeURIComponent(qr));
                 const claseEstado = { 'Gris': 'sg', 'Naranja': 'so', 'Azul': 'sb', 'Verde': 'sv' };
                 (zone.activos || []).forEach(activo => {
                     const el = document.querySelector(`[data-id="${activo.id_activo}"]`);
@@ -216,13 +279,18 @@ const modalReporte = reportZone({
         loadRender: async () => {
             header.loadRender();
             if (modalReporte.loadRender) modalReporte.loadRender();
+            
+            // Conectar socket para sincronización en tiempo real
+            socket_manager.connect('ZONE').catch(err => {
+              console.warn('[ZonePage] No se pudo conectar socket:', err)
+            })
 
             const qrCode = window.location.hash.split('/').pop() || 'SALA3-P1';
             const claseEstado = { 'Gris': 'sg', 'Naranja': 'so', 'Azul': 'sb', 'Verde': 'sv' };
             let activos = [];
 
             try {
-                const response = await maintenanceService.getZoneByQR(encodeURIComponent(qrCode));
+                const response = await maintenance_service.get_zone_by_qr(encodeURIComponent(qrCode));
                 activos = response.activos || [];
 
                 activos.forEach(activo => {

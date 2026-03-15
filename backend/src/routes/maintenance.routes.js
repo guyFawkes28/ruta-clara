@@ -1,15 +1,14 @@
 import { Router } from "express"
 import { verifyToken } from "../middlewares/auth.middleware.js"
-import { getZonasByQr, getTiposIncidencia, crearReporteMantenimiento, getPendingTasks, getRecentInspections, getRecentReports } from "../controllers/maintenance.controller.js"
+import { get_zone_by_qr, get_incident_types, create_maintenance_report, get_pending_tasks, get_recent_inspections, get_recent_reports } from "../controllers/maintenance.controller.js"
 
 const router = Router();
 
-// Rutas estáticas primero para evitar que 
-// la ruta dinámica '/:qr_code' capture solicitudes como '/incidencias'
-router.get('/incidencias', verifyToken, getTiposIncidencia)
-router.get('/pendientes', verifyToken, getPendingTasks)
-router.get('/inspecciones/recientes', verifyToken, getRecentInspections)
-router.get('/reportes/recientes', verifyToken, getRecentReports)
-router.get('/:qr_code', verifyToken, getZonasByQr)
-router.post('/reportar', verifyToken, crearReporteMantenimiento)
+// Static routes first to prevent dynamic route '/:qr_code' from capturing requests
+router.get('/incident-types', verifyToken, get_incident_types)
+router.get('/pending-tasks', verifyToken, get_pending_tasks)
+router.get('/inspections/recent', verifyToken, get_recent_inspections)
+router.get('/reports/recent', verifyToken, get_recent_reports)
+router.get('/:qr_code', verifyToken, get_zone_by_qr)
+router.post('/report', verifyToken, create_maintenance_report)
 export { router as maintenanceRoutes };

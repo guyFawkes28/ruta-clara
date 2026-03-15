@@ -1,4 +1,4 @@
-import { loginService } from "../api/auth.service.js"
+import { login_service } from "../api/auth.service.js"
 import { persistence } from "../util/persistence.js"
 
 export const loginPage = () => ({
@@ -38,7 +38,7 @@ export const loginPage = () => ({
     
             try {
               console.log('[LoginPage] Iniciando login con:', emailInput.value)
-              const user = await loginService(emailInput.value, pinInput.value)
+              const user = await login_service(emailInput.value, pinInput.value)
               console.log('[LoginPage] Usuario autenticado:', user)
               
                             // Guardar la sesión y delegar la redirección al router

@@ -1,37 +1,37 @@
 import axios from './axiosConfig.js'
 
-export const aiService = {
-  // Mejorar clasificación de reporte con IA
-  async improveReport(tareaId) {
+export const ai_service = {
+  // Improve report classification with AI
+  async improve_report(task_id) {
     const response = await axios.post('/ai/improve-report', {
-      tarea_id: tareaId
+      tarea_id: task_id
     })
     return response.data
   },
 
-  // Mejorar descripción de un reporte (corregir ortografía, hacerlo más detallado)
-  async improveDescription(descripcion, contexto = {}) {
+  // Improve description of a report (fix spelling, make it more detailed)
+  async improve_description(description, context = {}) {
     const response = await axios.post('/ai/improve-description', {
-      descripcion,
-      tipo_dano: contexto.tipo_dano || '',
-      activo: contexto.activo || '',
-      zona: contexto.zona || ''
+      descripcion: description,
+      tipo_dano: context.damage_type || '',
+      activo: context.asset || '',
+      zona: context.zone || ''
     })
     return response.data
   },
 
-  // Obtener orden optimizado de tareas
-  async getOptimizedTaskOrder(zonaId = null) {
-    const params = zonaId ? { zona_id: zonaId } : {}
+  // Get optimized task order
+  async get_optimized_task_order(zone_id = null) {
+    const params = zone_id ? { zona_id: zone_id } : {}
     const response = await axios.get('/ai/optimize-tasks', { params })
-    return response.data.optimizacion || {}
+    return response.data.optimization || {}
   },
 
-  // Sugerir compras basadas en IA
-  async suggestPurchases() {
+  // Suggest purchases based on AI
+  async suggest_purchases() {
     const response = await axios.get('/ai/suggest-purchases')
-    return response.data.sugerencias_compra || {}
+    return response.data.purchase_suggestions || {}
   }
 }
 
-export default aiService
+export default ai_service

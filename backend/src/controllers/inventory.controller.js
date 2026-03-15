@@ -2,7 +2,7 @@ import Inventory from '../models/Inventory.model.js'
 import { supabase } from '../config/db.js'
 
 // Obtener todos los repuestos con filtros
-export const getAllRepuestos = async (req, res) => {
+export const get_all_spare_parts = async (req, res) => {
   try {
     const { categoria } = req.query
     let repuestos
@@ -25,7 +25,7 @@ export const getAllRepuestos = async (req, res) => {
 }
 
 // Obtener repuesto específico
-export const getRepuesto = async (req, res) => {
+export const get_spare_part = async (req, res) => {
   try {
     const { id } = req.params
     const repuesto = await Inventory.getById(parseInt(id))
@@ -38,7 +38,7 @@ export const getRepuesto = async (req, res) => {
 }
 
 // Validar disponibilidad para una tarea
-export const checkAvailability = async (req, res) => {
+export const check_availability = async (req, res) => {
   try {
     const { repuesto_id, cantidad } = req.body
     
@@ -65,7 +65,7 @@ export const checkAvailability = async (req, res) => {
 }
 
 // Hard-Lock: Verificar si tarea puede iniciarse (stock disponible)
-export const validateTaskStart = async (req, res) => {
+export const validate_task_start = async (req, res) => {
   try {
     const { tarea_id } = req.body
 
@@ -145,7 +145,7 @@ export const validateTaskStart = async (req, res) => {
 }
 
 // Descontar repuestos al completar tarea
-export const descontarRepuestos = async (req, res) => {
+export const deduct_spare_parts = async (req, res) => {
   try {
     const { tarea_id, repuestos_usados } = req.body
     // repuestos_usados = [{ repuesto_id, cantidad_usada }, ...]
@@ -177,7 +177,7 @@ export const descontarRepuestos = async (req, res) => {
 }
 
 // Alertas de stock bajo
-export const getLowStockAlerts = async (req, res) => {
+export const get_low_stock_alerts = async (req, res) => {
   try {
     const alerts = await Inventory.getLowStockAlerts()
     
@@ -193,7 +193,7 @@ export const getLowStockAlerts = async (req, res) => {
 }
 
 // Agregar stock (compra)
-export const agregarStock = async (req, res) => {
+export const add_stock = async (req, res) => {
   try {
     const { repuesto_id, cantidad, motivo } = req.body
 
@@ -222,7 +222,7 @@ export const agregarStock = async (req, res) => {
 }
 
 // Historial de movimientos
-export const getMovementHistory = async (req, res) => {
+export const get_movement_history = async (req, res) => {
   try {
     const { repuesto_id, limit } = req.query
 
@@ -250,7 +250,7 @@ export const getMovementHistory = async (req, res) => {
 }
 
 // Obtener tipos de repuestos
-export const getRepuestoTypes = async (req, res) => {
+export const get_spare_part_types = async (req, res) => {
   try {
     const { data: tipos, error } = await supabase
       .from('categorias_repuestos')
@@ -274,32 +274,80 @@ export const getRepuestoTypes = async (req, res) => {
 }
 
 // Obtener repuestos agrupados por tipo con cantidad
-export const getRepuestosGroupedByType = async (req, res) => {
+export const get_spare_parts_grouped_by_type = async (req, res) => {
   try {
     console.log('[Inventory] getRepuestosGroupedByType iniciado')
     
-    // Por ahora devolver estructura vacía para evitar errores
+    // Obtener todos los repuestos
+    const { data: repuestos, error } = await supabase
+      .from('repuestos')
+      .select(`
+        id_repuesto,
+        nombre,
+        stock_actual,
+        stock_minimo,
+        categoria_id
+      `)
+      .order('nombre', { ascending: true })
+
+    if (error) {
+      console.error('[Inventory] Error al obtener repuestos:', error)
+      throw error
+    }
+
+    // Agrupar por categoría_id
+    const repuestos_por_tipo = {}
+    
+    if (repuestos && repuestos.length > 0) {
+      repuestos.forEach(rep => {
+        const tipoNombre = `Categoría ${rep.categoria_id}`
+        
+        if (!repuestos_por_tipo[tipoNombre]) {
+          repuestos_por_tipo[tipoNombre] = {
+            cantidad_total: 0,
+            repuestos: []
+          }
+        }
+
+        const repuestoFormateado = {
+          id: rep.id_repuesto,
+          nombre: rep.nombre,
+          stock: rep.stock_actual || 0,
+          stock_minimo: rep.stock_minimo || 0
+        }
+
+        repuestos_por_tipo[tipoNombre].repuestos.push(repuestoFormateado)
+        repuestos_por_tipo[tipoNombre].cantidad_total += rep.stock_actual || 0
+      })
+    }
+
+    console.log('[Inventory] Repuestos agrupados:', Object.keys(repuestos_por_tipo).length, 'categorías')
+
+    // Return both legacy key and frontend-expected key for compatibility
     res.json({
       success: true,
-      repuestos_por_tipo: {}
+      repuestos_por_tipo,
+      grouped_by_type: repuestos_por_tipo
     })
   } catch (err) {
     console.error('[Inventory] Error obtener agrupados:', err)
     res.status(500).json({ 
       success: false, 
       error: err.message,
-      repuestos_por_tipo: {}
+      repuestos_por_tipo: {},
+      grouped_by_type: {}
     })
   }
 }
 
 export default {
-  getAllRepuestos,
-  getRepuesto,
-  checkAvailability,
-  validateTaskStart,
-  descontarRepuestos,
-  getLowStockAlerts,
-  agregarStock,
-  getMovementHistory
+  get_all_spare_parts,
+  get_spare_part,
+  check_availability,
+  validate_task_start,
+  deduct_spare_parts,
+  get_low_stock_alerts,
+  add_stock,
+  get_spare_parts_grouped_by_type,
+  get_movement_history
 }

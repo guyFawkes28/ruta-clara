@@ -1,8 +1,8 @@
-import AIService from '../services/openai.service.js'
+import ai_service from '../services/openai.service.js'
 import { supabase } from '../config/db.js'
 
 // Mejorar clasificación de un reporte
-export const improveReport = async (req, res) => {
+export const improve_report = async (req, res) => {
   try {
     const { tarea_id } = req.body
 
@@ -31,7 +31,7 @@ export const improveReport = async (req, res) => {
     }
 
     // Enviar a IA para análisis
-    const analisis = await AIService.improveReportClassification({
+    const analisis = await ai_service.improve_report_classification({
       tipo_dano: tarea.tipo_dano,
       activo: tarea.activos?.etiqueta || 'Desconocido',
       zona: tarea.activos?.zonas?.nombre || 'Desconocida',
@@ -67,7 +67,7 @@ export const improveReport = async (req, res) => {
 }
 
 // Obtener orden optimizado de tareas
-export const getOptimizedTaskOrder = async (req, res) => {
+export const get_optimized_task_order = async (req, res) => {
   try {
     const { zona_id } = req.query
 
@@ -113,7 +113,7 @@ export const getOptimizedTaskOrder = async (req, res) => {
     }))
 
     // Enviar a IA para optimización
-    const optimizacion = await AIService.optimizeTaskOrder(tareasFormatted)
+    const optimizacion = await ai_service.optimize_task_order(tareasFormatted)
 
     res.json({
       success: true,
@@ -127,7 +127,7 @@ export const getOptimizedTaskOrder = async (req, res) => {
 }
 
 // Sugerir órdenes de compra
-export const suggestPurchases = async (req, res) => {
+export const suggest_purchases = async (req, res) => {
   try {
     // Obtener inventario
     const { data: repuestos, error: repuestosError } = await supabase
@@ -157,7 +157,7 @@ export const suggestPurchases = async (req, res) => {
     }
 
     // Enviar a IA para sugerencias
-    const sugerencias = await AIService.suggestPurchaseOrders(repuestos)
+    const sugerencias = await ai_service.suggest_purchase_orders(repuestos)
 
     res.json({
       success: true,
@@ -171,7 +171,7 @@ export const suggestPurchases = async (req, res) => {
 }
 
 // Mejorar descripción de un reporte
-export const improveDescription = async (req, res) => {
+export const improve_description = async (req, res) => {
   try {
     const { descripcion, tipo_dano, activo, zona } = req.body
 
@@ -195,7 +195,7 @@ export const improveDescription = async (req, res) => {
     console.log('[improveDescription] Enviando a IA:', { descripcion, tipo_dano, activo, zona })
 
     // Enviar a IA para mejora de descripción
-    const mejora = await AIService.improveReportDescription(
+    const mejora = await ai_service.improve_report_description(
       descripcion.trim(),
       {
         tipo_dano: tipo_dano || '',
@@ -231,9 +231,9 @@ export const improveDescription = async (req, res) => {
 }
 
 export default {
-  improveReport,
-  getOptimizedTaskOrder,
-  suggestPurchases,
-  improveDescription
+  improve_report,
+  get_optimized_task_order,
+  suggest_purchases,
+  improve_description
 }
 

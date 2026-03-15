@@ -1,77 +1,77 @@
 import axios from './axiosConfig.js'
 
-export const inventoryService = {
-  // Obtener repuestos
-  async getRepuestos(categoria = null) {
-    const params = categoria ? { categoria } : {}
-    const response = await axios.get('/inventory/repuestos', { params })
-    return response.data.repuestos || []
+export const inventory_service = {
+  // Get spare parts
+  async get_spare_parts(category = null) {
+    const params = category ? { categoria: category } : {}
+    const response = await axios.get('/inventory/spare-parts', { params })
+    return response.data.spare_parts || []
   },
 
-  // Verificar disponibilidad
-  async checkAvailability(repuestoId, cantidad) {
+  // Check availability
+  async check_availability(spare_part_id, quantity) {
     const response = await axios.post('/inventory/check-availability', {
-      repuesto_id: repuestoId,
-      cantidad
+      repuesto_id: spare_part_id,
+      cantidad: quantity
     })
     return response.data
   },
 
-  // Validar inicio de tarea (Hard-Lock)
-  async validateTaskStart(tareaId, repuestosRequeridos) {
+  // Validate task start (Hard-Lock)
+  async validate_task_start(task_id, required_spare_parts) {
     const response = await axios.post('/inventory/validate-task-start', {
-      tarea_id: tareaId,
-      repuestos_requeridos: repuestosRequeridos
+      tarea_id: task_id,
+      required_spare_parts: required_spare_parts
     })
     return response.data
   },
 
-  // Descontar repuestos
-  async descontarRepuestos(tareaId, repuestosUsados) {
-    const response = await axios.post('/inventory/descontar', {
-      tarea_id: tareaId,
-      repuestos_usados: repuestosUsados
+  // Deduct spare parts
+  async deduct_spare_parts(task_id, spare_parts_used) {
+    const response = await axios.post('/inventory/deduct', {
+      tarea_id: task_id,
+      repuestos_usados: spare_parts_used
     })
     return response.data
   },
 
-  // Alertas de stock bajo
-  async getLowStockAlerts() {
+  // Low stock alerts
+  async get_low_stock_alerts() {
     const response = await axios.get('/inventory/alerts/low-stock')
-    return response.data.repuestos_bajo_stock || []
+    return response.data.low_stock || []
   },
 
-  // Agregar stock
-  async agregarStock(repuestoId, cantidad, motivo) {
+  // Add stock
+  async add_stock(spare_part_id, quantity, reason) {
     const response = await axios.post('/inventory/add-stock', {
-      repuesto_id: repuestoId,
-      cantidad,
-      motivo
+      repuesto_id: spare_part_id,
+      cantidad: quantity,
+      motivo: reason
     })
     return response.data
   },
 
-  // Obtener tipos de repuestos
-  async getRepuestoTypes() {
+  // Get spare part types
+  async get_spare_part_types() {
     try {
-      const response = await axios.get('/inventory/tipos-repuestos')
-      return response.data.tipos || []
+      const response = await axios.get('/inventory/spare-part-types')
+      return response.data.types || []
     } catch (error) {
-      console.warn('[inventoryService] Error cargando tipos:', error)
+      console.warn('[inventory_service] Error loading types:', error)
       return []
     }
   },
 
-  // Obtener repuestos agrupados por tipo con cantidad
-  async getRepuestosGroupedByType() {
+  // Get spare parts grouped by type with quantity
+  async get_spare_parts_grouped_by_type() {
     try {
-      const response = await axios.get('/inventory/repuestos/agrupados')
-      return response.data.repuestos_por_tipo || {}
+      const response = await axios.get('/inventory/spare-parts/grouped')
+      return response.data.grouped_by_type || {}
     } catch (error) {
-      console.warn('[inventoryService] Error cargando repuestos agrupados:', error)
+      console.warn('[inventory_service] Error loading grouped spare parts:', error)
       return {}
     }
   }
 }
 
-export default inventoryService
+export default inventory_service

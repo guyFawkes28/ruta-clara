@@ -1,16 +1,18 @@
 import { connectMongo } from "../config/mongo.js";
 import { supabase } from "../config/db.js";
+import { io } from "../../app.js";
 
-export const createCleaning = async (req, res) => {
+export const create_cleaning = async (req, res) => {
   try {
     const db = await connectMongo();
 
-    const { zone_id, user_name, descriptions, hora_fin } = req.body;
+    const { zone_id, user_name, descriptions, hora_inicio, hora_fin } = req.body;
 
     const cleaning = {
       zone_id,
       user_name,
       descriptions,
+      hora_inicio: hora_inicio || new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' }),
       hora_fin: hora_fin || null,
       createdAt: new Date()
     };
@@ -19,9 +21,27 @@ export const createCleaning = async (req, res) => {
       .collection("cleaning_logs")
       .insertOne(cleaning);
 
+    // Retornar el objeto completo con el ID insertado
+    const createdCleaning = {
+      ...cleaning,
+      _id: result.insertedId
+    };
+
+    // Emitir evento por socket para actualizar dashboard en tiempo real
+    io.emit('cleaning-created', {
+      _id: createdCleaning._id,
+      zone_id: zone_id,
+      user_name: user_name,
+      descriptions: descriptions,
+      hora_inicio: createdCleaning.hora_inicio,
+      hora_fin: hora_fin || null,
+      createdAt: createdCleaning.createdAt
+    });
+    console.log('[Cleaning] ✓ Evento socket emitido: cleaning-created');
+
     res.status(201).json({
       message: "Cleaning registered successfully",
-      id: result.insertedId
+      ...createdCleaning
     });
 
   } catch (error) {
@@ -29,7 +49,7 @@ export const createCleaning = async (req, res) => {
   }
 };
 
-export const getCleanings = async (req, res) => {
+export const get_cleanings = async (req, res) => {
   try {
     const db = await connectMongo();
     const { fecha } = req.query;
@@ -66,7 +86,7 @@ export const getCleanings = async (req, res) => {
   }
 };
 
-export const getCurrentCleaningInfo = async (req, res) => {
+export const get_current_cleaning_info = async (req, res) => {
   try {
     // FIX 1: Se leen ambos parámetros requeridos desde query
     const { codigo_qr, user_id } = req.query;
