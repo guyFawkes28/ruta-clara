@@ -1,6 +1,7 @@
 import { persistence } from "../util/persistence.js";
 import maintenanceService from "../api/maintenance.service.js";
 import chatService from "../api/chat.service.js";
+import socketManager from "../api/socket.js";
 import sidebarView from "../components/Sidebar.js";
 import { reportZone } from "../components/ReportZone.js";
 
@@ -394,34 +395,101 @@ export const dashboardPage = () => ({
       // Mapa RO: cargar estados reales
       if (page === 'inspecciones') cargarEstadosMapa()
 
-      // Chat
+      // Chat con Socket.io en tiempo real
       if (page === 'chat') {
         if (window.__dashboardChat_interval) clearInterval(window.__dashboardChat_interval)
         const input = document.getElementById('db-chat-input')
         const sendBtn = document.getElementById('db-chat-send')
         const container = document.getElementById('db-chat-messages')
+        const statusDiv = document.querySelector('.rc-chat-status')
+        
         if (input && sendBtn && container) {
-          const cargarMensajes = async () => {
+          const cargarMensajesHistoricos = async () => {
             try {
-              const mensajes = await chatService.getMessages('DASHBOARD')
+              const mensajes = await chatService.getMessages('DASHBOARD', 50, 0)
               chatMensajes = mensajes
               container.innerHTML = mensajes.length === 0 ? '<div style="text-align:center;padding:20px;color:var(--tsoft);">Sin mensajes</div>' : mensajes.map(renderMensaje).join('')
               container.scrollTop = container.scrollHeight
-            } catch (err) { console.error('[Dashboard Chat] Error cargando:', err) }
+            } catch (err) { console.error('[Dashboard Chat] Error cargando histórico:', err) }
           }
-          const enviar = async () => {
+          
+          // Conectar al servidor de WebSocket
+          socketManager.connect('DASHBOARD').then(() => {
+            console.log('[Dashboard Chat] WebSocket conectado')
+            
+            // Monitorear cambios de conexión
+            socketManager.onConnectionChange((isConnected) => {
+              if (statusDiv) {
+                if (isConnected) {
+                  statusDiv.textContent = '● En línea — Antonio'
+                } else {
+                  statusDiv.textContent = '● Desconectado'
+                }
+              }
+            })
+            
+            // Escuchar nuevos mensajes en tiempo real
+            socketManager.onMessage((msg) => {
+              console.log('[Dashboard Chat] Nuevo mensaje:', msg.senderName, '-', msg.message)
+              // Evitar duplicados
+              if (chatMensajes.find(m => m._id === msg._id)) {
+                console.log('[Dashboard Chat] Mensaje duplicado, ignorando')
+                return
+              }
+              chatMensajes.push(msg)
+              const html = renderMensaje(msg)
+              if (container.textContent.includes('Sin mensajes')) {
+                container.innerHTML = html
+              } else {
+                container.insertAdjacentHTML('beforeend', html)
+              }
+              container.scrollTop = container.scrollHeight
+            })
+            
+            // Escuchar confirmación de envío
+            socketManager.onMessageSent((data) => {
+              console.log('[Dashboard Chat] ✓ Mensaje confirmado en servidor', data.messageId)
+            })
+            
+            // Escuchar errores al enviar
+            socketManager.onMessageError((data) => {
+              console.error('[Dashboard Chat] ✗ Error al enviar:', data.error)
+              alert('Error al enviar el mensaje: ' + data.error)
+              input.focus()
+            })
+            
+            // Cargar histórico inicial
+            cargarMensajesHistoricos()
+          }).catch(err => {
+            console.error('[Dashboard Chat] Error conectando:', err)
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#f00;">Error conectando al chat</div>'
+          })
+          
+          const enviar = () => {
             const texto = input.value.trim()
             if (!texto) return
+            
+            // Validar conexión
+            if (!socketManager.isConnected()) {
+              alert('No estás conectado. Intenta recargar la página.')
+              return
+            }
+            
             const currentUser = persistence.getUser()
-            try {
-              await chatService.sendMessage({ message: texto, sender: 'DASHBOARD', senderName: currentUser?.name || 'Admin', senderEmail: currentUser?.email || 'admin@mail.com', role: currentUser?.rol || 'ADMIN', recipient: 'HOME' })
-              input.value = ''
-              await cargarMensajes()
-            } catch (err) { console.error('[Dashboard Chat] Error enviando:', err); alert('Error al enviar el mensaje') }
+            socketManager.sendMessage({
+              message: texto,
+              sender: 'DASHBOARD',
+              senderName: currentUser?.name || 'Admin',
+              senderEmail: currentUser?.email || 'admin@mail.com',
+              role: currentUser?.rol || 'ADMIN',
+              recipient: 'HOME'
+            })
+            input.value = ''
+            input.focus()
           }
+          
           sendBtn.onclick = enviar
           input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); enviar() } }
-          cargarMensajes()
         }
       }
     }

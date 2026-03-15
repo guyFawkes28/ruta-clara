@@ -363,6 +363,20 @@ export const HomePage = () => {
           await socketManager.connect('HOME')
           console.log('[HomePage Chat] WebSocket conectado')
           
+          // Monitorear cambios de conexión en tiempo real
+          const statusDiv = document.querySelector('.rc-chat-status')
+          socketManager.onConnectionChange((isConnected) => {
+            if (statusDiv) {
+              if (isConnected) {
+                statusDiv.className = 'rc-chat-status online'
+                statusDiv.textContent = '● Conectado'
+              } else {
+                statusDiv.className = 'rc-chat-status offline'
+                statusDiv.textContent = '● Desconectado'
+              }
+            }
+          })
+          
           // Cargar mensajes históricos del servidor
           const cargarMensajesHistoricos = async () => {
             try {
@@ -393,6 +407,18 @@ export const HomePage = () => {
             container.scrollTop = container.scrollHeight
           })
 
+          // Escuchar confirmación de envío exitoso
+          socketManager.onMessageSent((data) => {
+            console.log('[HomePage Chat] ✓ Mensaje confirmado en servidor', data.messageId)
+          })
+
+          // Escuchar errores al enviar
+          socketManager.onMessageError((data) => {
+            console.error('[HomePage Chat] ✗ Error al enviar:', data.error)
+            alert('Error al enviar el mensaje: ' + data.error)
+            input.focus()
+          })
+
           // Enviar mensaje
           const enviar = () => {
             const texto = input.value.trim()
@@ -400,6 +426,14 @@ export const HomePage = () => {
 
             console.log('[HomePage Chat] Enviando mensaje:', texto)
             const currentUser = persistence.getUser()
+            
+            // Validar conexión antes de enviar
+            if (!socketManager.isConnected()) {
+              console.error('[HomePage Chat] No conectado al servidor')
+              alert('No estás conectado. Intenta recargar la página.')
+              return
+            }
+            
             socketManager.sendMessage({
               message: texto,
               sender: 'HOME',

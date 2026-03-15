@@ -68,8 +68,8 @@ io.on('connection', (socket) => {
             })
             await chatMsg.save()
             
-            // Emitir a la sala destino en tiempo real
-            io.to(recipient).emit('new-message', {
+            // Construir objeto del mensaje confirmado
+            const confirmedMessage = {
                 _id: chatMsg._id,
                 sender,
                 senderName,
@@ -79,9 +79,14 @@ io.on('connection', (socket) => {
                 recipient,
                 isRead: false,
                 createdAt: chatMsg.createdAt
-            })
+            }
             
-            socket.emit('message-sent', { success: true })
+            // Emitir a la sala destino en tiempo real
+            io.to(recipient).emit('new-message', confirmedMessage)
+            
+            // Emitir confirmación al remitente (PARA QUE VEA SU PROPIO MENSAJE)
+            socket.emit('new-message', confirmedMessage)
+            socket.emit('message-sent', { success: true, messageId: chatMsg._id })
         } catch (err) {
             console.error('[SOCKET] Error guardando mensaje:', err)
             socket.emit('message-error', { error: err.message })

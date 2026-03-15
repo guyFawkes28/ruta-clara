@@ -250,6 +250,7 @@
 .rc-chat-title  { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
 .rc-chat-status { font-size: 11px; color: var(--tsoft); }
 .rc-chat-status.online { color: var(--green); }
+.rc-chat-status.offline { color: #ff3b30; }
 
 .rc-messages {
   flex: 1; overflow-y: auto;
