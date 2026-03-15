@@ -1,80 +1,90 @@
 import urlApi from "./axiosConfig.js"
 
-const maintenanceService = {
-    // 1. Cargar Mapa y Datos de la Zona
-    getZoneByQR: async (qrCode) => {
+const maintenance_service = {
+    // 1. Load Zone Map and Data
+    get_zone_by_qr: async (qr_code) => {
         try {
-            const response = await urlApi.get(`/maintenance/${qrCode}`)
+            const response = await urlApi.get(`/maintenance/${qr_code}`)
             return response.data;
         } catch (error) {
             throw error;
         }
     },
 
-    // 2. Traer el catálogo de daños (Silla, Mouse, etc.) para el Modal
-    getIncidencias: async () => {
+    // 2. Get damage catalog (Chair, Mouse, etc.) for Modal
+    get_incidentes: async () => {
         try {
-            const response = await urlApi.get(`/maintenance/incidencias`)
+            const response = await urlApi.get(`/maintenance/incident-types`)
             return response.data;
         } catch (error) {
             throw error;
         }
     },
 
-    // 3. Enviar el reporte completo (RPC)
-    createReport: async (reportData) => {
+    // 3. Send complete report (RPC)
+    create_report: async (report_data) => {
         try {
-            const response = await urlApi.post(`/maintenance/reportar`, reportData)
+            const response = await urlApi.post(`/maintenance/report`, report_data)
             return response.data;
         } catch (error) {
             throw error;
         }
     },
 
-    // 4. Obtener las tareas pendientes con detalles
-    getPendingTasks: async () => {
+    // 3b. Send maintenance report (alias for consistency)
+    create_maintenance_report: async (report_data) => {
         try {
-            const response = await urlApi.get(`/maintenance/pendientes`)
-            return response.data; // { tareas: [], total }
+            const response = await urlApi.post(`/maintenance/report`, report_data)
+            return response.data;
         } catch (error) {
             throw error;
         }
-    }
-    ,
-    // 5. Obtener solo el conteo de tareas pendientes (y métricas rápidas)
-    getPendingCount: async () => {
+    },
+
+    // 4. Get pending tasks with details
+    get_pending_tasks: async () => {
         try {
-            const response = await urlApi.get(`/maintenance/pendientes`);
+            const response = await urlApi.get(`/maintenance/pending-tasks`)
+            return response.data; // { tasks: [], total }
+        } catch (error) {
+            throw error;
+        }
+    },
+    
+    // 5. Get only pending tasks count (and quick metrics)
+    get_pending_count: async () => {
+        try {
+            const response = await urlApi.get(`/maintenance/pending-tasks`);
             const data = response.data;
-            const pending = data?.total ?? (Array.isArray(data?.tareas) ? data.tareas.length : 0);
-            const completedToday = data?.completedToday ?? 0;
-            return { pending, completedToday };
+            const pending = data?.total ?? (Array.isArray(data?.tasks) ? data.tasks.length : 0);
+            const completed_today = data?.completed_today ?? 0;
+            return { pending, completed_today };
         } catch (error) {
             throw error;
         }
     },
 
-    // 6. Obtener inspecciones recientes
-    getRecentInspections: async (limit = 10) => {
+    // 6. Get recent inspections
+    get_recent_inspections: async (limit = 10) => {
         try {
-            const response = await urlApi.get(`/maintenance/inspecciones/recientes?limit=${limit}`)
-            return response.data || { inspecciones: [] }
+            const response = await urlApi.get(`/maintenance/inspections/recent?limit=${limit}`)
+            return response.data || { inspections: [] }
         } catch (error) {
-            console.warn('[maintenanceService] Error cargando inspecciones:', error)
-            return { inspecciones: [] }
+            console.warn('[maintenance_service] Error loading inspections:', error)
+            return { inspections: [] }
         }
     },
 
-    // 7. Obtener reportes recientes
-    getRecentReports: async (limit = 10) => {
+    // 7. Get recent reports
+    get_recent_reports: async (limit = 10) => {
         try {
-            const response = await urlApi.get(`/maintenance/reportes/recientes?limit=${limit}`)
-            return response.data || { reportes: [] }
+            const response = await urlApi.get(`/maintenance/reports/recent?limit=${limit}`)
+            return response.data || { reports: [] }
         } catch (error) {
-            console.warn('[maintenanceService] Error cargando reportes:', error)
-            return { reportes: [] }
+            console.warn('[maintenance_service] Error loading reports:', error)
+            return { reports: [] }
         }
     }
 }
 
-export default maintenanceService;
+export default maintenance_service;

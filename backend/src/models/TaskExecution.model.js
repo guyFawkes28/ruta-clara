@@ -2,7 +2,7 @@ import { supabase } from '../config/db.js'
 
 export const TaskExecution = {
   // Crear registro de ejecución de tarea
-  async createExecution(tareaId) {
+  async create_execution(tareaId) {
     const { data, error } = await supabase
       .from('ejecucion_tarea')
       .insert({
@@ -17,7 +17,7 @@ export const TaskExecution = {
   },
 
   // Registrar SST (checklist) con foto
-  async recordSST(tareaId, fotoSelfie) {
+  async record_sst(tareaId, fotoSelfie) {
     // Primero intentar actualizar si existe
     const { data: updateData, error: updateError } = await supabase
       .from('ejecucion_tarea')
@@ -52,32 +52,53 @@ export const TaskExecution = {
     return updateData
   },
 
-  // Finalizar tarea con foto
-  async finishTask(tareaId, fotoDespues) {
+  // Finalizar tarea con foto y duración
+  async finish_task(tareaId, fotoDespues, duracionMinutos, duracionSegundos) {
+    console.log(`[TaskExecution.finishTask] Guardando para tarea_id: ${tareaId}`)
+    console.log(`[TaskExecution.finishTask] Duración recibida: ${duracionMinutos}m ${duracionSegundos}s`)
+    console.log(`[TaskExecution.finishTask] timestamp actual: ${new Date().toISOString()}`)
+    
+    // Calcular duración total en segundos
+    const duracionTotalSegundos = (duracionMinutos * 60) + duracionSegundos
+    console.log(`[TaskExecution.finishTask] Duración total en segundos: ${duracionTotalSegundos}s`)
+    
     const { data, error } = await supabase
       .from('ejecucion_tarea')
       .update({
         foto_despues: fotoDespues,
-        fecha_fin: new Date().toISOString()
+        fecha_fin: new Date().toISOString(),
+        duracion_minutos: duracionMinutos || 0,
+        duracion_segundos: duracionSegundos || 0,
+        duracion_total_segundos: duracionTotalSegundos
       })
       .eq('tarea_id', tareaId)
       .select()
       .single()
     
-    if (error) throw error
+    if (error) {
+      console.error(`[TaskExecution.finishTask] ✗ Error guardando fecha_fin:`, error)
+      throw error
+    }
     
-    // Calcular duración
-    const duracionMs = new Date(data.fecha_fin) - new Date(data.fecha_inicio)
-    const duracionMinutos = Math.round(duracionMs / (1000 * 60))
-
+    console.log(`[TaskExecution.finishTask] ✓ Datos guardados exitosamente`)
+    console.log(`[TaskExecution.finishTask] Registro actualizado:`, {
+      tarea_id: data.tarea_id,
+      duracion_minutos: data.duracion_minutos,
+      duracion_segundos: data.duracion_segundos,
+      duracion_total_segundos: data.duracion_total_segundos,
+      fecha_inicio: data.fecha_inicio,
+      fecha_fin: data.fecha_fin
+    })
+    
     return {
       ...data,
-      duracion_minutos: duracionMinutos
+      duracion_minutos: duracionMinutos,
+      duracion_segundos: duracionSegundos
     }
   },
 
   // Obtener ejecución de tarea
-  async getExecution(tareaId) {
+  async get_execution(tareaId) {
     const { data, error } = await supabase
       .from('ejecucion_tarea')
       .select(`
@@ -92,7 +113,7 @@ export const TaskExecution = {
   },
 
   // Obtener todas las ejecuciones (para análisis)
-  async getAllExecutions() {
+  async get_all_executions() {
     const { data, error } = await supabase
       .from('ejecucion_tarea')
       .select(`
@@ -101,12 +122,24 @@ export const TaskExecution = {
       `)
       .order('fecha_inicio', { ascending: false })
     
-    if (error) throw error
+    if (error) {
+      console.error('[TaskExecution.getAllExecutions] ✗ Error en query:', error)
+      throw error
+    }
+    
+    console.log(`[TaskExecution.getAllExecutions] ✓ Traídas ${data.length} ejecuciones`)
+    if (data.length > 0) {
+      console.log('[TaskExecution.getAllExecutions] Primeras 3 con sus fechas:')
+      data.slice(0, 3).forEach((e, i) => {
+        console.log(`  [${i}] ID: ${e.tarea_id}, Inicio: ${e.fecha_inicio}, Fin: ${e.fecha_fin}, SST: ${e.check_sst}`)
+      })
+    }
+    
     return data
   },
 
   // Obtener duración promedio de tareas por tipo de daño
-  async getAverageDuration(tipoDano) {
+  async get_average_duration(tipoDano) {
     const { data, error } = await supabase
       .from('ejecucion_tarea')
       .select(`

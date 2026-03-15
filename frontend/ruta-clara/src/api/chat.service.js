@@ -2,30 +2,30 @@ import urlApi from './axiosConfig.js';
 
 const API_URL = '/chat';
 
-const chatService = {
+const chat_service = {
   /**
-   * Enviar un mensaje
+   * Send a message
    * @param {Object} payload - { message, sender, senderName, senderEmail, role, recipient }
    * @returns {Promise}
    */
-  sendMessage: async (payload) => {
+  send_message: async (payload) => {
     try {
       const response = await urlApi.post(`${API_URL}/send`, payload);
       return response.data;
     } catch (err) {
-      console.error('[chatService] Error enviando mensaje:', err);
+      console.error('[chat_service] Error sending message:', err);
       throw err;
     }
   },
 
   /**
-   * Obtener mensajes para una vista (HOME o DASHBOARD)
-   * @param {string} view - 'HOME' o 'DASHBOARD'
-   * @param {number} limit - Cantidad de mensajes (default 50)
-   * @param {number} skip - Saltar N mensajes (default 0)
+   * Get messages for a view (HOME or DASHBOARD)
+   * @param {string} view - 'HOME' or 'DASHBOARD'
+   * @param {number} limit - Number of messages (default 50)
+   * @param {number} skip - Skip N messages (default 0)
    * @returns {Promise}
    */
-  getMessages: async (view, limit = 50, skip = 0) => {
+  get_messages: async (view, limit = 50, skip = 0) => {
     try {
       const response = await urlApi.get(`${API_URL}/messages`, {
         params: { view, limit, skip },
@@ -42,7 +42,7 @@ const chatService = {
    * @param {string} view - 'HOME' o 'DASHBOARD'
    * @returns {Promise}
    */
-  getUnreadCount: async (view) => {
+  get_unread_count: async (view) => {
     try {
       const response = await urlApi.get(`${API_URL}/unread`, {
         params: { view },
@@ -58,7 +58,7 @@ const chatService = {
    * Limpiar/Borrar todos los mensajes
    * @returns {Promise}
    */
-  clearMessages: async () => {
+  clear_messages: async () => {
     try {
       const response = await urlApi.delete(`${API_URL}/clear`);
       return response.data;
@@ -74,4 +74,4 @@ const chatService = {
    */
 };
 
-export default chatService;
+export default chat_service;

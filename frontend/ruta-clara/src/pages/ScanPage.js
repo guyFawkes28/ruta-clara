@@ -1,4 +1,4 @@
-import maintenanceService from '../api/maintenance.service.js'
+import maintenance_service from '../api/maintenance.service.js'
 import { toast } from '../util/ux.js'
 import { Html5Qrcode } from 'html5-qrcode'
 import { persistence } from '../util/persistence.js'
@@ -58,7 +58,7 @@ export const scannerPage = () => ({
 
         const qrFinal = decodedText.trim();
         console.log("Código QR detectado:", qrFinal);
-        const data = await maintenanceService.getZoneByQR(encodeURIComponent(qrFinal));
+        const data = await maintenance_service.get_zone_by_qr(encodeURIComponent(qrFinal));
         
         // REDIRECCIÓN LIMPIA: Reemplaza el scanner en el historial
         // Decide destino según rol del usuario: aseo -> pantalla de limpieza, otros -> vista de zona

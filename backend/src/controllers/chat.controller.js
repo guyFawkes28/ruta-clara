@@ -1,7 +1,7 @@
 import Chat from '../models/Chat.model.js';
 
 // Enviar un mensaje de chat
-export const sendMessage = async (req, res) => {
+export const send_message = async (req, res) => {
   try {
     const { message, sender, senderName, senderEmail, role, recipient } = req.body;
 
@@ -48,7 +48,7 @@ export const sendMessage = async (req, res) => {
 };
 
 // Obtener todos los mensajes (para una vista específica)
-export const getMessages = async (req, res) => {
+export const get_messages = async (req, res) => {
   try {
     const { limit = 50, skip = 0, view } = req.query;
 
@@ -91,7 +91,7 @@ export const getMessages = async (req, res) => {
 };
 
 // Obtener mensajes no leídos para una vista
-export const getUnreadCount = async (req, res) => {
+export const get_unread_count = async (req, res) => {
   try {
     const { view } = req.query;
 
@@ -120,7 +120,7 @@ export const getUnreadCount = async (req, res) => {
 };
 
 // Limpiar/Borrar todos los mensajes (opcional, útil para pruebas)
-export const clearMessages = async (req, res) => {
+export const clear_messages = async (req, res) => {
   try {
     const result = await Chat.deleteMany({});
     res.json({

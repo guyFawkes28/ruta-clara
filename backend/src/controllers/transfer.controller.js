@@ -1,7 +1,7 @@
 import Transfer from '../models/Transfer.model.js'
 
 // Registrar traslado de activo
-export const createTransfer = async (req, res) => {
+export const create_transfer = async (req, res) => {
   try {
     const { activo_id, zona_origen_id, zona_destino_id, motivo } = req.body
 
@@ -31,7 +31,7 @@ export const createTransfer = async (req, res) => {
 }
 
 // Obtener historial de un activo
-export const getTransferHistory = async (req, res) => {
+export const get_transfer_history = async (req, res) => {
   try {
     const { activo_id } = req.params
 
@@ -56,7 +56,7 @@ export const getTransferHistory = async (req, res) => {
 }
 
 // Obtener transferencias por zona
-export const getTransfersByZone = async (req, res) => {
+export const get_transfers_by_zone = async (req, res) => {
   try {
     const { zona_id } = req.query
 
@@ -81,7 +81,7 @@ export const getTransfersByZone = async (req, res) => {
 }
 
 // Obtener totales de activos móviles
-export const getMobileAssetsByZone = async (req, res) => {
+export const get_mobile_assets_by_zone = async (req, res) => {
   try {
     const { zona_id } = req.query
 
@@ -105,8 +105,8 @@ export const getMobileAssetsByZone = async (req, res) => {
 }
 
 export default {
-  createTransfer,
-  getTransferHistory,
-  getTransfersByZone,
-  getMobileAssetsByZone
+  create_transfer,
+  get_transfer_history,
+  get_transfers_by_zone,
+  get_mobile_assets_by_zone
 }

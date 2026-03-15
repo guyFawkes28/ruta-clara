@@ -1,5 +1,5 @@
 import { toast } from '../util/ux.js';
-import aiService from '../api/ai.service.js';
+import { ai_service } from '../api/ai.service.js';
 
 export const reportZone = ({ onSave, onCancel }) => {
     let reportData = { puestoId: '', categoria: '', comentario: '', isFan: false };
@@ -382,7 +382,7 @@ export const reportZone = ({ onSave, onCancel }) => {
                         };
 
                         // Llamar al servicio de IA
-                        const response = await aiService.improveDescription(notaVal.trim(), contexto);
+                        const response = await ai_service.improve_description(notaVal.trim(), contexto);
 
                         if (!response.success) {
                             toast('Error al mejorar el reporte con IA', 'error');

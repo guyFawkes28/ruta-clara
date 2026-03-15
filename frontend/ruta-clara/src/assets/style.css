@@ -88,7 +88,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
   align-items:center;
   justify-content:center;
   cursor:pointer;gap:2px;
-  transition:transform .13s;
+  transition: transform .13s, background-color 0.3s ease, border-color 0.3s ease;
   font-size:20px;
   line-height:1;
   user-select:none;
@@ -161,6 +161,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 
 .p:active{transform:scale(var(--rc-press-scale));}
 .plbl-in{font-family:'Barlow Condensed',sans-serif;font-size:clamp(10px,1.2vw,16px);font-weight:900;color:var(--tsoft);line-height:1;}
+.p{transition: background-color 0.3s ease, border-color 0.3s ease;}
 .p.sg{background:var(--grayb);border-color:#9CA3AF;}
 .p.so{background:var(--orab);border-color:var(--orange);}
 .p.sb{background:var(--blub);border-color:var(--blue);}

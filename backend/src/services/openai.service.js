@@ -18,12 +18,12 @@ const openaiClient = axios.create({
   }
 })
 
-export const AIService = {
+export const ai_service = {
   /**
    * Analizar reportes de daños y sugerir mejoras en clasificación
    * @param {Object} evento - { tipo_dano, activo, zona, descripcion }
    */
-  async improveReportClassification(evento) {
+  async improve_report_classification(evento) {
     try {
       const prompt = `
 Analiza este reporte de mantenimiento y proporciona:
@@ -88,7 +88,7 @@ Responde SOLO en JSON sin markdown:
    * Sugerir orden de tareas optimizado por eficiencia
    * @param {Array} tareas - Array de tareas pendientes
    */
-  async optimizeTaskOrder(tareas) {
+  async optimize_task_order(tareas) {
     try {
       const tareasText = tareas.map((t, i) => `
 ${i + 1}. ID: ${t.id_tarea}, Daño: ${t.tipo_dano}, Zona: ${t.zona}, Prioridad IA: ${t.prioridad_ia}
@@ -156,7 +156,7 @@ Responde SOLO en JSON:
    * @param {string} descripcionOriginal - Texto de descripción del usuario
    * @param {Object} contexto - { tipo_dano, activo, zona } para contexto adicional
    */
-  async improveReportDescription(descripcionOriginal, contexto = {}) {
+  async improve_report_description(descripcionOriginal, contexto = {}) {
     try {
       const prompt = `
 Eres un experto técnico en mantenimiento de infraestructura. Tu tarea es MEJORAR una descripción de daño:
@@ -244,7 +244,7 @@ FORMATO DE RESPUESTA - SOLO el texto mejorado en JSON:
    * Generar recomendación de compra basada en historial
    * @param {Array} repuestosEnStock - Array de repuestos con stock_actual y stock_minimo
    */
-  async suggestPurchaseOrders(repuestosEnStock) {
+  async suggest_purchase_orders(repuestosEnStock) {
     try {
       const repuestosText = repuestosEnStock.map(r => 
         `${r.nombre}: ${r.stock_actual}/${r.stock_minimo} unidades`
@@ -308,4 +308,4 @@ Responde SOLO en JSON:
   }
 }
 
-export default AIService
+export default ai_service

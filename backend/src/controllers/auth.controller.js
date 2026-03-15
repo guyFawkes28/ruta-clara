@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken'
 
 
-export const register = async (req,res) => {
+export const user_register = async (req,res) => {
 
     const {email,name,pin} = req.body
 
@@ -48,7 +48,7 @@ export const register = async (req,res) => {
 
   
 }
-export const logout = (req, res) => {
+export const user_logout = (req, res) => {
     // Limpia la cookie llamada 'token'
     res.clearCookie('token', {
         httpOnly: true,
@@ -62,7 +62,7 @@ export const logout = (req, res) => {
 
 
 
-export const login  = async (req, res) => {
+export const user_login  = async (req, res) => {
     const { email, pin } = req.body;
 
     if (!email || !pin) {

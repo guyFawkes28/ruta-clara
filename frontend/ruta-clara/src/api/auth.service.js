@@ -1,20 +1,20 @@
 import urlApi from '../api/axiosConfig.js'
 
 
-export const loginService = async (email,pin) => {
+export const login_service = async (email, pin) => {
 
     try {
 
-        const response = await urlApi.post('/auth/login',{email,pin})
+        const response = await urlApi.post('/auth/login', {email, pin})
         console.log(response)
 
         return response.data
 
     } catch (error) {
 
-        const errorMessage = error.response?.data?.error || 'error en la conexion'
+        const error_message = error.response?.data?.error || 'connection error'
 
-        throw new Error(errorMessage)
+        throw new Error(error_message)
         
     }
     

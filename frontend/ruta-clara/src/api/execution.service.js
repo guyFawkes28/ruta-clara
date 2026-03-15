@@ -1,67 +1,69 @@
 import axios from './axiosConfig.js'
 
-export const executionService = {
-  // Inicializar ejecución de tarea
-  async initializeExecution(tareaId) {
+export const execution_service = {
+  // Initialize task execution
+  async initialize_execution(task_id) {
     const response = await axios.post('/execution/init', {
-      tarea_id: tareaId
+      tarea_id: task_id
     })
     return response.data
   },
 
-  // Registrar protocolo SST
-  async registerSST(tareaId, fotoSelfie, checklist) {
+  // Register SST protocol
+  async register_sst(task_id, selfie_photo, checklist) {
     const body = {
-      tarea_id: tareaId,
-      foto_selfie: fotoSelfie,
+      tarea_id: task_id,
+      foto_selfie: selfie_photo,
       checklist
     }
     
-    console.log('[ExecutionService] registerSST enviando:', JSON.stringify(body, null, 2))
+    console.log('[ExecService] register_sst sending:', JSON.stringify(body, null, 2))
     
     try {
       const response = await axios.post('/execution/register-sst', body)
-      console.log('[ExecutionService] registerSST respuesta:', response.data)
+      console.log('[ExecService] register_sst response:', response.data)
       return response.data
     } catch (error) {
-      console.error('[ExecutionService] registerSST error:', error.response?.data || error.message)
+      console.error('[ExecService] register_sst error:', error.response?.data || error.message)
       throw error
     }
   },
 
-  // Finalizar tarea
-  async finishTask(tareaId, fotoDespues, repuestosUsados) {
+  // Finish task
+  async finish_task(task_id, after_photo, spare_parts_used, duration = {}) {
     const body = {
-      tarea_id: tareaId,
-      foto_despues: fotoDespues,
-      repuestos_usados: repuestosUsados
+      tarea_id: task_id,
+      foto_despues: after_photo,
+      repuestos_usados: spare_parts_used,
+      duracion_minutos: duration.duration_minutes || 0,
+      duracion_segundos: duration.duration_seconds || 0
     }
     
-    console.log('[ExecutionService] finishTask enviando:', JSON.stringify(body, null, 2))
+    console.log('[ExecService] finish_task sending:', JSON.stringify(body, null, 2))
     
     try {
       const response = await axios.post('/execution/finish', body)
-      console.log('[ExecutionService] finishTask respuesta:', response.data)
+      console.log('[ExecService] finish_task response:', response.data)
       return response.data
     } catch (error) {
-      console.error('[ExecutionService] finishTask error:', error.response?.data || error.message)
+      console.error('[ExecService] finish_task error:', error.response?.data || error.message)
       throw error
     }
   },
 
-  // Obtener duración estimada
-  async getEstimatedDuration(tipoDano) {
+  // Get estimated duration
+  async get_estimated_duration(damage_type) {
     const response = await axios.get('/execution/estimate/duration', {
-      params: { tipo_dano: tipoDano }
+      params: { tipo_dano: damage_type }
     })
-    return response.data.estimada || {}
+    return response.data.estimated || {}
   },
 
-  // Obtener métricas de performance
-  async getPerformanceMetrics() {
+  // Get performance metrics
+  async get_performance_metrics() {
     const response = await axios.get('/execution/metrics/performance')
-    return response.data.metricas || {}
+    return response.data.metrics || {}
   }
 }
 
-export default executionService
+export default execution_service

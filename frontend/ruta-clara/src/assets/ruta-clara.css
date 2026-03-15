@@ -410,6 +410,29 @@
 }
 .rc-nav-icon { font-size: 22px; line-height: 1; }
 
+/* Notification badge */
+.rc-notif-badge {
+  position: absolute;
+  top: -4px;
+  right: 6px;
+  background: #ef4444;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+  animation: rc-badge-pulse 2s infinite;
+}
+
+@keyframes rc-badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
 /* Scrollbars */
 .rc-view::-webkit-scrollbar,
 .rc-messages::-webkit-scrollbar { width: 5px; }

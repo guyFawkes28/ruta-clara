@@ -1,38 +1,38 @@
 import axios from './axiosConfig.js'
 
-export const transferService = {
-  // Registrar traslado
-  async createTransfer(activoId, zonaOrigenId, zonaDestinoId, motivo) {
+export const transfer_service = {
+  // Register transfer
+  async create_transfer(asset_id, origin_zone_id, destination_zone_id, reason) {
     const response = await axios.post('/transfer/create', {
-      activo_id: activoId,
-      zona_origen_id: zonaOrigenId,
-      zona_destino_id: zonaDestinoId,
-      motivo
+      activo_id: asset_id,
+      zona_origen_id: origin_zone_id,
+      zona_destino_id: destination_zone_id,
+      motivo: reason
     })
     return response.data
   },
 
-  // Historial de activo
-  async getTransferHistory(activoId) {
-    const response = await axios.get(`/transfer/history/${activoId}`)
-    return response.data.historial || []
+  // Asset history
+  async get_transfer_history(asset_id) {
+    const response = await axios.get(`/transfer/history/${asset_id}`)
+    return response.data.history || []
   },
 
-  // Traslados por zona
-  async getTransfersByZone(zonaId) {
+  // Transfers by zone
+  async get_transfers_by_zone(zone_id) {
     const response = await axios.get('/transfer/by-zone', {
-      params: { zona_id: zonaId }
+      params: { zona_id: zone_id }
     })
-    return response.data.transferencias || []
+    return response.data.transfers || []
   },
 
-  // Activos móviles disponibles
-  async getMobileAssetsByZone(zonaId) {
+  // Available mobile assets
+  async get_mobile_assets_by_zone(zone_id) {
     const response = await axios.get('/transfer/mobile-assets', {
-      params: { zona_id: zonaId }
+      params: { zona_id: zone_id }
     })
-    return response.data.activos_moviles || {}
+    return response.data.mobile_assets || {}
   }
 }
 
-export default transferService
+export default transfer_service

@@ -176,14 +176,18 @@ export const TaskTimer = ({ tareaId, onFinish, duracionEstimada = 0 }) => {
 
         const elapsed = Date.now() - state.startTime - state.pausedTime
         const segundos = Math.floor(elapsed / 1000)
+        
+        // Calcular correctamente minutos y segundos
+        const minutos = Math.floor(segundos / 60)
+        const segsRestantes = segundos % 60
 
         const modal = document.getElementById('task-timer')
         if (modal) modal.remove()
 
         onFinish && onFinish({
           tareaId,
-          duracion_segundos: segundos,
-          duracion_minutos: Math.round(segundos / 60)
+          duracion_minutos: minutos,
+          duracion_segundos: segsRestantes
         })
       })
     },

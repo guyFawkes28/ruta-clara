@@ -1,75 +1,78 @@
 import { persistence } from "../util/persistence.js";
-import maintenanceService from "../api/maintenance.service.js";
-import chatService from "../api/chat.service.js";
-import socketManager from "../api/socket.js";
-import executionService from "../api/execution.service.js";
-import inventoryService from "../api/inventory.service.js";
-import aiService from "../api/ai.service.js";
+import maintenance_service from "../api/maintenance.service.js";
+import chat_service from "../api/chat.service.js";
+import socket_manager from "../api/socket.js";
+import execution_service from "../api/execution.service.js";
+import inventory_service from "../api/inventory.service.js";
+import ai_service from "../api/ai.service.js";
 import sidebarView from "../components/Sidebar.js";
 import { reportZone } from "../components/ReportZone.js";
 
 const state = {
-  equipos: { total: 0, activos: 0, inactivos: 0, enMantenimiento: 0, lista: [] },
-  inspecciones: { total: 0, completadas: 0, pendientes: 0, conProblemas: 0, lista: [] },
-  tecnicos: { total: 0, activos: 0, disponibles: 0, lista: [] },
-  reportes: { generados: 0, pendientes: 0, lista: [] },
-  metricas: { total_tareas: 0, completadas: 0, en_proceso: 0, promedio_duracion_minutos: 0, tasa_cumplimiento_sst: 0 },
-  alertas_stock: [],
-  repuestos_por_tipo: {},
-  zoneNotFound: false
+  equipment: { total: 0, active: 0, inactive: 0, in_maintenance: 0, list: [] },
+  inspections: { total: 0, completed: 0, pending: 0, with_issues: 0, list: [] },
+  technicians: { total: 0, active: 0, available: 0, list: [] },
+  reports: { generated: 0, pending: 0, list: [], status_summary: {}, total: 0 },
+  metrics: { total_tasks: 0, completed: 0, in_progress: 0, avg_duration_minutes: 0, sst_compliance_rate: 0 },
+  stock_alerts: [],
+  spare_parts_by_type: {},
+  zone_not_found: false,
+  // Equipment mapping to task states for map
+  equipment_states: {} // { 'A-P1': 'no_issues' | 'damage_reported' | 'under_repair' | 'repaired' }
 }
 
-const loadZone = async (qrCode = 'SALA3-P1') => {
+const load_zone = async (qrCode = 'SALA3-P1') => {
   try {
-    state.zoneNotFound = false
-    const data = await maintenanceService.getZoneByQR(qrCode)
-    const activos = data?.activos || []
-    state.equipos.lista = activos.map(a => ({
+    state.zone_not_found = false
+    const data = await maintenance_service.get_zone_by_qr(qrCode)
+    const assets = data?.activos || []
+    state.equipment.list = assets.map(a => ({
       id: a.id_activo ?? a.id ?? a.codigo ?? '',
-      nombre: a.nombre ?? a.descripcion ?? a.tipos_activo?.nombre ?? 'Activo',
-      ubicacion: data?.info_zona?.nombre ?? a.ubicacion ?? '',
-      tipo: a.tipos_activo?.nombre ?? a.tipo ?? '',
-      estado: a.estado ?? a.status ?? 'activo'
+      name: a.nombre ?? a.descripcion ?? a.tipos_activo?.nombre ?? 'Activo',
+      location: data?.info_zona?.nombre ?? a.ubicacion ?? '',
+      type: a.tipos_activo?.nombre ?? a.tipo ?? '',
+      status: a.estado ?? a.status ?? 'activo'
     }))
-    state.equipos.total = state.equipos.lista.length
-    const counts = state.equipos.lista.reduce((acc, it) => { acc[it.estado] = (acc[it.estado] || 0) + 1; return acc }, {})
-    state.equipos.activos = counts['activo'] || counts['ok'] || 0
-    state.equipos.inactivos = counts['inactivo'] || 0
-    state.equipos.enMantenimiento = counts['mantenimiento'] || 0
+    state.equipment.total = state.equipment.list.length
+    const counts = state.equipment.list.reduce((acc, it) => { acc[it.status] = (acc[it.status] || 0) + 1; return acc }, {})
+    state.equipment.active = counts['activo'] || counts['ok'] || 0
+    state.equipment.inactive = counts['inactivo'] || 0
+    state.equipment.in_maintenance = counts['mantenimiento'] || 0
   } catch (err) { 
     console.warn('Error cargando zona:', err)
-    state.zoneNotFound = true
-    state.equipos.lista = []
-    state.equipos.total = 0
+    state.zone_not_found = true
+    state.equipment.list = []
+    state.equipment.total = 0
   }
 }
 
-const statusBadge = (estado) => {
-  // Normalizar estado
-  const estadoNorm = String(estado || '').toLowerCase().trim()
+const statusBadge = (status) => {
+  // Normalize status
+  const statusNormalized = String(status || '').toLowerCase().trim()
   
   const map = {
     activo: ['db-status-ok','● Activo'], inactivo: ['db-status-off','● Inactivo'],
     mantenimiento: ['db-status-pending','⏳ Mantenimiento'], ok: ['db-status-ok','✓ OK'],
     critico: ['db-status-error','⚠ Crítico'], pendiente: ['db-status-pending','⏳ Pendiente'],
-    completada: ['db-status-ok','✓ Completada'], progreso: ['db-status-pending','⏳ En Progreso'],
-    'en ejecución': ['db-status-pending','⏳ En Ejecución'], 'ejecución': ['db-status-pending','⏳ En Ejecución'],
-    problema: ['db-status-error','⚠ Problema'], disponible: ['db-status-ok','✓ Disponible'],
-    revision: ['db-status-pending','⏳ Revisión'], 'en_progreso': ['db-status-pending','⏳ En Progreso'],
+    completada: ['db-status-ok','✓ Completada'], terminada: ['db-status-ok','✓ Terminada'],
+    progreso: ['db-status-pending','⏳ En Progreso'], 'en proceso': ['db-status-pending','⏳ En Proceso'], 'en ejecución': ['db-status-pending','⏳ En Ejecución'], 
+    'ejecución': ['db-status-pending','⏳ En Ejecución'], problema: ['db-status-error','⚠ Problema'], 
+    disponible: ['db-status-ok','✓ Disponible'], revision: ['db-status-pending','⏳ Revisión'], 
+    'en_progreso': ['db-status-pending','⏳ En Progreso'],
   }
-  const [cls, label] = map[estadoNorm] ?? ['db-status-off', estado]
+  const [cls, label] = map[statusNormalized] ?? ['db-status-off', status]
   return `<span class="db-status ${cls}">${label}</span>`
 }
 
-let chatMensajes = []
-const escapeHtml = (str) => String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[s])
+let chat_messages = []
+const escape_html = (str) => String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[s])
 
-const renderMensaje = (msg) => {
+const render_message = (msg) => {
   const currentUser = persistence.getUser()
   const isSent = msg.senderEmail === currentUser?.email
-  const tipo = isSent ? 'sent' : 'received'
+  const type = isSent ? 'sent' : 'received'
 
-  const hora = msg.createdAt
+  const time = msg.createdAt
     ? new Date(msg.createdAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
     : msg.hora || '00:00'
 
@@ -102,24 +105,24 @@ const renderMensaje = (msg) => {
         overflow: hidden;
         text-overflow: ellipsis;
         max-width: 180px;
-      ">${escapeHtml(senderLabel)}</div>
+      ">${escape_html(senderLabel)}</div>
       <div style="
         font-size: 14px;
         line-height: 1.45;
         white-space: pre-wrap;
-      ">${escapeHtml(msg.message || msg.texto || '')}</div>
+      ">${escape_html(msg.message || msg.texto || '')}</div>
       <div style="
         font-size: 10px;
         opacity: 0.6;
         margin-top: 5px;
         text-align: right;
-      ">${escapeHtml(hora)}</div>
+      ">${escape_html(time)}</div>
     </div>
   </div>`
 }
 
 function subDashboard() {
-  const { equipos, inspecciones, tecnicos, metricas, alertas_stock } = state
+  const { equipment, inspections, technicians, metrics, stock_alerts, reports } = state
   return `
     <div class="db-ph">
       <div class="db-ph-actions">
@@ -131,10 +134,10 @@ function subDashboard() {
       </div>
     </div>
     
-    ${state.zoneNotFound ? '<div style="padding:10px 12px;border-radius:8px;background:rgba(220,38,38,0.06);color:var(--danger);margin-bottom:12px;font-weight:700;">Zona no encontrada</div>' : ''}
+    ${state.zone_not_found ? '<div style="padding:10px 12px;border-radius:8px;background:rgba(220,38,38,0.06);color:var(--danger);margin-bottom:12px;font-weight:700;">Zona no encontrada</div>' : ''}
     
     <!-- Alertas de Stock Bajo -->
-    ${alertas_stock.length > 0 ? `
+    ${stock_alerts.length > 0 ? `
       <div style="
         padding:12px;
         border-radius:8px;
@@ -142,10 +145,10 @@ function subDashboard() {
         border-left:4px solid #f97316;
         margin-bottom:16px;
       ">
-        <div style="font-weight:700;color:#f97316;margin-bottom:8px;">⚠️ ${alertas_stock.length} Repuestos con Stock Bajo</div>
+        <div style="font-weight:700;color:#f97316;margin-bottom:8px;">⚠️ ${stock_alerts.length} Repuestos con Stock Bajo</div>
         <div style="font-size:12px;color:var(--tmid);">
-          ${alertas_stock.slice(0, 3).map(r => `<div>• ${r.nombre}: ${r.stock_actual}/${r.stock_minimo}</div>`).join('')}
-          ${alertas_stock.length > 3 ? `<div style="color:var(--tsoft);">+ ${alertas_stock.length - 3} más</div>` : ''}
+          ${stock_alerts.slice(0, 3).map(r => `<div>• ${r.nombre}: ${r.stock_actual}/${r.stock_minimo}</div>`).join('')}
+          ${stock_alerts.length > 3 ? `<div style="color:var(--tsoft);">+ ${stock_alerts.length - 3} más</div>` : ''}
         </div>
       </div>
     ` : ''}
@@ -154,87 +157,62 @@ function subDashboard() {
     <div class="db-cards">
       <div class="db-card db-fade">
         <div class="db-card-head"><span class="db-card-title">Tareas Completadas</span></div>
-        <div class="db-card-value">${metricas.completadas ?? 0}</div>
-        <div class="db-card-stat">De ${metricas.total_tareas ?? 0} totales</div>
+        <div class="db-card-value">${metrics.completed ?? 0}</div>
+        <div class="db-card-stat">De ${metrics.total_tasks ?? 0} totales</div>
       </div>
       <div class="db-card db-fade" style="animation-delay:.06s">
         <div class="db-card-head"><span class="db-card-title">En Proceso</span></div>
-        <div class="db-card-value" style="color:#f97316">${metricas.en_proceso ?? 0}</div>
+        <div class="db-card-value" style="color:#f97316">${metrics.in_progress ?? 0}</div>
         <div class="db-card-stat">Tareas activas</div>
       </div>
       <div class="db-card db-fade" style="animation-delay:.12s">
         <div class="db-card-head"><span class="db-card-title">Cumplimiento SST</span></div>
-        <div class="db-card-value" style="color:#22c55e">${metricas.tasa_cumplimiento_sst ?? 0}%</div>
+        <div class="db-card-value" style="color:#22c55e">${metrics.sst_compliance_rate ?? 0}%</div>
         <div class="db-card-stat">Protocolo de seguridad</div>
       </div>
-      <div class="db-card db-fade" style="animation-delay:.18s">
-        <div class="db-card-head"><span class="db-card-title">Duración Promedio</span></div>
-        <div class="db-card-value">${metricas.promedio_duracion_minutos ?? 0}</div>
-        <div class="db-card-stat">Minutos por tarea</div>
-      </div>
-    </div>
-    
-    <!-- Información Operativa Anterior -->
-    <div class="db-cards">
-      <div class="db-card db-fade"><div class="db-card-head"><span class="db-card-title">Equipos Activos</span></div><div class="db-card-value">${equipos.activos}</div><div class="db-card-stat">De ${equipos.total} totales</div></div>
-      <div class="db-card db-fade" style="animation-delay:.06s"><div class="db-card-head"><span class="db-card-title">Inspecciones</span><span class="db-badge db-badge-info">${inspecciones.pendientes} pend.</span></div><div class="db-card-value">${inspecciones.completadas}</div><div class="db-card-stat">Completadas este mes</div></div>
-      <div class="db-card db-fade" style="animation-delay:.12s"><div class="db-card-head"><span class="db-card-title">Problemas</span><span class="db-badge db-badge-warn">${inspecciones.conProblemas}</span></div><div class="db-card-value">${inspecciones.conProblemas}</div><div class="db-card-stat">Requieren atención</div></div>
-      <div class="db-card db-fade" style="animation-delay:.18s"><div class="db-card-head"><span class="db-card-title">Técnicos Disponibles</span><span class="db-badge db-badge-ok">${tecnicos.disponibles}</span></div><div class="db-card-value">${tecnicos.disponibles}/${tecnicos.activos}</div><div class="db-card-stat">En horario laboral</div></div>
-    </div>
-    
-    <div class="db-section">
-      <div class="db-section-head"><h2 class="db-section-title">Últimas Inspecciones</h2><button class="db-btn db-btn-secondary db-btn-sm" id="db-see-all">Ver todas →</button></div>
-      <div class="db-table-wrap" style="max-height:250px;overflow-y:auto;"><table class="db-table" style="font-size:13px;"><thead><tr><th style="padding:6px 8px;">ID Equipo</th><th style="padding:6px 8px;">Ubicación</th><th style="padding:6px 8px;">Técnico</th><th style="padding:6px 8px;">Fecha</th><th style="padding:6px 8px;">Estado</th><th style="padding:6px 8px;">Acción</th></tr></thead>
-        <tbody>${inspecciones.lista.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:var(--tsoft);padding:10px;">No hay inspecciones recientes</td></tr>' : inspecciones.lista.map(i => `<tr style="font-size:12px;"><td style="padding:6px 8px;"><strong>${i.id||''}</strong></td><td style="padding:6px 8px;">${i.equipo||i.ubicacion||''}</td><td style="padding:6px 8px;">${i.tecnico||''}</td><td style="padding:6px 8px;">${i.fecha||''}</td><td style="padding:6px 8px;">${statusBadge(i.estado||'pendiente')}</td><td style="padding:6px 8px;"><button class="db-btn db-btn-secondary db-btn-sm">Ver</button></td></tr>`).join('')}</tbody>
-      </table></div>
+   
     </div>`
 }
 
-function subEquipos() {
-  const { repuestos_por_tipo } = state
-  const tipos = Object.keys(repuestos_por_tipo)
+function subEquipment() {
+  const { spare_parts_by_type } = state
+  const types = Object.keys(spare_parts_by_type)
   
-  const tablaHtml = tipos.length === 0 
-    ? '<tr><td colspan="5" style="text-align:center;color:var(--tsoft);padding:10px;">No hay repuestos registrados</td></tr>'
-    : tipos.map(tipo => {
-        const datos = repuestos_por_tipo[tipo]
-        const repuestos = datos.repuestos || []
-        return repuestos.map((rep, idx) => `
+  const tablaHtml = types.length === 0 
+    ? `<tr><td colspan="5" style="text-align:center;color:var(--tsoft);padding:10px;"></td></tr>`
+    : types.map(type => {
+        const datos = spare_parts_by_type[type]
+        const spare_parts = datos.repuestos || []
+        return spare_parts.map((rep, idx) => `
           <tr style="font-size:12px;">
-            <td style="padding:6px 8px;"><strong>${idx === 0 ? tipo : ''}</strong></td>
+            <td style="padding:6px 8px;"><strong>${idx === 0 ? type : ''}</strong></td>
             <td style="padding:6px 8px;">${rep.nombre || ''}</td>
             <td style="padding:6px 8px;text-align:center;"><span style="background:${rep.stock <= rep.stock_minimo ? '#fecaca' : '#dcfce7'};padding:4px 8px;border-radius:4px;font-weight:700;">${rep.stock || 0}</span></td>
             <td style="padding:6px 8px;text-align:center;">${rep.stock_minimo || 0}</td>
-            <td style="padding:6px 8px;text-align:center;">${rep.stock_maximo || 0}</td>
           </tr>
         `).join('')
       }).join('')
   
   return `
-<<<<<<< HEAD
     <div class="db-ph">
-      <div class="db-ph-actions"><button id="db-filter-equipos" class="db-btn db-btn-secondary">🔍 Filtrar</button><button class="db-btn db-btn-primary">+ Registrar Equipo</button></div>
-      <div><h1>Gestión de Equipos</h1></div>
+      <div><h1>📦 Inventario de Repuestos</h1></div>
     </div>
-=======
-    <div class="db-ph"><h1>📦 Inventario de Repuestos</h1><div class="db-ph-actions"><button class="db-btn db-btn-secondary">🔍 Filtrar</button><button class="db-btn db-btn-primary">+ Agregar Repuesto</button></div></div>
->>>>>>> e4b46ac93fe4a855271a72dd01e793facd66028e
     <div class="db-cards">
-      <div class="db-card db-fade"><div class="db-card-title">Tipos de Repuestos</div><div class="db-card-value">${tipos.length}</div></div>
-      <div class="db-card db-fade" style="animation-delay:.06s"><div class="db-card-title">Total en Stock</div><div class="db-card-value" style="color:#22c55e">${Object.values(repuestos_por_tipo).reduce((sum, t) => sum + (t.cantidad_total || 0), 0)}</div></div>
-      <div class="db-card db-fade" style="animation-delay:.12s"><div class="db-card-title">Stock Bajo</div><div class="db-card-value" style="color:#f97316">${Object.values(repuestos_por_tipo).reduce((sum, t) => sum + (t.repuestos || []).filter(r => r.stock <= r.stock_minimo).length, 0)}</div></div>
+      <div class="db-card db-fade"><div class="db-card-title">Tipos de Repuestos</div><div class="db-card-value">${types.length}</div></div>
+      <div class="db-card db-fade" style="animation-delay:.06s"><div class="db-card-title">Total en Stock</div><div class="db-card-value" style="color:#22c55e">${Object.values(spare_parts_by_type).reduce((sum, t) => sum + (t.cantidad_total || 0), 0)}</div></div>
+      <div class="db-card db-fade" style="animation-delay:.12s"><div class="db-card-title">Stock Bajo</div><div class="db-card-value" style="color:#f97316">${Object.values(spare_parts_by_type).reduce((sum, t) => sum + (t.repuestos || []).filter(r => r.stock <= r.stock_minimo).length, 0)}</div></div>
     </div>
     <div class="db-section"><div class="db-section-head"><h2 class="db-section-title">Repuestos por Categoría</h2></div>
-      <div class="db-table-wrap"><table class="db-table"><thead><tr><th>Categoría</th><th>Nombre</th><th>Stock Actual</th><th>Stock Mínimo</th><th>Stock Máximo</th></tr></thead><tbody>${tablaHtml}</tbody></table></div>
+      <div class="db-table-wrap"><table class="db-table"><thead><tr><th>Categoría</th><th>Nombre</th><th>Stock Actual</th><th>Stock Mínimo</th></tr></thead><tbody>${tablaHtml}</tbody></table></div>
     </div>`
 }
 
-// ─── Mapa solo lectura ───────────────────────────────────────
-function ro(etiqueta, label) {
-  return `<div class="p sg" data-map-id="${etiqueta}" style="cursor:default;pointer-events:none;"><div class="plbl-in" style="pointer-events:none;">${label}</div></div>`
+// ─── Read-only Map ───────────────────────────────────────
+function ro(tag, label) {
+  return `<div class="p sg" data-map-id="${tag}" style="cursor:default;pointer-events:none;"><div class="plbl-in" style="pointer-events:none;">${label}</div></div>`
 }
 
-function subMapa() {
+function subMap() {
   return `
     <div class="db-ph">
       <div class="db-ph-actions"></div>
@@ -298,24 +276,37 @@ function subMapa() {
     </div>`
 }
 
-function subReportes() {
-  const { reportes } = state
-  const rows = reportes.lista.map(r => `<tr><td><strong>${r.id}</strong></td><td>${r.tipo}</td><td>${r.fecha}</td><td>${r.autor}</td><td>${statusBadge(r.estado)}</td><td><button class="db-btn db-btn-secondary db-btn-sm">${r.estado==='disponible'?'📥 Descargar':'Ver'}</button></td></tr>`).join('')
+function subReports() {
+  const { reports } = state
+  const rows = reports.list.map(r => `<tr><td><strong>${r.id}</strong></td><td>${r.description}</td><td>${r.date}</td><td>Antonio</td><td>${statusBadge(r.status)}</td></tr>`).join('')
+  
+  // Card de total reportes
+  const totalCard = `<div class="db-card db-fade"><div class="db-card-title">Total Reportes</div><div class="db-card-value">${reports.list?.length || 0}</div></div>`;
+  
+  // Construir cards de resumen de estados
+  const statusCards = Object.entries(reports.status_summary || {}).map(([ status, count ], idx) => {
+    const colors = {
+      'Pendiente': 'var(--orange)',
+      'En Ejecución': 'var(--blue)',
+      'Completado': 'var(--green)',
+      'Cancelado': 'var(--red)'
+    };
+    const color = colors[status] || 'var(--primary)';
+    return `<div class="db-card db-fade" style="animation-delay:${idx * 0.06}s"><div class="db-card-title">${status}</div><div class="db-card-value" style="color:${color}">${count}</div></div>`;
+  }).join('');
+  
   return `
-    <div class="db-ph">
-      <div class="db-ph-actions"><button class="db-btn db-btn-secondary">📥 Importar</button><button class="db-btn db-btn-primary">+ Generar Reporte</button></div>
-      <div><h1>Reportes</h1></div>
-    </div>
+    
     <div class="db-cards">
-      <div class="db-card db-fade"><div class="db-card-title">Reportes Generados</div><div class="db-card-value">${reportes.generados}</div></div>
-      <div class="db-card db-fade" style="animation-delay:.06s"><div class="db-card-title">Pendientes de Revisión</div><div class="db-card-value" style="color:var(--orange)">${reportes.pendientes}</div></div>
+      ${totalCard}
+      ${statusCards}
     </div>
     <div class="db-section"><div class="db-section-head"><h2 class="db-section-title">Reportes Recientes</h2></div>
-      <div class="db-table-wrap"><table class="db-table"><thead><tr><th>ID</th><th>Tipo</th><th>Fecha</th><th>Generado por</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="db-table-wrap"><table class="db-table"><thead><tr><th>ID</th><th>Descripción</th><th>Fecha</th><th>Generado por</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></div>
     </div>`
 }
 
-function subAseo() {
+function subCleaning() {
   return `
     <div class="db-ph">
       <div class="db-ph-actions"></div>
@@ -327,7 +318,7 @@ function subAseo() {
 
     <div class="db-section">
       <div class="db-section-head"><h2 class="db-section-title">Registros</h2></div>
-      <div id="db-aseo-list" class="db-table-wrap" style="max-height:420px;overflow:auto;padding:12px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;">
+      <div id="db-cleaning-list" class="db-table-wrap" style="max-height:420px;overflow:auto;padding:12px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;">
         <div style="color:var(--tsoft);padding:16px;text-align:center">Cargando registros de aseo...</div>
       </div>
     </div>`
@@ -362,11 +353,11 @@ function subChat() {
 
 const subRenders = {
   dashboard:    subDashboard,
-  equipos:      subEquipos,
-  inspecciones: subMapa,
-  reportes:     subReportes,
+  equipment:    subEquipment,
+  inspections:  subMap,
+  reports:      subReports,
   chat:         subChat,
-  'home-cleaner': subAseo
+  'home-cleaner': subCleaning
 }
 
 export const dashboardPage = () => ({
@@ -385,29 +376,97 @@ export const dashboardPage = () => ({
     let isLoadingPage = false // Prevenir peticiones simultáneas
     let lastPageLoad = 0
 
-    const cargarEstadosMapa = async () => {
+const load_map_states = async () => {
       try {
-        const response = await maintenanceService.getZoneByQR(encodeURIComponent('SALA3-P1'))
-        const activos = response.activos || []
-        const claseEstado = { 'Gris': 'sg', 'Naranja': 'so', 'Azul': 'sb', 'Verde': 'sv' }
-        activos.forEach(activo => {
-          const el = document.querySelector(`[data-map-id="${activo.etiqueta}"]`)
-          if (el) {
-            el.classList.remove('sg', 'so', 'sb', 'sv')
-            el.classList.add(claseEstado[activo.estado] || 'sg')
-            const fallos = activo.fallos_activos?.length ? activo.fallos_activos.join(', ') : 'Sin fallos'
-            el.setAttribute('title', `${activo.etiqueta} — ${activo.estado} | ${fallos}`)
+        console.log('[Mapa] Iniciando carga de estados...')
+        const response = await maintenance_service.get_zone_by_qr(encodeURIComponent('SALA3-P1'))
+        const assets = response.activos || []
+        console.log('[Map] Assets received from backend:', assets)
+        
+        // Listar todos los elementos disponibles en el mapa
+        const elementosEnMapa = document.querySelectorAll('[data-map-id]')
+        console.log('[Mapa] Elementos disponibles en DOM:', Array.from(elementosEnMapa).map(e => e.getAttribute('data-map-id')))
+        
+        const class_state = { 'Gris': 'sg', 'Naranja': 'so', 'Azul': 'sb', 'Verde': 'sv' }
+        
+        // Load states saved in localStorage
+        let states_ls = {}
+        try {
+          states_ls = JSON.parse(localStorage.getItem('mapEstados') || '{}')
+          console.log('[Mapa] 📦 Estados cargados desde localStorage:', states_ls)
+        } catch (lsErr) {
+          console.warn('[Mapa] Error leyendo localStorage:', lsErr)
+        }
+        
+        // Initialize cache with localStorage or DB states
+        // Only initialize if it doesn't already have a cached state (to not overwrite recent changes)
+        assets.forEach(asset => {
+          if (!state.equipment_states[asset.etiqueta]) {
+            // Priority: localStorage > DB
+            state.equipment_states[asset.etiqueta] = states_ls[asset.etiqueta] || asset.estado
+            console.log(`[Map] 💾 Initializing cache: ${asset.etiqueta} = ${state.equipment_states[asset.etiqueta]} (LS: ${states_ls[asset.etiqueta]}, DB: ${asset.estado})`)
           }
         })
-      } catch (err) { console.warn('[Mapa RO] No se cargaron estados:', err) }
+        
+        assets.forEach(asset => {
+          console.log(`[Map] Processing asset:`, {
+            etiqueta: asset.etiqueta,
+            codigo: asset.codigo,
+            nombre: asset.nombre,
+            id: asset.id_activo,
+            estado: asset.estado
+          })
+          
+          // Use saved state (priority: LS > cache > DB)
+          const state_ls_item = states_ls[asset.etiqueta]
+          const state_cache = state.equipment_states[asset.etiqueta]
+          const state_final = state_ls_item || state_cache || asset.estado
+          console.log(`[Mapa] Estado para ${asset.etiqueta}: LS="${state_ls_item}" | Cache="${state_cache}" | BD="${asset.estado}" → Usando="${state_final}"`)
+          
+          // Intentar con etiqueta
+          let selector = `[data-map-id="${asset.etiqueta}"]`
+          let el = document.querySelector(selector)
+          console.log(`[Mapa] Intentando con etiqueta "${asset.etiqueta}": ${!!el}`)
+          
+          // Si no encuentra, intentar con codigo
+          if (!el && asset.codigo) {
+            selector = `[data-map-id="${asset.codigo}"]`
+            el = document.querySelector(selector)
+            console.log(`[Mapa] Intentando con codigo "${asset.codigo}": ${!!el}`)
+          }
+          
+          if (el) {
+            const previous_class = el.className
+            el.classList.remove('sg', 'so', 'sb', 'sv')
+            const new_class = class_state[state_final] || 'sg'
+            el.classList.add(new_class)
+            console.log(`[Mapa] ✅ ${asset.etiqueta || asset.codigo}: "${previous_class}" → "${el.className}"`)
+            
+            const issues = asset.fallos_activos?.length ? asset.fallos_activos.join(', ') : 'Sin fallos'
+            el.setAttribute('title', `${asset.etiqueta} — ${state_final} | ${issues}`)
+          } else {
+            console.warn(`[Mapa] ⚠️ No encontrado: etiqueta=${asset.etiqueta}, codigo=${asset.codigo}`)
+          }
+        })
+        console.log('[Mapa] Carga completada - Cache:', state.equipment_states, 'localStorage:', states_ls)
+      } catch (err) { 
+        console.error('[Mapa] Error cargando estados:', err) 
+      }
     }
 
     // Cargar métricas de desempeño
-    const cargarMetricas = async () => {
+    const load_metrics = async () => {
       try {
-        const metricas = await executionService.getPerformanceMetrics()
-        state.metricas = metricas
-        console.log('[Dashboard] Métricas cargadas:', metricas)
+        const metricas = await execution_service.get_performance_metrics()
+        // Map backend Spanish names to frontend English names
+        state.metrics = {
+          total_tasks: metricas.total_tareas || 0,
+          completed: metricas.completadas || 0,
+          in_progress: metricas.en_proceso || 0,
+          avg_duration_minutes: metricas.promedio_duracion_minutos || 0,
+          sst_compliance_rate: metricas.tasa_cumplimiento_sst || 0
+        }
+        console.log('[Dashboard] Métricas mapeadas:', state.metrics)
         // Re-render si estamos en dashboard
         if (currentPage === 'dashboard') {
           const content = document.getElementById('db-content')
@@ -419,9 +478,9 @@ export const dashboardPage = () => ({
     }
 
     // Cargar alertas de stock bajo
-    const cargarAlertasStock = async () => {
+    const load_stock_alerts = async () => {
       try {
-        const alertas = await inventoryService.getLowStockAlerts()
+        const alertas = await inventory_service.get_low_stock_alerts()
         state.alertas_stock = alertas
         console.log('[Dashboard] Alertas de stock:', alertas.length)
         // Re-render si estamos en dashboard
@@ -434,280 +493,151 @@ export const dashboardPage = () => ({
       }
     }
 
-    // Cargar inspecciones recientes
-    const cargarInspecciones = async () => {
+    // Load recent inspections
+    const load_inspections = async () => {
       try {
-        const data = await maintenanceService.getRecentInspections(10)
-        state.inspecciones.lista = data.inspecciones || []
-        console.log('[Dashboard] Inspecciones cargadas:', state.inspecciones.lista.length)
+        const data = await maintenance_service.get_recent_inspections(10)
+        state.inspections.list = data.inspections || []
+        console.log('[Dashboard] Inspecciones cargadas:', state.inspections.list.length)
       } catch (err) {
         console.warn('[Dashboard] Error cargando inspecciones:', err)
       }
     }
 
-    // Cargar reportes recientes
-    const cargarReportes = async () => {
+    // Load recent reports
+    const load_reports = async () => {
       try {
-        const data = await maintenanceService.getRecentReports(10)
-        state.reportes.lista = data.reportes || []
-        console.log('[Dashboard] Reportes cargados:', state.reportes.lista.length)
+        const data = await maintenance_service.get_recent_reports(15)
+        console.log('[Dashboard] Raw data from backend:', JSON.stringify(data, null, 2))
+        
+        // Map backend Spanish property names to frontend English names
+        state.reports.list = (data.reportes || []).map(r => ({
+          id: r.id,
+          description: r.descripcion,
+          date: r.fecha,
+          generatedBy: r.generadoPor || 'Antonio',
+          status: r.estado
+        }))
+        state.reports.status_summary = data.resumen_estados || {}
+        state.reports.total = data.total || 0
+        console.log('[Dashboard] Reportes mapeados:', state.reports.list.length)
+        console.log('[Dashboard] ResumenEstados:', state.reports.status_summary)
+        console.log('[Dashboard] Reportes cargados:', state.reports.list.length, 'Estados:', Object.keys(state.reports.status_summary).join(', '))
       } catch (err) {
         console.warn('[Dashboard] Error cargando reportes:', err)
       }
     }
 
-    // Cargar repuestos agrupados
-    const cargarRepuestos = async () => {
+    // Load spare parts grouped by type
+    const load_spare_parts = async () => {
       try {
-        const data = await inventoryService.getRepuestosGroupedByType()
-        state.repuestos_por_tipo = data
+        const data = await inventory_service.get_spare_parts_grouped_by_type()
+        state.spare_parts_by_type = data
         console.log('[Dashboard] Repuestos agrupados cargados')
       } catch (err) {
         console.warn('[Dashboard] Error cargando repuestos agrupados:', err)
       }
     }
 
-    const renderPage = async (page) => {
-      // Evitar múltiples cargas simultáneas
-      if (isLoadingPage) {
-        console.log('[Dashboard] Ya hay una carga en progreso, ignorando', page)
-        return
-      }
-
-      const now = Date.now()
-      if (now - lastPageLoad < 500) { // Debounce de 500ms
-        console.log('[Dashboard] Demasiadas peticiones rápido, ignorando', page)
-        return
-      }
-
-      isLoadingPage = true
-      lastPageLoad = now
-
+    // Function to update a specific equipment on the map without reloading everything
+    const update_equipment_on_map = (tag, new_status) => {
       try {
-        currentPage = page
-        const content = document.getElementById('db-content')
-        if (!content) return
-
-        // Cargar datos según la página
-        if (page === 'dashboard') {
-          await Promise.all([cargarMetricas(), cargarAlertasStock(), cargarInspecciones()])
-        } else if (page === 'equipos') {
-          await cargarRepuestos()
-        } else if (page === 'reportes') {
-          await cargarReportes()
+        // Validate input
+        if (!tag || !String(tag).trim()) {
+          console.error('[Mapa] Error: etiqueta vacía o inválida')
+          return
         }
-
-        content.innerHTML = subRenders[page]?.() ?? subRenders.dashboard()
-
-      try { sidebarView({ activePage: page, onNavigate: renderPage }).loadRender() } catch (e) {}
-
-      const sidebar = document.getElementById('db-sidebar')
-      let backdrop = document.getElementById('db-backdrop')
-      if (!backdrop) {
-        backdrop = document.createElement('div')
-        backdrop.id = 'db-backdrop'
-        document.body.appendChild(backdrop)
-      }
-
-      const setSidebarOpen = (open) => {
-        if (!sidebar || !backdrop) return
-        sidebar.classList.toggle('open', open)
-        backdrop.classList.toggle('visible', open)
-        document.body.style.overflow = open ? 'hidden' : ''
-        globalToggle?.setAttribute('aria-expanded', String(open))
-      }
-
-      backdrop.onclick = () => setSidebarOpen(false)
-
-      let closeBtn = sidebar.querySelector('.db-sidebar-close')
-      if (!closeBtn) {
-        closeBtn = document.createElement('button')
-        closeBtn.className = 'db-sidebar-close'
-        closeBtn.setAttribute('aria-label', 'Cerrar menú')
-        closeBtn.innerText = '✕'
-        sidebar.insertBefore(closeBtn, sidebar.firstChild)
-      }
-      closeBtn.onclick = () => setSidebarOpen(false)
-
-      const globalToggle = document.getElementById('db-global-toggle')
-      if (globalToggle) {
-        globalToggle.setAttribute('aria-controls', 'db-sidebar')
-        globalToggle.setAttribute('aria-expanded', 'false')
-        if (!globalToggle.dataset.dbToggleBound) {
-          globalToggle.addEventListener('click', (e) => { e.stopPropagation(); setSidebarOpen(!sidebar.classList.contains('open')) })
-          globalToggle.dataset.dbToggleBound = '1'
-        }
-      }
-
-      document.querySelectorAll('#db-sidebar [data-db-page]').forEach(link => {
-        link.addEventListener('click', () => { if (window.innerWidth <= 768) setSidebarOpen(false) })
-      })
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setSidebarOpen(false) })
-      window.addEventListener('resize', () => { if (window.innerWidth > 768) setSidebarOpen(false) })
-
-      document.querySelectorAll('[data-db-page]').forEach(link => {
-        link.classList.toggle('active', link.dataset.dbPage === page)
-      })
-
-      document.getElementById('db-logout')?.addEventListener('click', () => {
-        persistence.clearSession(); window.location.hash = '#/login'
-      })
-      document.getElementById('db-see-all')?.addEventListener('click', () => renderPage('inspecciones'))
-
-      // '+ Nuevo Reporte' removed: no-op (listener deleted)
-
-      if (currentPage === 'equipos') {
-        const filterBtn = document.getElementById('db-filter-equipos')
-        if (!filterBtn) return
-        filterBtn.addEventListener('click', () => {
-          const header = document.querySelector('.db-ph')
-          if (!header) return
-          let f = document.getElementById('db-filter-input')
-          if (!f) {
-            const inp = document.createElement('input')
-            inp.id = 'db-filter-input'
-            inp.placeholder = 'Filtrar por ID, nombre, ubicación o tipo...'
-            inp.style.cssText = 'padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:Nunito,sans-serif;margin-top:8px;width:100%'
-            header.appendChild(inp)
-            inp.addEventListener('input', (e) => {
-              const q = (e.target.value || '').toLowerCase().trim()
-              const lista = state.equipos.lista.filter(it => String(it.id||'').toLowerCase().includes(q) || String(it.nombre||'').toLowerCase().includes(q) || String(it.ubicacion||'').toLowerCase().includes(q) || String(it.tipo||'').toLowerCase().includes(q))
-              const tbody = document.querySelector('.db-table tbody')
-              if (!tbody) return
-              tbody.innerHTML = lista.map(e => `<tr><td><strong>${e.id}</strong></td><td>${e.nombre}</td><td>${e.ubicacion}</td><td>${e.tipo}</td><td>${statusBadge(e.estado)}</td><td><button class=\"db-btn db-btn-secondary db-btn-sm\">Editar</button></td></tr>`).join('')
-            })
-          } else { f.remove() }
-        })
-      }
-
-      // Mapa RO: cargar estados reales
-      if (page === 'inspecciones') cargarEstadosMapa()
-      // Aseo: cargar registros cuando se muestra la vista de limpieza
-      if (page === 'home-cleaner') cargarRegistrosAseo()
-
-      // Chat con Socket.io en tiempo real
-      if (page === 'chat') {
-        if (window.__dashboardChat_interval) clearInterval(window.__dashboardChat_interval)
-        const input = document.getElementById('db-chat-input')
-        const sendBtn = document.getElementById('db-chat-send')
-        const container = document.getElementById('db-chat-messages')
-        const statusDiv = document.querySelector('.rc-chat-status')
         
-        if (input && sendBtn && container) {
-          const cargarMensajesHistoricos = async () => {
-            try {
-              const mensajes = await chatService.getMessages('DASHBOARD', 50, 0)
-              chatMensajes = mensajes
-              container.innerHTML = mensajes.length === 0 ? '<div style="text-align:center;padding:20px;color:var(--tsoft);">Sin mensajes</div>' : mensajes.map(renderMensaje).join('')
-              container.scrollTop = container.scrollHeight
-            } catch (err) { console.error('[Dashboard Chat] Error cargando histórico:', err) }
-          }
-          
-          // Conectar al servidor de WebSocket
-          socketManager.connect('DASHBOARD').then(() => {
-            console.log('[Dashboard Chat] WebSocket conectado')
-            
-            // Monitorear cambios de conexión
-            socketManager.onConnectionChange((isConnected) => {
-              if (statusDiv) {
-                if (isConnected) {
-                  statusDiv.textContent = '● En línea — Antonio'
-                } else {
-                  statusDiv.textContent = '● Desconectado'
-                }
-              }
-            })
-            
-            // Escuchar nuevos mensajes en tiempo real
-            socketManager.onMessage((msg) => {
-              console.log('[Dashboard Chat] Nuevo mensaje:', msg.senderName, '-', msg.message)
-              // Evitar duplicados
-              if (chatMensajes.find(m => m._id === msg._id)) {
-                console.log('[Dashboard Chat] Mensaje duplicado, ignorando')
-                return
-              }
-              chatMensajes.push(msg)
-              const html = renderMensaje(msg)
-              if (container.textContent.includes('Sin mensajes')) {
-                container.innerHTML = html
-              } else {
-                container.insertAdjacentHTML('beforeend', html)
-              }
-              container.scrollTop = container.scrollHeight
-            })
-            
-            // Escuchar confirmación de envío
-            socketManager.onMessageSent((data) => {
-              console.log('[Dashboard Chat] ✓ Mensaje confirmado en servidor', data.messageId)
-            })
-            
-            // Escuchar errores al enviar
-            socketManager.onMessageError((data) => {
-              console.error('[Dashboard Chat] ✗ Error al enviar:', data.error)
-              alert('Error al enviar el mensaje: ' + data.error)
-              input.focus()
-            })
-            
-            // Cargar histórico inicial
-            cargarMensajesHistoricos()
-          }).catch(err => {
-            console.error('[Dashboard Chat] Error conectando:', err)
-            container.innerHTML = '<div style="text-align:center;padding:20px;color:#f00;">Error conectando al chat</div>'
-          })
-          
-          const enviar = () => {
-            const texto = input.value.trim()
-            if (!texto) return
-            
-            // Validar conexión
-            if (!socketManager.isConnected()) {
-              alert('No estás conectado. Intenta recargar la página.')
-              return
-            }
-            
-            const currentUser = persistence.getUser()
-            socketManager.sendMessage({
-              message: texto,
-              sender: 'DASHBOARD',
-              senderName: currentUser?.name || 'Admin',
-              senderEmail: currentUser?.email || 'admin@mail.com',
-              role: currentUser?.rol || 'ADMIN',
-              recipient: 'HOME'
-            })
-            input.value = ''
-            input.focus()
-          }
-          
-          sendBtn.onclick = enviar
-          input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); enviar() } }
+        // Color mapping: states come directly from socket/events
+        const class_to_color = { 
+          'Gris': 'sg', 
+          'Naranja': 'so', 
+          'Azul': 'sb', 
+          'Verde': 'sv',
+          'sg': 'sg',
+          'so': 'so', 
+          'sb': 'sb', 
+          'sv': 'sv'
         }
+        const color_class = class_to_color[new_status] || 'sg'
+        
+        // Save in local cache AND in localStorage for permanent persistence
+        state.equipment_states[tag] = new_status
+        try {
+          const states_ls = JSON.parse(localStorage.getItem('mapEstados') || '{}')
+          states_ls[tag] = new_status
+          localStorage.setItem('mapEstados', JSON.stringify(states_ls))
+          console.log(`[Mapa] 💾 Estado guardado en localStorage: ${tag} → ${new_status} (JSON: ${JSON.stringify(states_ls).substring(0, 100)})`)
+        } catch (lsErr) {
+          console.warn('[Mapa] No se pudo guardar en localStorage:', lsErr)
+        }
+        
+        // Find the element on the map
+        let selector = `[data-map-id="${tag}"]`
+        let el = document.querySelector(selector)
+        console.log(`[Mapa] 🔍 Buscando elemento: selector="${selector}" → encontrado=${!!el}`)
+        
+        if (el) {
+          // Remove previous classes
+          const previous_classes = el.className
+          el.classList.remove('sg', 'so', 'sb', 'sv')
+          // Add new class
+          el.classList.add(color_class)
+          console.log(`[Mapa] ✅ Equipo ${tag} actualizado a ${new_status} (${color_class}) | Antes: "${previous_classes}" → Después: "${el.className}"`)
+          
+          // Trigger a visual update if needed
+          el.style.transition = 'all 0.3s ease'
+          el.offsetHeight // Force reflow
+        } else {
+          console.warn(`[Mapa] ⚠️ Elemento ${tag} no encontrado en el DOM para selector "${selector}". Reintentando en 500ms...`)
+          // Retry after 500ms (the map might be re-rendering)
+          setTimeout(() => {
+            let elRetry = document.querySelector(selector)
+            if (elRetry) {
+              elRetry.classList.remove('sg', 'so', 'sb', 'sv')
+              elRetry.classList.add(color_class)
+              console.log(`[Mapa] ✅ Reintento exitoso: ${tag} → ${color_class}`)
+            } else {
+              console.warn(`[Mapa] ⚠️ Elemento ${tag} aún no disponible después del reintento. Probablemente la pestaña "Inspecciones" no está visible actualmente.`)
+              // List all available elements
+              const allMapElements = document.querySelectorAll('[data-map-id]')
+              const availableIds = Array.from(allMapElements).map(e => e.dataset.mapId)
+              console.log(`[Mapa] ℹ️ Elementos disponibles en el mapa (${availableIds.length}):`, availableIds)
+            }
+          }, 500)
+        }
+      } catch (err) {
+        console.error('[Mapa] Error actualizando equipo:', err)
       }
-    } catch (err) {
-      console.error('[Dashboard renderPage] Error:', err)
-    } finally {
-      isLoadingPage = false
-    }
     }
 
-    document.querySelectorAll('[data-db-page]').forEach(link => {
-      link.addEventListener('click', (e) => { e.preventDefault(); renderPage(link.dataset.dbPage) })
-    })
+    // Función para limpiar estado de un equipo (cuando se reporte nueva novedad)
+    const clear_equipment_state = (etiqueta) => {
+      try {
+        // Limpiar del cache local
+        delete state.equipment_states[etiqueta]
+        
+        // Limpiar de localStorage
+        const states_ls = JSON.parse(localStorage.getItem('mapEstados') || '{}')
+        delete states_ls[etiqueta]
+        localStorage.setItem('mapEstados', JSON.stringify(states_ls))
+        
+        console.log(`[Mapa] 🗑️ Estado limpiado para ${etiqueta} (volverá a leer desde BD)`)
+        
+        // Recargar mapa para que agarre el estado de BD
+        load_map_states()
+      } catch (err) {
+        console.error('[Mapa] Error limpiando estado:', err)
+      }
+    }
 
-    // Inicializar con dashboard
-    renderPage('dashboard')
-    loadZone().catch(err => console.warn('[Dashboard] Error en loadZone:', err))
-
-    // Cargar métricas e inicializar actualizaciones en tiempo real
-    cargarMetricas()
-    cargarAlertasStock()
-
-    // Función para cargar registros de aseo y renderizarlos en la vista 'Aseo'
-    const cargarRegistrosAseo = async () => {
+    // Función para cargar registros de aseo - INDEPENDIENTE DEL THROTTLE
+    const load_cleaning_records = async () => {
       try {
         const resp = await fetch('http://localhost:4000/api/cleanings')
         if (!resp.ok) throw new Error('fetch failed')
         const registros = await resp.json()
-        const container = document.getElementById('db-aseo-list')
+        const container = document.getElementById('db-cleaning-list')
         if (!container) return
 
         const user = (typeof persistence !== 'undefined') ? persistence.getUser() : null
@@ -728,22 +658,33 @@ export const dashboardPage = () => ({
         const rows = filtered.slice().sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt)).map(r => {
           const who = r.user_name || r.user || r.user_email || '—'
           const zone = r.zone_id || r.zone || r.zone_name || r.zona || r.zone_label || r.zoneId || '—'
-          const when = r.createdAt ? new Date(r.createdAt).toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) + ' · ' + new Date(r.createdAt).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota' }) : (r.created_at || '')
+          const when = r.createdAt ? new Date(r.createdAt).toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) + ' · ' + new Date(r.createdAt).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota' }) : (r.created_at || '—')
           const desc = r.descriptions || r.description || r.desc || r.detalle || r.notes || r.observacion || ''
-          const hora_inicio = r.hora_inicio || r.start_time || ''
-          const hora_fin = r.hora_fin || r.end_time || ''
+          
+          let start_time = r.hora_inicio || r.start_time || r.startTime || r.inicio || r.start || ''
+          let end_time = r.hora_fin || r.end_time || r.endTime || r.fin || r.end || ''
+          
+          if (!start_time && r.createdAt) {
+            start_time = new Date(r.createdAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' })
+          }
+          if (!end_time && r.createdAt) {
+            end_time = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' })
+          }
+          
           return `
-            <div style="padding:10px;border-bottom:1px solid var(--border);">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-                <div style="font-weight:700">${escapeHtml(String(zone))}</div>
-                <div style="font-size:12px;color:var(--tsoft)">${escapeHtml(when)}</div>
+            <div style="padding:12px;border-bottom:1px solid var(--border);background:var(--card-bg);">
+              <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;margin-bottom:8px;">
+                <div style="font-weight:700;font-size:14px;color:var(--primary)">${escape_html(String(zone))}</div>
+                <div style="font-size:11px;color:var(--tsoft);white-space:nowrap">${escape_html(when)}</div>
               </div>
-              <div style="margin-top:6px;font-size:13px">${escapeHtml(String(who))} — ${escapeHtml(String(desc))}</div>
-              <div style="margin-top:6px;font-size:12px;color:var(--tsoft)">Inicio: ${escapeHtml(hora_inicio) || '—'} — Fin: ${escapeHtml(hora_fin) || '—'}</div>
+              <div style="display:flex;gap:16px;font-size:13px;margin-bottom:6px;">
+                <div><span style="color:var(--tsoft)">🕐 Inicio:</span> <strong>${escape_html(start_time) || '—'}</strong></div>
+                <div><span style="color:var(--tsoft)">🕑 Fin:</span> <strong>${escape_html(end_time) || '—'}</strong></div>
+              </div>
+              <div style="font-size:12px;color:var(--tmid)">${escape_html(String(who))} ${desc ? '— ' + escape_html(String(desc)) : ''}</div>
             </div>`
         }).join('')
 
-        // Mostrar contador y la lista
         const headerHtml = `<div style="font-size:13px;color:var(--tsoft);margin-bottom:10px">Mostrando ${filtered.length} registros${isAdmin ? ' (todos)' : ''}</div>`
         container.innerHTML = headerHtml + `<div>${rows}</div>`
       } catch (err) {
@@ -753,23 +694,476 @@ export const dashboardPage = () => ({
       }
     }
 
-    // Escuchar eventos de nuevo registro de limpieza para actualizar la vista en tiempo real
-    window.addEventListener('cleaning:created', (e) => {
+    // Hacer globalmente accesible
+    window.load_cleaning_records_global = (forceUpdate = false) => {
+      console.log('[Dashboard] Actualizando registros de aseo' + (forceUpdate ? ' (bypass throttle)' : ''))
+      load_cleaning_records()
+    }
+
+    // Función para actualizar el badge de chat en el sidebar
+    const update_dashboard_chat_badge = () => {
       try {
-        cargarRegistrosAseo()
+        const count = parseInt(localStorage.getItem('dashboard_chat_notifications') || '0', 10) || 0
+        const chatLink = document.querySelector('[data-db-page="chat"]')
+        if (!chatLink) return
+        
+        // Remover badge anterior si existe
+        const oldBadge = chatLink.querySelector('.db-notif-badge')
+        if (oldBadge) oldBadge.remove()
+        
+        // Agregar nuevo badge si hay notificaciones
+        if (count > 0) {
+          const badge = document.createElement('span')
+          badge.className = 'db-notif-badge'
+          badge.textContent = count > 99 ? '99+' : String(count)
+          chatLink.appendChild(badge)
+        }
       } catch (err) {
-        console.warn('[Dashboard] Error actualizando por evento cleaning:created', err)
+        console.error('[Dashboard] Error actualizando badge:', err)
+      }
+    }
+
+    const render_page = async (page) => {
+      // Evitar múltiples cargas simultáneas
+      if (isLoadingPage) {
+        console.log('[Dashboard] Ya hay una carga en progreso, ignorando', page)
+        return
+      }
+
+      const now = Date.now()
+      // Solo aplicar throttle si es la misma página (evita recargas rápidas de la misma página)
+      // Pero permite navegar entre diferentes páginas libremente
+      if (page === currentPage && now - lastPageLoad < 500) {
+        console.log('[Dashboard] Demasiadas peticiones rápido para la misma página, ignorando', page)
+        return
+      }
+
+      isLoadingPage = true
+      lastPageLoad = now
+
+      try {
+        currentPage = page
+        const content = document.getElementById('db-content')
+        if (!content) return
+
+        // Load data according to page
+        if (page === 'dashboard') {
+          await Promise.all([load_metrics(), load_stock_alerts(), load_inspections(), load_spare_parts()])
+        } else if (page === 'equipment') {
+          await load_spare_parts()
+        } else if (page === 'reports') {
+          await load_reports()
+        }
+
+        content.innerHTML = subRenders[page]?.() ?? subRenders.dashboard()
+
+        // Load map states if we're in inspections (where the map exists)
+        if (page === 'inspections') {
+          setTimeout(() => {
+            console.log('[Dashboard] Renderizado completado, cargando estados del mapa...')
+            load_map_states()
+          }, 100)
+        }
+
+        try { sidebarView({ activePage: page, onNavigate: render_page }).loadRender() } catch (e) {}
+        update_dashboard_chat_badge()
+
+        const sidebar = document.getElementById('db-sidebar')
+        let backdrop = document.getElementById('db-backdrop')
+        if (!backdrop) {
+          backdrop = document.createElement('div')
+          backdrop.id = 'db-backdrop'
+          document.body.appendChild(backdrop)
+        }
+
+        const setSidebarOpen = (open) => {
+          if (!sidebar || !backdrop) return
+          sidebar.classList.toggle('open', open)
+          backdrop.classList.toggle('visible', open)
+          document.body.style.overflow = open ? 'hidden' : ''
+          globalToggle?.setAttribute('aria-expanded', String(open))
+        }
+
+        backdrop.onclick = () => setSidebarOpen(false)
+
+        let closeBtn = sidebar.querySelector('.db-sidebar-close')
+        if (!closeBtn) {
+          closeBtn = document.createElement('button')
+          closeBtn.className = 'db-sidebar-close'
+          closeBtn.setAttribute('aria-label', 'Cerrar menú')
+          closeBtn.innerText = '✕'
+          sidebar.insertBefore(closeBtn, sidebar.firstChild)
+        }
+        closeBtn.onclick = () => setSidebarOpen(false)
+
+        const globalToggle = document.getElementById('db-global-toggle')
+        if (globalToggle) {
+          globalToggle.setAttribute('aria-controls', 'db-sidebar')
+          globalToggle.setAttribute('aria-expanded', 'false')
+          if (!globalToggle.dataset.dbToggleBound) {
+            globalToggle.addEventListener('click', (e) => { e.stopPropagation(); setSidebarOpen(!sidebar.classList.contains('open')) })
+            globalToggle.dataset.dbToggleBound = '1'
+          }
+        }
+
+        document.querySelectorAll('#db-sidebar [data-db-page]').forEach(link => {
+          link.addEventListener('click', () => { if (window.innerWidth <= 768) setSidebarOpen(false) })
+        })
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setSidebarOpen(false) })
+        window.addEventListener('resize', () => { if (window.innerWidth > 768) setSidebarOpen(false) })
+
+        document.querySelectorAll('[data-db-page]').forEach(link => {
+          link.classList.toggle('active', link.dataset.dbPage === page)
+        })
+
+        document.getElementById('db-logout')?.addEventListener('click', () => {
+          persistence.clearSession(); window.location.hash = '#/login'
+        })
+        document.getElementById('db-see-all')?.addEventListener('click', () => render_page('inspections'))
+
+        if (currentPage === 'equipment') {
+          const filterBtn = document.getElementById('db-filter-equipment')
+          if (!filterBtn) return
+          filterBtn.addEventListener('click', () => {
+            const header = document.querySelector('.db-ph')
+            if (!header) return
+            let f = document.getElementById('db-filter-input')
+            if (!f) {
+              const inp = document.createElement('input')
+              inp.id = 'db-filter-input'
+              inp.placeholder = 'Filtrar por ID, nombre, ubicación o tipo...'
+              inp.style.cssText = 'padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-family:Nunito,sans-serif;margin-top:8px;width:100%'
+              header.appendChild(inp)
+              inp.addEventListener('input', (e) => {
+                const q = (e.target.value || '').toLowerCase().trim()
+                const lista = state.equipos.lista.filter(it => String(it.id||'').toLowerCase().includes(q) || String(it.nombre||'').toLowerCase().includes(q) || String(it.ubicacion||'').toLowerCase().includes(q) || String(it.tipo||'').toLowerCase().includes(q))
+                const tbody = document.querySelector('.db-table tbody')
+                if (!tbody) return
+                tbody.innerHTML = lista.map(e => `<tr><td><strong>${e.id}</strong></td><td>${e.nombre}</td><td>${e.ubicacion}</td><td>${e.tipo}</td><td>${statusBadge(e.estado)}</td><td><button class="db-btn db-btn-secondary db-btn-sm">Editar</button></td></tr>`).join('')
+              })
+            } else { f.remove() }
+          })
+        }
+
+        // Cleaning: load records when the cleaning view is displayed
+        if (page === 'home-cleaner') load_cleaning_records()
+
+        // Chat with Socket.io in real time
+        if (page === 'chat') {
+          // Clear notifications when entering chat
+          localStorage.setItem('dashboard_chat_notifications', '0')
+          update_dashboard_chat_badge()
+          
+          if (window.__dashboardChat_interval) clearInterval(window.__dashboardChat_interval)
+          const input = document.getElementById('db-chat-input')
+          const sendBtn = document.getElementById('db-chat-send')
+          const container = document.getElementById('db-chat-messages')
+          const statusDiv = document.querySelector('.rc-chat-status')
+          
+          if (input && sendBtn && container) {
+            const load_chat_history = async () => {
+              try {
+                const messages = await chat_service.get_messages('DASHBOARD', 50, 0)
+                chat_messages = messages
+                container.innerHTML = messages.length === 0 ? '<div style="text-align:center;padding:20px;color:var(--tsoft);">Sin mensajes</div>' : messages.map(render_message).join('')
+                container.scrollTop = container.scrollHeight
+              } catch (err) { console.error('[Dashboard Chat] Error cargando histórico:', err) }
+            }
+            
+
+            
+            // Conectar al servidor de WebSocket
+            socket_manager.connect('DASHBOARD').then(() => {
+              console.log('[Dashboard Chat] WebSocket conectado')
+              
+              // Monitorear cambios de conexión
+              socket_manager.on_connection_change((is_connected) => {
+                if (statusDiv) {
+                  if (is_connected) {
+                    statusDiv.textContent = '● En línea — Antonio'
+                  } else {
+                    statusDiv.textContent = '● Desconectado'
+                  }
+                }
+              })
+              
+              // Escuchar nuevos mensajes en tiempo real
+              socket_manager.on_message((msg) => {
+                console.log('[Dashboard Chat] Nuevo mensaje:', msg.senderName, '-', msg.message)
+                // Avoid duplicates
+                if (chat_messages.find(m => m._id === msg._id)) {
+                  console.log('[Dashboard Chat] Mensaje duplicado, ignorando')
+                  return
+                }
+                chat_messages.push(msg)
+                const html = render_message(msg)
+                if (container.textContent.includes('Sin mensajes')) {
+                  container.innerHTML = html
+                } else {
+                  container.insertAdjacentHTML('beforeend', html)
+                }
+                container.scrollTop = container.scrollHeight
+                
+                // Incrementar notificaciones solo si no estamos en la vista de chat
+                if (currentPage !== 'chat') {
+                  try {
+                    const currentCount = parseInt(localStorage.getItem('dashboard_chat_notifications') || '0', 10) || 0
+                    const newCount = currentCount + 1
+                    localStorage.setItem('dashboard_chat_notifications', String(newCount))
+                    console.log('[Dashboard Chat] Notificación incrementada a:', newCount)
+                    // Actualizar badge en Sidebar
+                    update_dashboard_chat_badge()
+                  } catch (err) {
+                    console.error('[Dashboard Chat] Error actualizando notificaciones:', err)
+                  }
+                }
+              })
+              
+              // Escuchar confirmación de envío
+              socket_manager.on_message_sent((data) => {
+                console.log('[Dashboard Chat] ✓ Mensaje confirmado en servidor', data.messageId)
+              })
+              
+              // Escuchar errores al enviar
+              socket_manager.on_message_error((data) => {
+                console.error('[Dashboard Chat] ✗ Error al enviar:', data.error)
+                alert('Error al enviar el mensaje: ' + data.error)
+                input.focus()
+              })
+              
+              // Cargar histórico inicial
+              load_chat_history()
+            }).catch(err => {
+              console.error('[Dashboard Chat] Error conectando:', err)
+              container.innerHTML = '<div style="text-align:center;padding:20px;color:#f00;">Error conectando al chat</div>'
+            })
+            
+            const enviar = () => {
+              const texto = input.value.trim()
+              if (!texto) return
+              
+              // Validar conexión
+              if (!socket_manager.is_connected()) {
+                alert('No estás conectado. Intenta recargar la página.')
+                return
+              }
+              
+              const currentUser = persistence.getUser()
+              socket_manager.send_message({
+                message: texto,
+                sender: 'DASHBOARD',
+                senderName: currentUser?.name || 'Admin',
+                senderEmail: currentUser?.email || 'admin@mail.com',
+                role: currentUser?.rol || 'ADMIN',
+                recipient: 'HOME'
+              })
+              input.value = ''
+              input.focus()
+            }
+            
+            sendBtn.onclick = enviar
+            input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); enviar() } }
+          }
+        }
+      } catch (err) {
+        console.error('[Dashboard renderPage] Error:', err)
+      } finally {
+        isLoadingPage = false
+      }
+    }
+
+    document.querySelectorAll('[data-db-page]').forEach(link => {
+      link.addEventListener('click', (e) => { e.preventDefault(); render_page(link.dataset.dbPage) })
+    })
+
+    // Conectar a socket para escuchar cambios de estado de tareas en tiempo real
+    socket_manager.connect('DASHBOARD').then(() => {
+      console.log('[Dashboard] ✅ WebSocket conectado para sincronización en tiempo real')
+      
+      // Escuchar cambios de estado de tareas de otros usuarios - siempre activo
+      socket_manager.on_task_status_change((data) => {
+        console.log('[Dashboard] 📡 Cambio de estado recibido por socket:', data)
+        // Disponer el evento localmente como si viniera del HOME para actualizar el mapa
+        window.dispatchEvent(new CustomEvent('task:status:changed', { 
+          detail: data
+        }))
+        console.log('[Dashboard] ✓ Evento task:status:changed emitido localmente')
+      })
+
+      // Escuchar cuando se completa una tarea - RECARGAR TODO EL MAPA
+      socket_manager.on_task_completed((data) => {
+        console.log('[Dashboard] ✅ Tarea completada recibida - Recargando mapa completo:', data)
+        if ((currentPage === 'dashboard' || currentPage === 'inspections') && data.reloadMap) {
+          load_map_states()
+        }
+      })
+      
+      // Escuchar cuando se reporta una novedad
+      socket_manager.get_socket()?.on('report-created', (data) => {
+        console.log('[Dashboard] 🚨 Novedad reportada recibida por socket:', data)
+        if (data.etiqueta) {
+          console.log(`[Dashboard] Validando etiqueta recibida: "${data.etiqueta}" (tipo: ${typeof data.etiqueta})`)
+          
+          // NO limpiar localStorage - queremos GUARDAR el estado Naranja
+          // Solo limpiar el cache local para forzar re-lectura
+          delete state.equipment_states[data.etiqueta]
+          console.log(`[Dashboard] 🗑️ Cache local limpiado para ${data.etiqueta}`)
+          
+          // Actualizar el mapa a Naranja inmediatamente
+          console.log(`[Dashboard] Actualizando mapa: ${data.etiqueta} → Naranja (Novedad Reportada)`)
+          update_equipment_on_map(data.etiqueta, 'Naranja')
+          
+          // Recargar también el mapa después de 1s para asegurar BD actualizada
+          setTimeout(() => {
+            console.log('[Dashboard] Recargando mapa después de reportar novedad')
+            load_map_states()
+          }, 1000)
+        } else {
+          console.warn('[Dashboard] ⚠️ Evento report-created sin etiqueta:', data)
+        }
+      })
+
+      // Escuchar cuando se crea un nuevo registro de aseo
+      socket_manager.get_socket()?.on('cleaning-created', (data) => {
+        console.log('[Dashboard] 🧹 Nuevo registro de aseo recibido por socket:', data)
+        if (currentPage === 'home-cleaner') {
+          console.log('[Dashboard] ✓ Actualizando registros de aseo en tiempo real')
+          load_cleaning_records()
+        }
+      })
+      
+      // Escuchar cuando se crea un nuevo reporte/mantenimiento
+      socket_manager.get_socket()?.on('report-created', (data) => {
+        console.log('[Dashboard] 🚨 Nuevo reporte recibido por socket:', data)
+        if (data?.etiqueta) {
+          try {
+            console.log(`[Dashboard] Validando etiqueta recibida: "${data.etiqueta}"`)
+            // Actualizar mapa a Naranja (novedad reportada)
+            update_equipment_on_map(data.etiqueta, 'Naranja')
+
+            // Recargar reporte y mapa para que la vista muestre el nuevo reporte inmediatamente
+            load_reports().then(() => {
+              const content = document.getElementById('db-content')
+              if (content && (currentPage === 'reports' || currentPage === 'dashboard')) {
+                content.innerHTML = subRenders[currentPage]?.() ?? subRenders.dashboard()
+              }
+            }).catch(err => console.error('[Dashboard] Error recargando reportes tras evento socket:', err))
+
+            // También recargar el mapa después de 1s para asegurar consistencia con BD
+            setTimeout(() => {
+              console.log('[Dashboard] Recargando mapa después de nuevo reporte')
+              load_map_states()
+            }, 1000)
+          } catch (err) {
+            console.error('[Dashboard] Error procesando report-created:', err)
+          }
+        } else {
+          console.warn('[Dashboard] report-created sin etiqueta:', data)
+        }
+      })
+
+      console.log('[Dashboard] ✓ Listeners de socket establecidos')
+      // Global handler: increment dashboard chat badge when a new message arrives
+      socket_manager.on_message((msg) => {
+        try {
+          console.log('[Dashboard] Global new-message received:', msg)
+          // Only increment if message is destined to dashboard (or no explicit recipient)
+          if (msg && (msg.recipient === 'DASHBOARD' || !msg.recipient)) {
+            if (currentPage !== 'chat') {
+              const currentCount = parseInt(localStorage.getItem('dashboard_chat_notifications') || '0', 10) || 0
+              const newCount = currentCount + 1
+              localStorage.setItem('dashboard_chat_notifications', String(newCount))
+              console.log('[Dashboard] Global chat notification incremented to:', newCount)
+              update_dashboard_chat_badge()
+            }
+          }
+        } catch (err) {
+          console.error('[Dashboard] Error in global new-message handler:', err)
+        }
+      })
+    }).catch(err => {
+      console.warn('[Dashboard] ⚠️ No se pudo conectar a socket:', err)
+    })
+
+    // Inicializar con dashboard
+    render_page('dashboard')
+    update_dashboard_chat_badge()
+    load_zone().catch(err => console.warn('[Dashboard] Error en load_zone:', err))
+
+    // Load metrics and initialize real-time updates
+    load_metrics()
+    load_stock_alerts()
+
+    // Listen to completed task events to update map in real time
+    window.addEventListener('task:completed', (e) => {
+      try {
+        console.log('[Dashboard] 🟢 Evento task:completed recibido:', e.detail)
+        const { etiqueta, nuevoEstado } = e.detail
+        // Update only the specific equipment if we have the tag
+        if (etiqueta && nuevoEstado) {
+          update_equipment_on_map(etiqueta, nuevoEstado)
+        } else {
+          // If no tag, reload everything
+          load_map_states()
+        }
+        // IMPORTANT: Reload metrics when a task is completed
+        console.log('[Dashboard] Recargando métricas por task:completed')
+        load_metrics()
+      } catch (err) {
+        console.warn('[Dashboard] Error actualizando mapa por evento task:completed', err)
       }
     })
 
+    // Escuchar eventos de tareas iniciadas para actualizar mapa en tiempo real
+    window.addEventListener('task:started', (e) => {
+      try {
+        console.log('[Dashboard] 🔵 Evento task:started recibido:', e.detail)
+        const { etiqueta, nuevoEstado } = e.detail
+        // Update only the specific equipment if we have the tag
+        if (etiqueta && nuevoEstado) {
+          update_equipment_on_map(etiqueta, nuevoEstado)
+        } else {
+          // If no tag, reload everything
+          load_map_states()
+        }
+      } catch (err) {
+        console.warn('[Dashboard] Error actualizando mapa por evento task:started', err)
+      }
+    })
 
-    // Actualizar métricas cada 30 segundos
+    // Listen to task status changes coming from socket (other users)
+    window.addEventListener('task:status:changed', (e) => {
+      try {
+        console.log('[Dashboard] 📡 Evento task:status:changed desde socket:', e.detail)
+        const { etiqueta, nuevoEstado, estado, tareaId } = e.detail
+        
+        if (etiqueta && nuevoEstado) {
+          console.log(`[Dashboard] Actualizando mapa: ${etiqueta} → ${nuevoEstado} (Tarea: ${tareaId})`)
+          update_equipment_on_map(etiqueta, nuevoEstado)
+          
+          // If we're on dashboard/inspections, reload metrics
+          if ((currentPage === 'dashboard' || currentPage === 'inspections') && estado === 'Terminada') {
+            setTimeout(() => {
+              console.log('[Dashboard] Recargando métricas después de completar tarea...')
+              load_metrics()
+            }, 1000)
+          }
+        } else {
+          console.warn('[Dashboard] Datos incompletos en evento:', { etiqueta, nuevoEstado })
+        }
+      } catch (err) {
+        console.warn('[Dashboard] Error procesando cambio de estado desde socket', err)
+      }
+    })
+
+    // Update metrics every 10 seconds
     setInterval(() => {
       if (currentPage === 'dashboard') {
-        cargarMetricas()
-        cargarAlertasStock()
+        console.log('[Dashboard] Refrescando métricas (intervalo automático 10s)')
+        load_metrics()
+        load_stock_alerts()
       }
-    }, 30000)
+    }, 10000)
 
     // Debounce para evitar actualizaciones excesivas por socket
     let lastMetricsUpdate = Date.now()
@@ -778,16 +1172,15 @@ export const dashboardPage = () => ({
       if (now - lastMetricsUpdate > 10000) { // Max 1 petición cada 10 segundos
         lastMetricsUpdate = now
         if (currentPage === 'dashboard') {
-          cargarMetricas()
-          cargarAlertasStock()
+          load_metrics()
+          load_stock_alerts()
         }
       }
     }
 
     // Listeners de socket para actualizaciones en tiempo real
-    socketManager.onMessage((msg) => {
+    socket_manager.on_message((msg) => {
       throttleMetrics()
     })
-
   }
 })

@@ -27,7 +27,7 @@ export const SSTProtocol = ({ tareaId, tareaData, onSSTComplete, onCancel }) => 
   }
 
   // Obtener recomendaciones según tipo de activo
-  const obtenerRecomendaciones = () => {
+    const get_recommendations = () => {
     if (!tareaData?.activos) return []
     const tipoActivo = tareaData.activos?.tipos_activo?.nombre || 'Genérico'
     return SST_RECOMENDACIONES[tipoActivo] || SST_RECOMENDACIONES['Genérico'] || [
@@ -40,7 +40,7 @@ export const SSTProtocol = ({ tareaId, tareaData, onSSTComplete, onCancel }) => 
   // Crear objeto del componente para usarlo en callbacks
   const component = {
     render: () => {
-      const recomendaciones = obtenerRecomendaciones()
+      const recomendaciones = get_recommendations()
       const tipoActivo = tareaData?.activos?.tipos_activo?.nombre || 'Activo'
       const nombreActivo = tareaData?.activos?.etiqueta || 'desconocido'
       

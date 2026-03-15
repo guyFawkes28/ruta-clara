@@ -1,10 +1,10 @@
 import { persistence } from "../util/persistence.js"
-import maintenanceService from "../api/maintenance.service.js"
-import chatService from "../api/chat.service.js"
-import socketManager from "../api/socket.js"
-import aiService from "../api/ai.service.js"
-import inventoryService from "../api/inventory.service.js"
-import executionService from "../api/execution.service.js"
+import maintenance_service from "../api/maintenance.service.js"
+import chat_service from "../api/chat.service.js"
+import socket_manager from "../api/socket.js"
+import ai_service from "../api/ai.service.js"
+import inventory_service from "../api/inventory.service.js"
+import execution_service from "../api/execution.service.js"
 import { SSTProtocol } from "../components/SSTProtocol.js"
 import { TaskTimer } from "../components/TaskTimer.js"
 import { Modal } from "../components/Modal.js"
@@ -25,12 +25,12 @@ export const HomePage = () => {
   }
 
   // ── Helpers ───────────────────────────────────────────────
-  const ahora = () => {
+  const get_time = () => {
     const d = new Date()
     return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
   }
 
-  const obtenerSaludo = () => {
+  const get_greeting = () => {
     const hora = new Date().getHours()
     const nombre = persistence.getUser()?.name || 'Técnico'
     if (hora < 12) return `¡Buen día, ${nombre}!`
@@ -38,9 +38,9 @@ export const HomePage = () => {
     return `¡Buenas noches, ${nombre}!`
   }
 
-  const escapeHtml = (str) => String(str).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": "&#39;" })[s])
+  const escape_html = (str) => String(str).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": "&#39;" })[s])
 
-  const renderMensaje = (msg) => {
+  const render_message = (msg) => {
     const currentUser = persistence.getUser()
     const isSent = msg.senderEmail === currentUser?.email
     const tipo = isSent ? 'sent' : 'received'
@@ -78,18 +78,18 @@ export const HomePage = () => {
           overflow: hidden;
           text-overflow: ellipsis;
           max-width: 180px;
-        ">${escapeHtml(senderLabel)}</div>
+        ">${escape_html(senderLabel)}</div>
         <div style="
           font-size: 14px;
           line-height: 1.45;
           white-space: pre-wrap;
-        ">${escapeHtml(msg.message || msg.texto || '')}</div>
+        ">${escape_html(msg.message || msg.texto || '')}</div>
         <div style="
           font-size: 10px;
           opacity: 0.6;
           margin-top: 5px;
           text-align: right;
-        ">${escapeHtml(hora)}</div>
+        ">${escape_html(hora)}</div>
       </div>
     </div>`
   }
@@ -97,7 +97,7 @@ export const HomePage = () => {
   // ── Sub-renders ───────────────────────────────────────────
 
   const renderHome = () => `
-    ${HomeHeader({ title: obtenerSaludo(), showLogout: true }).render()}
+    ${HomeHeader({ title: get_greeting(), showLogout: true }).render()}
 
     <div class="rc-section">
       <div class="rc-section-title">Resumen del día</div>
@@ -252,8 +252,14 @@ export const HomePage = () => {
           btn.setAttribute('aria-pressed', isActive ? 'true' : 'false')
         })
 
+        // Limpiar notificaciones cuando entra al chat
+        if (vista === 'chat') {
+          localStorage.setItem('chat_notifications', '0')
+          updateChatBadge()
+        }
+
         // Re-montar listeners si la vista tiene interactividad
-        if (vista === 'chat') montarChat()
+        if (vista === 'chat') mount_chat()
         if (vista === 'settings') montarSettings()
       }
 
@@ -264,7 +270,7 @@ export const HomePage = () => {
 
       // Inicializar componentes reutilizables
       try {
-        HomeHeader({ title: obtenerSaludo(), showLogout: true }).loadRender()
+        HomeHeader({ title: get_greeting(), showLogout: true }).loadRender()
       } catch (e) { console.warn('[HomePage] HomeHeader loadRender error', e) }
       try {
         BottomNav({ active: 'home', showChat: true }).loadRender()
@@ -276,7 +282,7 @@ export const HomePage = () => {
           console.log('[HomePage] Iniciando tarea:', tareaId, tareaData)
           
           // 1. Validar inventario (hard-lock)
-          const validationResult = await inventoryService.validateTaskStart(tareaId)
+          const validationResult = await inventory_service.validate_task_start(tareaId)
           if (!validationResult.canStart) {
             const faltantes = validationResult.repuestos_faltantes?.map(r => `• ${r.nombre}: ${r.requerido} necesarios, ${r.disponible} disponibles`).join('\n') || 'Repuestos no disponibles'
             const modal = Modal({
@@ -301,7 +307,7 @@ export const HomePage = () => {
                 console.log('[HomePage] SST completado, registrando...')
                 
                 // Registrar SST en backend
-                const sstResult = await executionService.registerSST(
+                const sstResult = await execution_service.register_sst(
                   tareaId,
                   null, // Sin foto selfie en versión simplificada
                   {
@@ -324,21 +330,39 @@ export const HomePage = () => {
 
                 console.log('[HomePage] ✓ SST registrado, mostrando cronómetro...')
 
+                // Disparar evento para actualizar el mapa cuando inicia la tarea
+                const etiqueta = tareaData?.activos?.etiqueta || tareaData?.activo?.etiqueta || 'UNKNOWN'
+                console.log('[HomePage] Etiqueta del activo:', etiqueta, 'tareaData:', tareaData)
+                
+                const taskStartedEvent = { tareaId, etiqueta, estado: 'En Proceso', nuevoEstado: 'Azul' }
+                
+                // Evento local en esta ventana
+                window.dispatchEvent(new CustomEvent('task:started', { 
+                  detail: taskStartedEvent
+                }))
+                console.log('[HomePage] evento task:started emitido:', taskStartedEvent)
+                
+                // Enviar por socket a todos los usuarios conectados en tiempo real
+                console.log('[HomePage] Emitiendo cambio de estado por socket...')
+                const socketEmitted = socket_manager.emit_task_status_change(taskStartedEvent)
+                console.log('[HomePage] Socket emit result:', socketEmitted)
+
                 // 3. Mostrar cronómetro
                 const timer = TaskTimer({
                   tareaId,
                   onFinish: async (timerData) => {
-                    console.log('[HomePage] Cronómetro terminado, finalizando tarea...')
+                    console.log('[HomePage] Cronómetro terminado, finalizando tarea...', timerData)
                     
                     // Capturar foto final (simulada)
                     // En producción, habría un modal para capturar la foto
                     const fotoDespues = null // Simulado - en UI real sería capturada
 
                     try {
-                      const finishResult = await executionService.finishTask(
+                      const finishResult = await execution_service.finish_task(
                         tareaId,
                         fotoDespues,
-                        [] // repuestos usados
+                        [], // repuestos usados
+                        timerData // Pasar duración del cronómetro { duracion_minutos, duracion_segundos }
                       )
 
                       // Cerrar modal del cronómetro
@@ -347,6 +371,22 @@ export const HomePage = () => {
 
                       if (finishResult.success) {
                         console.log('[HomePage] ✓ Tarea finalizada, mostrando confirmación...')
+                        // Disparar evento para actualizar el mapa en tiempo real
+                        const etiqueta = tareaData?.activos?.etiqueta || tareaData?.activo?.etiqueta || 'UNKNOWN'
+                        console.log('[HomePage] Etiqueta del activo para finalización:', etiqueta)
+                        
+                        const taskCompletedEvent = { tareaId, etiqueta, estado: 'Terminada', nuevoEstado: 'Verde' }
+                        
+                        // Evento local en esta ventana
+                        window.dispatchEvent(new CustomEvent('task:completed', { 
+                          detail: taskCompletedEvent
+                        }))
+                        console.log('[HomePage] evento task:completed emitido:', taskCompletedEvent)
+                        
+                        // Enviar por socket a todos los usuarios conectados en tiempo real
+                        console.log('[HomePage] Emitiendo cambio de estado (completado) por socket...')
+                        const socketEmitted = socket_manager.emit_task_status_change(taskCompletedEvent)
+                        console.log('[HomePage] Socket emit result:', socketEmitted)
                         const modal = Modal({
                           title: '✅ ¡Tarea Completada!',
                           message: 'La tarea se ha finalizado exitosamente. Los cambios se han guardado en el sistema.',
@@ -360,7 +400,7 @@ export const HomePage = () => {
                             const completedEl = document.getElementById('completed-count')
                             if (completedEl) completedEl.textContent = String(state.completedToday)
                             // Recargar tareas pendientes
-                            await cargarTareasPendientes()
+                            await load_pending_tasks()
                             // Actualizar contadores desde backend
                             await updatePendingCount()
                           }, style: 'primary' }],
@@ -446,10 +486,10 @@ export const HomePage = () => {
       }
 
       // ── Cargar tareas pendientes y actualizar estadísticas ──
-      const cargarTareasPendientes = async () => {
+      const load_pending_tasks = async () => {
         try {
           console.log('[HomePage] Iniciando carga de tareas pendientes...')
-          const response = await maintenanceService.getPendingTasks()
+          const response = await maintenance_service.get_pending_tasks()
           console.log('[HomePage] Respuesta de tareas:', response)
           
           const tareas = response?.tareas || []
@@ -555,7 +595,7 @@ export const HomePage = () => {
               btn.disabled = true
 
               try {
-                const result = await aiService.improveReport(tareaId)
+                const result = await ai_service.improve_report(tareaId)
                 if (result.success && result.mejoras) {
                   const mejoras = result.mejoras
                   const modal = Modal({
@@ -595,10 +635,33 @@ export const HomePage = () => {
       }
 
       // Cargar tareas pendientes al iniciar
-      setTimeout(() => cargarTareasPendientes(), 100)
+      setTimeout(() => load_pending_tasks(), 100)
 
       // ── Chat ─────────────────────────────────────────────
-      const montarChat = async () => {
+      // Función para actualizar el badge de chat
+      const updateChatBadge = () => {
+        try {
+          const count = parseInt(localStorage.getItem('chat_notifications') || '0', 10) || 0
+          const chatBtn = document.querySelector('[data-rc-view="chat"]')
+          if (!chatBtn) return
+          
+          // Remover badge anterior si existe
+          const oldBadge = chatBtn.querySelector('.rc-notif-badge')
+          if (oldBadge) oldBadge.remove()
+          
+          // Agregar nuevo badge si hay notificaciones
+          if (count > 0) {
+            const badge = document.createElement('span')
+            badge.className = 'rc-notif-badge'
+            badge.textContent = count > 99 ? '99+' : String(count)
+            chatBtn.appendChild(badge)
+          }
+        } catch (err) {
+          console.error('[HomePage] Error actualizando badge:', err)
+        }
+      }
+
+      const mount_chat = async () => {
         const input = document.getElementById('rc-chat-input')
         const sendBtn = document.getElementById('rc-chat-send')
         const form = document.getElementById('rc-chat-form')
@@ -612,11 +675,11 @@ export const HomePage = () => {
         if (sendBtn.dataset.homeChatBound) {
           console.log('[HomePage Chat] Ya montado, solo cargando histórico')
           try {
-            const mensajes = await chatService.getMessages('HOME', 50, 0)
+            const mensajes = await chat_service.get_messages('HOME', 50, 0)
             state.mensajes = mensajes
             container.innerHTML = mensajes.length === 0 
               ? '<div style="text-align:center;padding:20px;color:var(--tsoft);">Sin mensajes</div>'
-              : mensajes.map(renderMensaje).join('')
+              : mensajes.map(render_message).join('')
             container.scrollTop = container.scrollHeight
           } catch (err) {
             console.error('[HomePage Chat] Error recargando:', err)
@@ -628,12 +691,12 @@ export const HomePage = () => {
 
         try {
           // Conectar al servidor de WebSocket
-          await socketManager.connect('HOME')
+          await socket_manager.connect('HOME')
           console.log('[HomePage Chat] WebSocket conectado')
           
           // Monitorear cambios de conexión en tiempo real
           const statusDiv = document.querySelector('.rc-chat-status')
-          socketManager.onConnectionChange((isConnected) => {
+          socket_manager.on_connection_change((isConnected) => {
             if (statusDiv) {
               if (isConnected) {
                 statusDiv.className = 'rc-chat-status online'
@@ -646,14 +709,14 @@ export const HomePage = () => {
           })
           
           // Cargar mensajes históricos del servidor
-          const cargarMensajesHistoricos = async () => {
+          const load_chat_history = async () => {
             try {
-              const mensajes = await chatService.getMessages('HOME', 50, 0)
+              const mensajes = await chat_service.get_messages('HOME', 50, 0)
               console.log('[HomePage Chat] Mensajes históricos cargados:', mensajes.length)
               state.mensajes = mensajes
               container.innerHTML = mensajes.length === 0 
                 ? '<div style="text-align:center;padding:20px;color:var(--tsoft);">Sin mensajes</div>'
-                : mensajes.map(renderMensaje).join('')
+                : mensajes.map(render_message).join('')
               container.scrollTop = container.scrollHeight
             } catch (err) {
               console.error('[HomePage Chat] Error cargando histórico:', err)
@@ -662,7 +725,7 @@ export const HomePage = () => {
           }
 
           // Escuchar nuevos mensajes en tiempo real
-          socketManager.onMessage((msg) => {
+          socket_manager.on_message((msg) => {
             console.log('[HomePage Chat] Nuevo mensaje:', msg.senderName, '-', msg.message)
             // Evitar duplicados
             if (state.mensajes.find(m => m._id === msg._id)) {
@@ -670,18 +733,32 @@ export const HomePage = () => {
               return
             }
             state.mensajes.push(msg)
-            const html = renderMensaje(msg)
+            const html = render_message(msg)
             container.insertAdjacentHTML('beforeend', html)
             container.scrollTop = container.scrollHeight
+            
+            // Incrementar notificaciones solo si no estamos en la vista de chat
+            if (state.vistaActiva !== 'chat') {
+              try {
+                const currentCount = parseInt(localStorage.getItem('chat_notifications') || '0', 10) || 0
+                const newCount = currentCount + 1
+                localStorage.setItem('chat_notifications', String(newCount))
+                console.log('[HomePage Chat] Notificación incrementada a:', newCount)
+                // Actualizar badge en BottomNav
+                updateChatBadge()
+              } catch (err) {
+                console.error('[HomePage Chat] Error actualizando notificaciones:', err)
+              }
+            }
           })
 
           // Escuchar confirmación de envío exitoso
-          socketManager.onMessageSent((data) => {
+          socket_manager.on_message_sent((data) => {
             console.log('[HomePage Chat] ✓ Mensaje confirmado en servidor', data.messageId)
           })
 
           // Escuchar errores al enviar
-          socketManager.onMessageError((data) => {
+          socket_manager.on_message_error((data) => {
             console.error('[HomePage Chat] ✗ Error al enviar:', data.error)
             alert('Error al enviar el mensaje: ' + data.error)
             input.focus()
@@ -696,13 +773,13 @@ export const HomePage = () => {
             const currentUser = persistence.getUser()
             
             // Validar conexión antes de enviar
-            if (!socketManager.isConnected()) {
+            if (!socket_manager.is_connected()) {
               console.error('[HomePage Chat] No conectado al servidor')
               alert('No estás conectado. Intenta recargar la página.')
               return
             }
             
-            socketManager.sendMessage({
+            socket_manager.send_message({
               message: texto,
               sender: 'HOME',
               senderName: currentUser?.name || 'Técnico',
@@ -728,7 +805,7 @@ export const HomePage = () => {
           if (form) form.onsubmit = (e) => { e.preventDefault(); enviar(); return false }
 
           // Cargar histórico al iniciar
-          await cargarMensajesHistoricos()
+          await load_chat_history()
         } catch (err) {
           console.error('[HomePage Chat] Error conectando:', err)
           container.innerHTML = '<div style="text-align:center;padding:20px;color:#f00;">Error conectando al chat</div>'
@@ -748,14 +825,15 @@ export const HomePage = () => {
       }
 
       // Montar listeners de la vista inicial
-      montarChat()
+      mount_chat()
+      updateChatBadge()
 
       // Actualizar el conteo de tareas pendientes (estado 'Naranja')
       const updatePendingCount = async () => {
         try {
           console.debug('[HomePage] updatePendingCount called');
-          const data = await maintenanceService.getPendingCount();
-          console.debug('[HomePage] getPendingCount response:', data);
+          const data = await maintenance_service.get_pending_tasks();
+          console.debug('[HomePage] get_pending_tasks response:', data);
 
           // Soporte para dos formas de respuesta: 1) el objeto directo {pending, completedToday}
           // o 2) una respuesta anidada tipo axios { data: { pending, completedToday } }

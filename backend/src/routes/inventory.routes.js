@@ -1,50 +1,50 @@
 import express from 'express'
 import { 
-  getAllRepuestos,
-  getRepuesto,
-  checkAvailability,
-  validateTaskStart,
-  descontarRepuestos,
-  getLowStockAlerts,
-  agregarStock,
-  getMovementHistory,
-  getRepuestoTypes,
-  getRepuestosGroupedByType
+  get_all_spare_parts,
+  get_spare_part,
+  check_availability,
+  validate_task_start,
+  deduct_spare_parts,
+  get_low_stock_alerts,
+  add_stock,
+  get_movement_history,
+  get_spare_part_types,
+  get_spare_parts_grouped_by_type
 } from '../controllers/inventory.controller.js'
 import { verifyToken } from '../middlewares/auth.middleware.js'
 
 const router = express.Router()
 
 // ─── STATIC ROUTES FIRST (before dynamic :id) ───
-// GET: Obtener tipos de repuestos
-router.get('/tipos-repuestos', verifyToken, getRepuestoTypes)
+// GET: Get spare part types
+router.get('/types', verifyToken, get_spare_part_types)
 
-// GET: Obtener repuestos agrupados por tipo
-router.get('/repuestos/agrupados', verifyToken, getRepuestosGroupedByType)
+// GET: Get spare parts grouped by type
+router.get('/spare-parts/grouped', verifyToken, get_spare_parts_grouped_by_type)
 
-// GET: Alertas de stock bajo
-router.get('/alerts/low-stock', verifyToken, getLowStockAlerts)
+// GET: Low stock alerts
+router.get('/alerts/low-stock', verifyToken, get_low_stock_alerts)
 
 // ─── DYNAMIC ROUTES (after static) ───
-// POST: Verificar disponibilidad de un repuesto
-router.post('/check-availability', verifyToken, checkAvailability)
+// POST: Check spare part availability
+router.post('/check-availability', verifyToken, check_availability)
 
-// POST: Validar si una tarea puede iniciarse (Hard-Lock)
-router.post('/validate-task-start', verifyToken, validateTaskStart)
+// POST: Validate if a task can start (Hard-Lock)
+router.post('/validate-task-start', verifyToken, validate_task_start)
 
-// POST: Descontar repuestos al completar tarea
-router.post('/descontar', verifyToken, descontarRepuestos)
+// POST: Deduct spare parts when completing task
+router.post('/deduct', verifyToken, deduct_spare_parts)
 
-// POST: Agregar stock (compra)
-router.post('/add-stock', verifyToken, agregarStock)
+// POST: Add stock (purchase)
+router.post('/add-stock', verifyToken, add_stock)
 
-// GET: Historial de movimientos de un repuesto
-router.get('/movements/:repuesto_id', verifyToken, getMovementHistory)
+// GET: Movement history of a spare part
+router.get('/movements/:repuesto_id', verifyToken, get_movement_history)
 
-// GET: Listar repuestos
-router.get('/repuestos', verifyToken, getAllRepuestos)
+// GET: List all spare parts
+router.get('/spare-parts', verifyToken, get_all_spare_parts)
 
-// GET: Obtener repuesto por ID (MUST BE LAST - dynamic :id)
-router.get('/repuestos/:id', verifyToken, getRepuesto)
+// GET: Get spare part by ID (MUST BE LAST - dynamic :id)
+router.get('/spare-parts/:id', verifyToken, get_spare_part)
 
 export const inventoryRoutes = router

@@ -1,5 +1,5 @@
 import '../assets/clean.css'
-import maintenanceService from '../api/maintenance.service.js'
+import maintenance_service from '../api/maintenance.service.js'
 import { toast } from '../util/ux.js'
 import { headerView } from '../components/Header.js'
 import { persistence } from '../util/persistence.js'
@@ -151,7 +151,7 @@ export const cleaningReportPage = (zoneId) => {
 		;(async function cargarZona() {
 			try {
 				if (!zoneId) return
-				const resp = await maintenanceService.getZoneByQR(encodeURIComponent(zoneId))
+				const resp = await maintenance_service.get_zone_by_qr(encodeURIComponent(zoneId))
 				const info = resp.info_zona || {}
 
 				// Guardar zone_id para usarlo al registrar la limpieza
@@ -236,23 +236,29 @@ export const cleaningReportPage = (zoneId) => {
 						throw new Error(err.error || `Error HTTP ${res.status}`)
 					}
 
-					// Intentar leer el registro creado del backend
-					let created = null
-					try { created = await res.json() } catch (e) { /* ignore */ }
-					toast("✓ Limpieza registrada correctamente", "success")
-					document.getElementById("clean-description").value = ""
-					// Notificar al resto de la app que se creó un nuevo registro
-					if (created) {
-						window.dispatchEvent(new CustomEvent('cleaning:created', { detail: created }))
+				// Leer el registro completo creado del backend
+				const created = await res.json()
+				console.log("[cleanPage] Registro creado:", created)
+				toast("✓ Limpieza registrada correctamente", "success")
+				document.getElementById("clean-description").value = ""
+				
+				// Notificar al Dashboard en tiempo real
+				window.dispatchEvent(new CustomEvent('cleaning:created', { 
+					detail: {
+						...created,
+						user_name: user_name,
+						zone_id: zone_id
 					}
+				}))
+				console.log("[cleanPage] Evento 'cleaning:created' emitido")
 
-				} catch (error) {
-					console.error("Error registrando limpieza:", error.message)
-					toast("Error al registrar: " + error.message, "error")
-				} finally {
-					submitBtn.disabled = false
-					submitBtn.textContent = "Registrar limpieza ✓"
-				}
+			} catch (error) {
+				console.error("Error registrando limpieza:", error.message)
+				toast("Error al registrar: " + error.message, "error")
+			} finally {
+				submitBtn.disabled = false
+				submitBtn.textContent = "Registrar limpieza ✓"
+			}
 
 			})
 		}
